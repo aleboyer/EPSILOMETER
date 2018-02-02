@@ -46,17 +46,17 @@ SBEcal=get_CalSBE()
 
 if len(sys.argv)>=2:
    filename=sys.argv[1]
-   fid,eof=open_datafile('/Volumes/KINGSTON/DEV/benchSPROUL/d3/raw/'+filename)
-   epsifile='/Volumes/KINGSTON/DEV/benchSPROUL/d3/epsi/'+filename
+   fid,eof=open_datafile('/Volumes/KINGSTON/DEV/User_COMM/d1/raw/'+filename)
+   epsifile='/Volumes/KINGSTON/DEV/User_COMM/d1/epsi/'+filename
 else:
-   filename='/Volumes/KINGSTON/DEV/benchSPROUL/d3/raw/MADREtest.dat' 
+   filename='/Volumes/KINGSTON/DEV/User_COMM/d1/raw/MADRE_CALFPO7SBE.dat' 
    fid,eof=open_datafile(filename)
-   epsifile='/Volumes/KINGSTON/DEV/benchSPROUL/d3/epsi/MADREtest.dat'
+   epsifile='/Volumes/KINGSTON/DEV/User_COMM/d1/epsi/MADRE_CALFPO7SBE.dat'
    
 if len(sys.argv)==3:
-    ctdfile= '/Volumes/KINGSTON/DEV/benchSPROUL/d3/ctd/'+sys.argv[2]
+    ctdfile= '/Volumes/KINGSTON/DEV/User_COMM/d1/ctd/'+sys.argv[2]
 else:
-    ctdfile='/Volumes/KINGSTON/DEV/benchSPROUL/d3/ctd/MADREtest.dat'
+    ctdfile='/Volumes/KINGSTON/DEV/User_COMM/d1/ctd/MADRE_CALFPO7SBE.dat'
    
 
 lines=fid.read()

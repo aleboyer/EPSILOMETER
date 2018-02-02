@@ -22,7 +22,7 @@ ser = serial.Serial(serport[0],460800)  # open serial port
 print(ser.name)         # check which port was really used
 
 ## DO NOT TOUCH 
-def open_datafile_write(filename='/Volumes/KINGSTON/DEV/benchSPROUL/d3/raw/MADREtest.dat'):
+def open_datafile_write(filename='/Volumes/KINGSTON/DEV/User_COMM/d1/raw/MADRE_CALFPO7SBE.dat'):
     fid=open(filename,'wb+')
     return fid 
 
@@ -37,7 +37,7 @@ ser.flushInput()
 
 if len(sys.argv)==2:
    filename=sys.argv[1]
-   fid=open_datafile_write('/Volumes/KINGSTON/DEV/benchSPROUL/d3/raw/' +filename)
+   fid=open_datafile_write('/Volumes/KINGSTON/DEV/User_COMM/d1/raw/' +filename)
 else:
     fid=open_datafile_write()
 

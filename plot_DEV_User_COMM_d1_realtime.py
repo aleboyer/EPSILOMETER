@@ -301,9 +301,9 @@ SBEcal      = get_CalSBE()
 
 if len(sys.argv)>=2:
    filename=sys.argv[1]
-   fid,eof=open_datafile('/Volumes/KINGSTON/DEV/benchSPROUL/d3/raw/'+filename)
+   fid,eof=open_datafile('/Volumes/KINGSTON/DEV/User_COMM/d1/raw/'+filename)
 else:
-   filename='/Volumes/KINGSTON/DEV/benchSPROUL/d3/raw/MADREtest.dat' 
+   filename='/Volumes/KINGSTON/DEV/User_COMM/d1/raw/MADRE_CALFPO7SBE.dat' 
    fid,eof=open_datafile(filename)
    
 fid,eof=seekend_datafile(fid,eof)
