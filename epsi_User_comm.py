@@ -2,11 +2,16 @@
 
 import serial
 import time
-#ser = serial.Serial('/dev/tty.usbserial-FTYVXOI5',460800)  # open serial port
-#ser = serial.Serial('/dev/tty.usbserial-FTXOY2MY',460800)  # open serial port
-ser = serial.Serial('/dev/tty.usbserial-FTYVXOI5',460800)  # open serial port
+import glob
+
+serport=glob.glob('/dev/tty.usbserial-*')
+
+ser = serial.Serial(serport[0],460800)  # open serial port
 print(ser.name)         # check which port was really used
 time.sleep(.1)
+
+############################
+
 
 # send the first 2 bytes to stop sampling and enter in the menu mode 
 s=ser.write(b'\x1e\x1e')
@@ -51,4 +56,9 @@ time.sleep(.001)
 readByte=ser.readline()
 print(readByte.decode('ascii'))
 
+if ser.in_waiting>0:
+    print(ser.read(ser.in_waiting))
+    
+##################
+#need to check whether it succeed?, close return 0 is succeed
 ser.close()             # close port
