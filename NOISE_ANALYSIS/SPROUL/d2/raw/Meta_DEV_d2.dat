@@ -1,0 +1,47 @@
+mission: DEV
+vehicle_name: MADRESPROUL
+deployement: d2
+path_mission: /Volumes/KINGSTON
+vehicle: 415DCDC
+root: /Volumes/KINGSTON/DEV/MADRESPROUL/d2
+L1path:/Volumes/KINGSTON/DEV/MADRESPROUL/d2/L1/
+Epsipath: /Volumes/KINGSTON/DEV/MADRESPROUL/d2/epsi/
+CTDpath: /Volumes/KINGSTON/DEV/MADRESPROUL/d2/ctd/
+RAWpath: /Volumes/KINGSTON/DEV/MADRESPROUL/d2/raw/
+
+MADRE:
+    rev: MADREB.0
+    SN: 0002
+
+MAP:
+    rev: MAPB.0
+    SN: 0001
+
+Firmware:
+    version: MADRE_HEX
+    sampling_frequency: 320Hz
+    ADCshear: Unipolar
+    ADC_FPO7: Unipolar
+    ADC_accellerometer: Unipolar
+
+aux1:
+    name: SBE49
+    SN: 00000
+    cal_file: SBE49/
+
+epsi:
+    s1:
+        SN: 102
+        Sv:  42.12
+        ADCfilter: None
+    s2:
+        SN: 102
+        Sv:  42.12
+        ADCfilter: None
+    t1:
+      SN: 000
+      ADCfilter: None
+    t2:
+        SN: 000
+        ADCfilter: None
+    shearcal_path: /Volumes/MOD_dev/Projects/Epsilometer/CALIBRATION/SHEAR_PROBES

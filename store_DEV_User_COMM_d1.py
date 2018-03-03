@@ -42,8 +42,8 @@ else:
     fid=open_datafile_write()
 
 Aux1WordLength = 0
-#ADCWordlength  = 6
-ADCWordlength  = 3
+ADCWordlength  = 6
+#ADCWordlength  = 3
 number_of_sensor  = 7
 EpsisampleWordLength= ADCWordlength*number_of_sensor
 epsisample_per_block  = 160 

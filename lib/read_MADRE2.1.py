@@ -126,14 +126,6 @@ for i,block in enumerate(blocks[1:-1]):
                         a3[i*len(epsiblock)+k] \
                                = EPSI_accel_unig(sample);
 
-if (len(blocks[1].split(b'$'))==3):
-    T=T[T>0]
-    C=C[C>0]
-    P=P[P>0]
-    Aux1Stamp=Aux1Stamp[Aux1Stamp>0]
-
-
-
 
 
 print(' print in'+ filename[:-4] +'_EPSI.mat')
@@ -151,8 +143,11 @@ sio.savemat(epsifile[:-4] +'_EPSI.mat',EPSImat)
 np.save(epsifile[:-4] +'_EPSI.npy',(t1,t2,s1,s2,a1,a2,a3))
 
 
-
-if (len(blocks[1].split(b'$'))==3):
+if (len(blocks[1].split(b'$AUX1'))==2):
+    T=T[Aux1Stamp>0];  
+    C=C[Aux1Stamp>0];  
+    P=P[Aux1Stamp>0];  
+    Aux1Stamp=Aux1Stamp[Aux1Stamp>0];  
     print(' print in '+ filename[:-4] +'_SBE.mat')
     SBEmat={'time':Aux1Stamp,\
             'T':T,\

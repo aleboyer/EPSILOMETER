@@ -2,10 +2,10 @@
 # declare STRING variable
 
 MISSION_NAME="DEV"
-VEHICLE_NAME="User_COMM"
+VEHICLE_NAME="bench132"
 DEPLOYMENT_NAME="d1"
-PATH_MISSION="/Volumes/KINGSTON"
-VEHICLE="415DCDC"
+PATH_MISSION="/Volumes/KINGSTON/"
+VEHICLE="bench"
 
 MADRE_REV="MADREB.0"
 MADRE_SN="0002"
@@ -23,15 +23,17 @@ AUX1_NAME="SBE49"
 AUX1_SN="0058"
 AUX1_CALFILE="SBE49/0058.dat"
 
-PROBE_S1_SN="102"
-PROBE_S2_SN="102"
-PROBE_T1_SN="102"
-PROBE_T2_SN="000"
+## 105 is 8k ohms
+## 102 is 200kohms
+PROBE_S1_SN="107"
+PROBE_S2_SN="106"
+PROBE_T1_SN="107"
+PROBE_T2_SN="101"
 
-PROBE_SHEAR_CALFILE="/Volumes/MOD_dev/Projects/Epsilometer/CALIBRATION/SHEAR_PROBES"
+PROBE_SHEAR_CALFILE="CALIBRATION/SHEAR_PROBES"
 
-RAW_DATA_FILENAME="MADRE_CALFPO7SBE.dat"
-RECORDING_MODE="STREAMING"  # other choise is SD
+RAW_DATA_FILENAME="${VEHICLE_NAME}_${DEPLOYMENT_NAME}.dat"
+RECORDING_MODE="SDCARD"  # other choise is SD
 
 declare PATHS=(`python lib/create_mission_from_bash_mission.py $MISSION_NAME $VEHICLE_NAME $DEPLOYMENT_NAME $PATH_MISSION $VEHICLE $MADRE_REV $MADRE_SN $MAP_REV $MAP_SN $FIRMWARE_VERSION $FIRMWARE_SAMPLING $FIRMWARE_ADCshear $FIRMWARE_ADCFPO7 $FIRMWARE_ADCaccellerometer $AUX1_NAME $AUX1_SN $AUX1_CALFILE $PROBE_S1_SN $PROBE_S2_SN $PROBE_T1_SN $PROBE_T2_SN $PROBE_SHEAR_CALFILE`) 
   
@@ -55,8 +57,26 @@ rm tempo3_readMADRE.py
 rm tempo4_readMADRE.py
 
 
+sed -e "s+RAWFILE+${PATHS[0]}${RAW_DATA_FILENAME}+g" <lib/MADRE2.1_SD2MAT.py>tempo_SDMADRE.py
+sed -e "s+RAWPATH+${PATHS[0]}+g" <tempo_SDMADRE.py>tempo1_SDMADRE.py
+sed -e "s+EPSIFILE+${PATHS[1]}${RAW_DATA_FILENAME}+g" <tempo1_SDMADRE.py>tempo2_SDMADRE.py
+sed -e "s+EPSIPATH+${PATHS[1]}+g" <tempo2_SDMADRE.py>tempo3_SDMADRE.py
+sed -e "s+CTDFILE+${PATHS[2]}${RAW_DATA_FILENAME}+g" <tempo3_SDMADRE.py>tempo4_SDMADRE.py
+sed -e "s+CTDPATH+${PATHS[2]}+g" <tempo4_SDMADRE.py>sd_${MISSION_NAME}_${VEHICLE_NAME}_${DEPLOYMENT_NAME}.py
+rm tempo_SDMADRE.py
+rm tempo1_SDMADRE.py
+rm tempo2_SDMADRE.py
+rm tempo3_SDMADRE.py
+rm tempo4_SDMADRE.py
+
+
+
 sed -e "s+RAWFILE+${PATHS[0]}${RAW_DATA_FILENAME}+g" <lib/plot_MADRE2.1_realtime.py>tempo_plotMADRE.py
 sed -e "s+RAWPATH+${PATHS[0]}+g" <tempo_plotMADRE.py>plot_${MISSION_NAME}_${VEHICLE_NAME}_${DEPLOYMENT_NAME}_realtime.py
+rm tempo_plotMADRE.py
+
+sed -e "s+RAWFILE+${PATHS[0]}${RAW_DATA_FILENAME}+g" <lib/real_time_spectra_MADRE.py>tempo_plotMADRE.py
+sed -e "s+RAWPATH+${PATHS[0]}+g" <tempo_plotMADRE.py>spectrum_${MISSION_NAME}_${VEHICLE_NAME}_${DEPLOYMENT_NAME}_realtime.py
 rm tempo_plotMADRE.py
 
 cp bash_mission.sh bash_${MISSION_NAME}_${VEHICLE_NAME}_${DEPLOYMENT_NAME}.sh

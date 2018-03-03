@@ -34,19 +34,39 @@ time.sleep(.1)
 # one more read all to be sure we emptied everything
 readByte=ser.read_all()
 print(readByte.decode('ascii'))
-answer1 = input('Enter answer: ')
+answer1 = input('Enter answer1: ')
 s=ser.write(answer1.encode())
+
 # we should be in MADRE_Change_Config by now.
 # we should be asked to chose between the different parameter we want to change
-readByte=ser.read_all()
-print(readByte.decode('ascii'))
-# send 2 bytes to exit USART_RxDouble() and send the TEXT  
-s=ser.write(b'\x1e\x1e')
-# a short pause before reading the MISO buffer 
 time.sleep(.1)
-# read and print the text
 readByte=ser.read_all()
 print(readByte.decode('ascii'))
+
+
+#enter in the 2 level of the menu Sensor SBE Whatever
+answer2 = input('Enter answer2: ')
+s=ser.write(answer2.encode())
+time.sleep(.1)
+readByte=ser.read_all()
+print(readByte.decode('ascii'))
+
+
+
+#enter in the 3 level of the menu the real change in parameters
+answer3 = input('Enter answer3: ')
+if len(answer3)==1:
+    s=ser.write(bytes([int(answer3)]))
+    s=ser.write(b'\x00')
+    
+    
+time.sleep(.1)
+readByte=ser.readline()
+print(readByte.decode('ascii'))
+
+
+
+
 test=int(time.time())+1
 btest=test.to_bytes(4,byteorder='big')
 s=ser.write(btest[1::-1])
@@ -56,9 +76,7 @@ time.sleep(.001)
 readByte=ser.readline()
 print(readByte.decode('ascii'))
 
-if ser.in_waiting>0:
-    print(ser.read(ser.in_waiting))
-    
+
 ##################
 #need to check whether it succeed?, close return 0 is succeed
 ser.close()             # close port

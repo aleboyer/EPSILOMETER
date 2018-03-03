@@ -28,7 +28,7 @@ def makefft(dataBuffer,Fs):
   k=k[k>=0]
   return k,spec_pos
 
-def bitnoise(Fs,FR=3,Nb_bi=24):
+def bitnoise(Fs,FR=2.5,Nb_bi=24):
     # Fs sampling frequency
     Fn    = .5*Fs  # Nyquist frequency
  #= [(full range = 3V)/2^24 ]^2 / f_N where f_N =200 =#
