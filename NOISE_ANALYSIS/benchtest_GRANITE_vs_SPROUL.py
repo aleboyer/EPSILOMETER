@@ -54,7 +54,6 @@ Fs=325
 
 d1=d1_a1[10:]
 d2=d2_a1[10:]
-d2=d2[d2<.102]
 title='Accelleration GRANITE/SPROUL'
 ylabel='g^2/Hz'
 xlabel='Hz'
@@ -103,8 +102,6 @@ plt.show()
 
 
 
-f      = np.pi*k1[1:]/Fs
-sinc4  = (np.sin(f)/f)**4;
 
 
 title='Shear GRANITE/SPROUL'
@@ -113,7 +110,7 @@ xlabel='Hz'
 filename_sh='Shear_GRANITE_vs_SPROUL_newresistance.png'
 
 d1=d1_s1[10:]
-d2=d2_s1[20000:]
+d2=d2_s1[10:]
 
 segments_d1,dof1=split_block(d1,Fs,Lsec=20)
 segments_d2,dof2=split_block(d2,Fs,Lsec=20)
@@ -126,6 +123,8 @@ noise24= bitnoise(Fs,Nb_bi=24);
 noise20= bitnoise(Fs,Nb_bi=20);
 noise16= bitnoise(Fs,Nb_bi=16);
    
+f      = np.pi*k1[1:]/Fs
+sinc4  = (np.sin(f)/f)**4;
 
 fig = plt.figure(figsize=(20,10))
 ax1 = fig.add_subplot(1, 1, 1)
@@ -137,7 +136,7 @@ datarms2=np.sqrt(np.mean(d2**2))
 ax1.set_title(title + '- dof:%i' % dof1,fontsize=25)
 ax1.set_ylabel(ylabel,fontsize=25)
 ax1.set_xlabel(xlabel,fontsize=25)
-ax1.loglog(k1,mspec_pos2,'g',label="SPROUL bench" )
+ax1.loglog(k1,mspec_pos2,'g',label=filename.split('/')[-1]  )
 ax1.loglog(fs1,Ps1.T,'r',label="SPROUL SD TEST" )
 ax1.loglog(k1,mspec_pos1,'b',label="GRANITE" )
 ax1.loglog(k1[1:],np.nanmedian(mspec_pos1[:20])*sinc4,'c',label="sinc4")
@@ -166,8 +165,6 @@ filename_fpo7='FPO7_GRANITE_vs_SPROUL_new_resistance.png'
 d1=d1_t1[10:]
 d2=d2_t1[10:]
 
-d2=d2[d2>1.187064]
-
 segments_d1,dof1=split_block(d1,Fs,Lsec=20)
 segments_d2,dof2=split_block(d2,Fs,Lsec=20)
 k1,spec_pos1=makefft(segments_d1,Fs)
@@ -190,7 +187,7 @@ datarms2=np.sqrt(np.mean(d2**2))
 ax1.set_title(title + '- dof:%i' % dof1,fontsize=25)
 ax1.set_ylabel(ylabel,fontsize=25)
 ax1.set_xlabel(xlabel,fontsize=25)
-#ax1.loglog(k1,mspec_pos2,'g',label="SPROUL bench" )
+ax1.loglog(k1,mspec_pos2,'g',label=filename.split('/')[-1]   )
 ax1.loglog(ft1,Pt1.T,'r',label="SPROUL SD TEST" )
 ax1.loglog(k1,mspec_pos1,'b',label="GRANITE" )
 ax1.loglog(k1[1:],np.nanmedian(mspec_pos1[:20])*sinc4,'c',label="sinc4")
@@ -201,6 +198,7 @@ ax1.loglog(k1,noise16+0*k1,'k.',label="noise 16 bit",lw=1)
 ax1.legend()
 plt.savefig(filename_fpo7)
 
+plt.show()    
 
 #COMPARISON_MAT={'k_granite':k1, \
 #                'spec_granite':mspec_pos1, \

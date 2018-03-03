@@ -128,7 +128,7 @@ for i,block in enumerate(blocks[1:-1]):
 
 
 
-print(' print in'+ filename[:-4] +'_EPSI.mat')
+print(' print in'+ epsifile[:-4] +'_EPSI.mat')
 EPSImat={'EPSItime':EpsiStamp, \
          'time':TimeStamp, \
          'Sensor1':t1,  \
@@ -140,6 +140,7 @@ EPSImat={'EPSItime':EpsiStamp, \
          'Sensor7':a2,  \
          'Sensor8':a3}
 sio.savemat(epsifile[:-4] +'_EPSI.mat',EPSImat)
+print(' print in'+ epsifile[:-4] +'_EPSI.npy')
 np.save(epsifile[:-4] +'_EPSI.npy',(t1,t2,s1,s2,a1,a2,a3))
 
 
@@ -148,12 +149,13 @@ if (len(blocks[1].split(b'$AUX1'))==2):
     C=C[Aux1Stamp>0];  
     P=P[Aux1Stamp>0];  
     Aux1Stamp=Aux1Stamp[Aux1Stamp>0];  
-    print(' print in '+ filename[:-4] +'_SBE.mat')
+    print(' print in '+ ctdfile[:-4] +'_SBE.mat')
     SBEmat={'time':Aux1Stamp,\
             'T':T,\
             'C':C,\
             'P':P}
     sio.savemat(ctdfile[:-4] +'_SBE.mat',SBEmat)
+    print(' print in '+ ctdfile[:-4] +'_SBE.npy')
     np.save(ctdfile[:-4] +'_SBE.npy',(T,C,P,Aux1Stamp))
 
 
