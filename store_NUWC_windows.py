@@ -18,11 +18,12 @@ import glob
 
 serport=glob.glob('/dev/tty.usbserial-*')
 
-ser = serial.Serial('/dev/tty.usbserial-A503PZXL',115200)  # open serial port
+#ser = serial.Serial('/dev/tty.usbserial-A503PZXL',115200)  # open serial port
+ser = serial.Serial(serport[0],460800)  # open serial port
 print(ser.name)         # check which port was really used
 
 ## DO NOT TOUCH 
-def open_datafile_write(filename='/Users/Shared/EPSILOMETER//NISKINE/epsifish1/d5/raw/epsifish1_d5.dat'):
+def open_datafile_write(filename='NUWC_d1.dat'):
     fid=open(filename,'wb+')
     return fid 
 
@@ -37,7 +38,7 @@ ser.flushInput()
 
 if len(sys.argv)==2:
    filename=sys.argv[1]
-   fid=open_datafile_write('/Users/Shared/EPSILOMETER//NISKINE/epsifish1/d5/raw/' +filename)
+   fid=open_datafile_write(filename)
 else:
     fid=open_datafile_write()
 

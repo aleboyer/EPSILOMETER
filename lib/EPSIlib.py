@@ -19,11 +19,16 @@ def EPSI_cond_count(sample):
     C  = int(sample[24:30],16)
     return C 
 def EPSI_accel_count(sample):
-    A1  = int(sample[24:30],16)
-    A2  = int(sample[30:36],16)
-    A3  = int(sample[36:42],16)
+#    A1  = int(sample[30:36],16)
+#    A2  = int(sample[36:42],16)
+#    A3  = int(sample[42:48],16)
+    A1  = int(sample[30:36],16)
+    A2  = int(sample[36:42],16)
+    A3  = int(sample[42:48],16)
     return A1,A2,A3 
-
+def EPSI_channel_count(sample,posi):
+    Cha  = int(sample[posi:posi+6],16)
+    return Cha
 
 def Count2Volt_unipol(count,N=24,Full_Range=2.5,Gain=1):
     Vin=Full_Range*np.array(count)/2**N/Gain;
@@ -58,16 +63,19 @@ def EPSI_cond_univolt(sample):
     C  = Count2Volt_unipol(int(sample[24:30],16))
     return C 
 def EPSI_accel_univolt(sample):
-    A1  = Count2Volt_unipol(int(sample[24:30],16))
-    A2  = Count2Volt_unipol(int(sample[30:36],16))
-    A3  = Count2Volt_unipol(int(sample[36:42],16))
+    A1  = Count2Volt_unipol(int(sample[30:36],16))
+    A2  = Count2Volt_unipol(int(sample[36:42],16))
+    A3  = Count2Volt_unipol(int(sample[42:48],16))
     return A1,A2,A3 
+def EPSI_channel_univolt(sample,posi):
+    Cha  = Count2Volt_unipol(int(sample[posi:posi+6],16))
+    return Cha
 
 
 
-def EPSI_temp_bivolt(sample):
+def EPSI_temp_bivolt(sample,gain):
     T1  = Count2Volt_bipol(int(sample[:6],16))
-    T2  = Count2Volt_bipol(int(sample[6:12],16))
+    T2  = Count2Volt_bipol(int(sample[6:12],16),Gain=gain)
     return T1,T2
 def EPSI_shear_bivolt(sample):
     S1  = Count2Volt_bipol(int(sample[12:18],16))
@@ -77,20 +85,32 @@ def EPSI_cond_bivolt(sample):
     C  = Count2Volt_bipol(int(sample[24:30],16))
     return C 
 def EPSI_accel_bivolt(sample):
-    A1  = Count2Volt_bipol(int(sample[24:30],16))
-    A2  = Count2Volt_bipol(int(sample[30:36],16))
-    A3  = Count2Volt_bipol(int(sample[36:42],16))
+    A1  = Count2Volt_bipol(int(sample[30:36],16))
+    A2  = Count2Volt_bipol(int(sample[36:42],16))
+    A3  = Count2Volt_bipol(int(sample[42:48],16))
     return A1,A2,A3 
+#def EPSI_accel_unig(sample):
+#    A1  = Volt2g(Count2Volt_unipol(int(sample[30:36],16)))
+#    A2  = Volt2g(Count2Volt_unipol(int(sample[36:42],16)))
+#    A3  = Volt2g(Count2Volt_unipol(int(sample[42:48],16)))
+#    return A1,A2,A3 
 def EPSI_accel_unig(sample):
     A1  = Volt2g(Count2Volt_unipol(int(sample[24:30],16)))
     A2  = Volt2g(Count2Volt_unipol(int(sample[30:36],16)))
     A3  = Volt2g(Count2Volt_unipol(int(sample[36:42],16)))
     return A1,A2,A3 
 def EPSI_accel_big(sample):
-    A1  = Volt2g(Count2Volt_bipol(int(sample[24:30],16)))
-    A2  = Volt2g(Count2Volt_bipol(int(sample[30:36],16)))
-    A3  = Volt2g(Count2Volt_bipol(int(sample[36:42],16)))
+    A1  = Volt2g(Count2Volt_bipol(int(sample[30:36],16)))
+    A2  = Volt2g(Count2Volt_bipol(int(sample[36:42],16)))
+    A3  = Volt2g(Count2Volt_bipol(int(sample[42:48],16)))
     return A1,A2,A3 
+def EPSI_channel_unig(sample,posi):
+    Cha  = Volt2g(Count2Volt_unipol(int(sample[posi:posi+6],16)))
+    return Cha
+def EPSI_channel_big(sample,posi):
+    Cha  = Volt2g(Count2Volt_bipol(int(sample[posi:posi+6],16)))
+    return Cha
+
 
 
 
