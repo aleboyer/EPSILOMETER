@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys
-sys.path.insert(0,'lib')
+sys.path.insert(0,'/Users/Shared/EPSILOMETER/EPSILOMETER/lib')
 
 
 ##  only look at shear and temp from madre
@@ -11,6 +11,8 @@ from EPSIlib import Count2Volt_unipol
 from EPSIlib import EPSI_temp_count
 from EPSIlib import EPSI_shear_count
 from EPSIlib import EPSI_accel_count
+from EPSIlib import EPSI_cond_count
+from EPSIlib import EPSI_channel_count
 
 from SBElib import SBE_temp
 from SBElib import SBE_cond
@@ -52,7 +54,7 @@ def init_axes_fig0(fig):
     lineV1, = ax0.plot([],[], '.-', alpha=0.8, color="gray", markerfacecolor="green")
     lineV2, = ax0.plot([],[], '.-', alpha=0.8, color="gray", markerfacecolor="cyan")
     radio = RadioButtons(ax1, ('Counts', 'Volts')) 
-    radio1 = RadioButtons(ax4, ('t1', 't2','s1','s2','a1','a2','a3'))
+    radio1 = RadioButtons(ax4, ('t1', 't2','s1','s2','c','a1','a2','a3'))
     Sl_ymin = Slider(ax2, 'Ymin', 0, 1, valinit=.5)
     Sl_ymax = Slider(ax3, 'Ymax', 0, 1, valinit=.5)
     ax0.set_xlabel('Second')
@@ -72,7 +74,7 @@ def init_axes_fig1(fig):
     lineV1, = ax0.plot([],[], '.-', alpha=0.8, color="gray", markerfacecolor="green")
     lineV2, = ax0.plot([],[], '.-', alpha=0.8, color="gray", markerfacecolor="cyan")
     radio = RadioButtons(ax1, ('Counts', 'Volts')) 
-    radio1 = RadioButtons(ax4, ('t1', 't2','s1','s2','a1','a2','a3'))
+    radio1 = RadioButtons(ax4, ('t1', 't2','s1','s2','c','a1','a2','a3'))
     Sl_ymin = Slider(ax2, 'Ymin', 0, 1, valinit=.5)
     Sl_ymax = Slider(ax3, 'Ymax', 0, 1, valinit=.5)
     ax0.set_xlabel('Second')
@@ -93,9 +95,11 @@ def define_block(fid,eof):
     Splitblock = block.split(b'$')
     Splitblock1 = block1.split(b'$')
     headerlen  = len(Splitblock[0])
-    RTC1=int(Splitblock[0].split(b',')[1],16)
-    RTC2=int(Splitblock1[0].split(b',')[1],16)
-    freq=epsisample_per_block*32768/(RTC2-RTC1)
+    RTC1=int(Splitblock[0].split(b',')[0],16)
+    RTC2=int(Splitblock1[0].split(b',')[0],16)    
+    #freq=epsisample_per_block*32768/(RTC2-RTC1)
+    freq=(RTC2-RTC1)/0.5;
+    print(RTC2-RTC1)
     if Splitblock[1][:4]==b'AUX1':
         aux1len = len(Splitblock[1])
     else:
@@ -117,7 +121,7 @@ def update_sample(fid,ii):
     SBEsample   = SBEsample_class
     block=fid.read(blocklen)   
     Splitblock=block.split(b'$')
-    print('coucou ii')
+    print("posi in plot buffer")
     print(ii)
     for j,dev_block in enumerate(Splitblock[1:]):
         if j==0:
@@ -159,25 +163,35 @@ def update_sample(fid,ii):
                             
 
                     EPSI_time[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_time[(ii*len(epsiblock))%LepsiBuffer]+(k+1)/freq
-                    t1[(ii*len(epsiblock)+k)%LepsiBuffer], \
-                    t2[(ii*len(epsiblock)+k)%LepsiBuffer]  \
-                                                = EPSI_temp_count(sample);
-                    s1[(ii*len(epsiblock)+k)%LepsiBuffer], \
-                    s2[(ii*len(epsiblock)+k)%LepsiBuffer] \
-                                               = EPSI_shear_count(sample);
-                    a1[(ii*len(epsiblock)+k)%LepsiBuffer], \
-                    a2[(ii*len(epsiblock)+k)%LepsiBuffer], \
-                    a3[(ii*len(epsiblock)+k)%LepsiBuffer] \
-                                               = EPSI_accel_count(sample);
-                                               
+#                    t1[(ii*len(epsiblock)+k)%LepsiBuffer], \
+#                    t2[(ii*len(epsiblock)+k)%LepsiBuffer]  \
+#                                                = EPSI_temp_count(sample);
+#                    s1[(ii*len(epsiblock)+k)%LepsiBuffer], \
+#                    s2[(ii*len(epsiblock)+k)%LepsiBuffer] \
+#                                               = EPSI_shear_count(sample);
+#                    c[(ii*len(epsiblock)+k)%LepsiBuffer] \
+#                                               =EPSI_cond_count(sample);
+#                    a1[(ii*len(epsiblock)+k)%LepsiBuffer], \
+#                    a2[(ii*len(epsiblock)+k)%LepsiBuffer], \
+#                    a3[(ii*len(epsiblock)+k)%LepsiBuffer] \
+#                                               = EPSI_accel_count(sample);
+#                                               
+                    
+                    t2[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample,0);
+                    s1[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample,6);
+                    s2[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample,12);
+                    a1[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample,18);
+                    a3[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample,24);
 
 
 def animate(i,radio,radio1,Sl_ymin,Sl_ymax):
     global index_store
     global index_plot
-    global update
+    global EPSI_time
+    global eof_old
     global time_tempo
     global data_tempo
+    global index_plotmax
     
     if(radio1.value_selected=='t1'):
        data=t1
@@ -187,6 +201,8 @@ def animate(i,radio,radio1,Sl_ymin,Sl_ymax):
        data=s1
     if(radio1.value_selected=='s2'):
        data=s2
+    if(radio1.value_selected=='c'):
+       data=c
     if(radio1.value_selected=='a1'):
        data=a1
     if(radio1.value_selected=='a2'):
@@ -194,15 +210,24 @@ def animate(i,radio,radio1,Sl_ymin,Sl_ymax):
     if(radio1.value_selected=='a3'):
        data=a3
 
-    ax0xmax=0xffffff
+    if(radio1.value_selected=='c'):
+        ax0xmax=500
+    else:
+        ax0xmax=0xffffff
+        
     ax0xmin=0
     if(radio.value_selected=='Volts'):
        data=Count2Volt_unipol(data)
        ax0xmax=3.3
        ax0xmin=0
     
-    ax0xmin=Sl_ymin.val*0xffffff 
-    ax0xmax=Sl_ymax.val*0xffffff 
+    if(radio1.value_selected=='c'):
+       ax0xmin=Sl_ymin.val*500 
+       ax0xmax=Sl_ymax.val*500
+    else:
+       ax0xmin=Sl_ymin.val*0xffffff 
+       ax0xmax=Sl_ymax.val*0xffffff 
+                
     if(radio.value_selected=='Volts'):
     	ax0xmin=Count2Volt_unipol(Sl_ymin.val*0xffffff) 
     	ax0xmax=Count2Volt_unipol(Sl_ymax.val*0xffffff) 
@@ -213,62 +238,18 @@ def animate(i,radio,radio1,Sl_ymin,Sl_ymax):
     posi=fid.tell()
     eof=fid.seek(0,2)
     fid.seek(posi)
-    if((eof-posi)>blocklen):
-        print(['update: %i' % index_store])
-        update_sample(fid,index_store)
-        index_store=(index_store+1)%LBuffer
-        update=True
-    
-    if update==False:
-        index_plot=(index_plot+1)%LepsiBuffer
-        index_plotend=(index_plot + Lepsiplot)%LepsiBuffer
-        if index_plotend<index_plot: #not standard case: edges in the way
-                
-            data_tempo[:len(data[index_plot:])]=data[index_plot:].copy()
-            data_tempo[len(data[index_plot:]):]=data[:index_plotend].copy()
-            time_tempo[:len(data[index_plot:])]=EPSI_time[index_plot:].copy()
-            time_tempo[len(data[index_plot:]):]=EPSI_time[:index_plotend].copy()
+    if (eof-eof_old)>0:
+        if((eof-posi)>=blocklen):
+            print(['update: %i' % index_store])
 
-     #       lineF0.set_data(time_tempo,data_tempo)
-    #        lineF0.set_data(time_tempo,time_tempo)
-            #lineV1.set_data(time_tempo,data_tempo*+max(data_tempo))
-            #lineV2.set_data(time_tempo,data_tempo*+min(data_tempo))
-                
-        else:
-    #        lineF0.set_data(EPSI_time[index_plot:index_plot+Lepsiplot],      \
-    #                                           data[index_plot:index_plot+Lepsiplot])
-            time_tempo=EPSI_time[index_plot:index_plot+Lepsiplot].copy()
-            data_tempo=data[index_plot:index_plot+Lepsiplot].copy()
-            #lineF0.set_data(time_tempo,time_tempo)
-        
-        lineF0.set_data( np.arange(LepsiBuffer),data)
-                    
-        #tmin1=time_tempo[0]
-        #tmax1=time_tempo[-1]
-#        fig0.axes[0].set_xlim([tmin1,tmax1])   
-        fig0.axes[0].set_xlim([0,LepsiBuffer])   
-        fig0.axes[0].set_ylim([ax0xmin,ax0xmax]) 
-        #fig.axes[0].text(tmin1+.9*(tmax1-tmin1),ax0xmin+.9*(ax0xmax-ax0xmin),'rms=%3.3f' % (np.sqrt(np.mean(data**2))))  
-        fig0.axes[0].legend(['rms=%3.3f' % np.sqrt(np.mean(data**2))],loc=2)  
-        #print(tmax1)        
+            update_sample(fid,index_store)
+            index_store=(index_store+1)%LBuffer
+            index_plot=np.arange(0,index_store*epsisample_per_block)
+            lineF0.set_data(EPSI_time,data)
 
-
-        #lineV1.set_data(EPSI_time[index_plot:index_plot+Lepsiplot],      \
-        #                               EPSI_time[index_plot:index_plot+Lepsiplot]*0\
-        #                               +max(data[index_plot:index_plot+Lepsiplot]))
-        #lineV2.set_data(EPSI_time[index_plot:index_plot+Lepsiplot],      \
-        #                              EPSI_time[index_plot:index_plot+Lepsiplot]*0\
-        #                               +min(data[index_plot:index_plot+Lepsiplot]))
-#    tmin1=np.nanmin(EPSI_time[index_plot:index_plot+Lepsiplot])
-#    tmax1=np.nanmax(EPSI_time[index_plot:index_plot+Lepsiplot])
-#    ax0xmin=np.nanmin(time_tempo)
-#    ax0xmax=np.nanmax(time_tempo)
-#    tmin1=time_tempo[0]
-#    tmax1=time_tempo[-1]
-        
-    if update:
-       update=False
-    
+            fig0.axes[0].set_xlim([EPSI_time[0],EPSI_time[0]+.5*LBuffer])   
+            fig0.axes[0].set_ylim([ax0xmin,ax0xmax]) 
+            fig0.axes[0].legend(['rms=%3.3f' % np.sqrt(np.mean(data**2))],loc=2)  
     return lineF0,lineV1,lineV2,
 
 
@@ -289,21 +270,21 @@ class EPSIsample_class:
 
 Aux1WordLength       = 0
 ADCWordlength        = 3
-number_of_sensor     = 7
+number_of_sensor     = 5
 epsisample_per_block = 160 # ???? 
 aux1sample_per_block = 9
 
 EpsisampleWordLength= ADCWordlength*number_of_sensor
 EPSIWordlength = ADCWordlength *  number_of_sensor * epsisample_per_block
 
-SBEcal      = get_CalSBE()
+SBEcal      = get_CalSBE('/Users/Shared/EPSILOMETER/EPSILOMETER/SBE49/0133.cal')
 
 
 if len(sys.argv)>=2:
    filename=sys.argv[1]
-   fid,eof=open_datafile('/Volumes/KINGSTON/DEV/benchSPROUL/d3/raw/'+filename)
+   fid,eof=open_datafile('/Users/Shared/EPSILOMETER//NISKINE/epsifish1/d5/raw/'+filename)
 else:
-   filename='/Volumes/KINGSTON/DEV/benchSPROUL/d3/raw/MADREtest.dat' 
+   filename='/Users/Shared/EPSILOMETER//NISKINE/epsifish1/d5/raw/epsifish1_d5.dat' 
    fid,eof=open_datafile(filename)
    
 fid,eof=seekend_datafile(fid,eof)
@@ -337,12 +318,13 @@ EPSI_time=np.zeros(LepsiBuffer)*np.nan
 # for circular buffer edges issues while plotting
 data_tempo=np.zeros(Lepsiplot)*np.nan
 time_tempo=np.zeros(Lepsiplot)*np.nan
-
+eof_old = 0
 
 t1=np.zeros(LepsiBuffer)*np.nan
 t2=np.zeros(LepsiBuffer)*np.nan
 s1=np.zeros(LepsiBuffer)*np.nan
 s2=np.zeros(LepsiBuffer)*np.nan
+c =np.zeros(LepsiBuffer)*np.nan
 a1=np.zeros(LepsiBuffer)*np.nan
 a2=np.zeros(LepsiBuffer)*np.nan
 a3=np.zeros(LepsiBuffer)*np.nan

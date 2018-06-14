@@ -18,11 +18,11 @@ import glob
 
 serport=glob.glob('/dev/tty.usbserial-*')
 
-ser = serial.Serial(serport[0],460800)  # open serial port
+ser = serial.Serial('/dev/tty.usbserial-A503PZXL',115200)  # open serial port
 print(ser.name)         # check which port was really used
 
 ## DO NOT TOUCH 
-def open_datafile_write(filename='/Volumes/KINGSTON/DEV/benchSPROUL/d3/raw/MADREtest.dat'):
+def open_datafile_write(filename='/Users/Shared/EPSILOMETER//NISKINE/epsifish1/d5/raw/epsifish1_d5.dat'):
     fid=open(filename,'wb+')
     return fid 
 
@@ -37,14 +37,14 @@ ser.flushInput()
 
 if len(sys.argv)==2:
    filename=sys.argv[1]
-   fid=open_datafile_write('/Volumes/KINGSTON/DEV/benchSPROUL/d3/raw/' +filename)
+   fid=open_datafile_write('/Users/Shared/EPSILOMETER//NISKINE/epsifish1/d5/raw/' +filename)
 else:
     fid=open_datafile_write()
 
 Aux1WordLength = 0
 #ADCWordlength  = 6
 ADCWordlength  = 3
-number_of_sensor  = 7
+number_of_sensor  = 8
 EpsisampleWordLength= ADCWordlength*number_of_sensor
 epsisample_per_block  = 160 
 
@@ -64,34 +64,37 @@ while True:
           print(line)
           if line[:6]==b'$MADRE':
              #State=1
-             len_header    = len(line)
-             EpsiStamp     = int(line[6:6+8],16)
-             TimeStamp     = int(line[15:15+8],16)
-             Voltage       = int(line[24:24+8],16)
-             Checksum_aux1 = int(line[33:33+8],16)
-             Checksum_aux2 = int(line[42:42+8],16)
-             Checksum_map  = int(line[51:51+8],16)
-                      
-             newHeader=ser.read(5)
-             if newHeader==b'$AUX1':
-                 print(b'AUXheader='+newHeader)
-                 #auxblock=ser.read(363)
-                 auxblock=ser.read(330-33)
-                 print(auxblock.decode("utf-8"))
-                 newHeader=ser.read(5)
-                 print(newHeader)
-                 
-             if newHeader==b'$EPSI':
-                 block=ser.read(EPSIWordlength)
-                 endblock=ser.read(2)
-                 if endblock==b'\r\n':
-                     count+=1
-                     if count==5:
-                         State=1
-                         print('Lock up')
-                         print('Start recording')
-                     else:
-                         print(5-count)    
+              try:
+                len_header    = len(line)
+                EpsiStamp     = int(line[6:6+8],16)
+                TimeStamp     = int(line[15:15+8],16)
+                Voltage       = int(line[24:24+8],16)
+                Checksum_aux1 = int(line[33:33+8],16)
+                Checksum_aux2 = int(line[42:42+8],16)
+                Checksum_map  = int(line[51:51+7],16)
+                         
+                newHeader=ser.read(5)
+                if newHeader==b'$AUX1':
+                    print(b'AUXheader='+newHeader)
+                    #auxblock=ser.read(363)
+                    auxblock=ser.read(330-33)
+                    print(auxblock.decode("utf-8"))
+                    newHeader=ser.read(5)
+                    print(newHeader)
+                    
+                if newHeader==b'$EPSI':
+                    block=ser.read(EPSIWordlength)
+                    endblock=ser.read(2)
+                    if endblock==b'\r\n':
+                        count+=1
+                        if count==5:
+                            State=1
+                            print('Lock up')
+                            print('Start recording')
+                        else:
+                            print(5-count)    
+              except:
+                 print('bad header')
     
     if (State==1):
 
@@ -111,7 +114,10 @@ while True:
                    aux1block=ser.read(330-33)
                    fid.write(aux1block)
                    newHeader=ser.read(5)
-                   print(aux1block.decode("utf-8"))
+                   try:
+                      print(aux1block.decode("utf-8"))
+                   except:
+                      print('bad line')
                if Checksum_aux2>0:
                    print(b'AUXheader='+newHeader)
                    newHeader=ser.read(5)
