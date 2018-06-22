@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys
-sys.path.insert(0,'/Users/Shared/EPSILOMETER/EPSILOMETER/lib')
+sys.path.insert(0,'lib')
 
 
 ##  only look at shear and temp from madre
@@ -8,10 +8,6 @@ from IOlib import open_datafile
 from IOlib import seekend_datafile
 from EPSIlib import Count2Volt_unipol
 
-from EPSIlib import EPSI_temp_count
-from EPSIlib import EPSI_shear_count
-from EPSIlib import EPSI_accel_count
-from EPSIlib import EPSI_cond_count
 from EPSIlib import EPSI_channel_count
 
 from SBElib import SBE_temp
@@ -120,68 +116,59 @@ def define_block(fid,eof):
 def update_sample(fid,ii):
     SBEsample   = SBEsample_class
     block=fid.read(blocklen)   
-    Splitblock=block.split(b'$')
+    Splitblock=block.split(b'$MADRE')
     print("posi in plot buffer")
     print(ii)
     for j,dev_block in enumerate(Splitblock[1:]):
-        if j==0:
-            EpsiStamp[ii]     = int(dev_block[5:].split(b',')[0],16)
-            TimeStamp[ii]     = int(dev_block[5:].split(b',')[1],16)
-            Voltage[ii]       = int(dev_block[5:].split(b',')[2],16)
-            Checksum_aux1[ii] = int(dev_block[5:].split(b',')[3],16)
-            Checksum_aux2[ii] = int(dev_block[5:].split(b',')[4],16)
-            Checksum_map[ii]  = int(dev_block[5:].split(b',')[5],16)
-        else:
-            if dev_block[:4]==b'AUX1':
-                aux1block=dev_block[6:].split(b'\r\n')[:-1]
-                for k,sample in enumerate(aux1block):
-                    indextime=int(sample.split(b',')[0],16)
-                    if indextime>0:
-                        Aux1Stamp[ii*(len(aux1block))+k]=int(sample.split(b',')[0],16)*freq
-                        SBEsample.raw=sample.split(b',')[1]
-                        SBEsample =  SBE_temp(SBEcal,SBEsample)
-                        SBEsample =  SBE_Pres(SBEcal,SBEsample)
-                        SBEsample =  SBE_cond(SBEcal,SBEsample)
-                        T[(ii*(len(aux1block))+k)]= SBEsample.temperature
-                        P[(ii*(len(aux1block))+k)]= SBEsample.pressure
-                        C[(ii*(len(aux1block))+k)]= SBEsample.conductivity
-                    else:
-                        T[(ii*(len(aux1block))+k)]= np.nan
-                        P[(ii*(len(aux1block))+k)]= np.nan
-                        C[(ii*(len(aux1block))+k)]= np.nan
-                        Aux1Stamp[(ii*(len(aux1block))+k)]=np.nan
-                            
-            if dev_block[:4]==b'EPSI':
-                epsiblock=dev_block[6:].split(b'\r\n')[:-1]
-                for k,sample in enumerate(epsiblock):
-                    if (k==0):
-                        EPSI_time[(ii*len(epsiblock))%LepsiBuffer]= \
-                                        EPSI_time[(ii*len(epsiblock)-1)%LepsiBuffer]
-                                        
-                    if (np.isnan(EPSI_time[(ii*len(epsiblock))%LepsiBuffer])):
-                            EPSI_time[(ii*len(epsiblock))%LepsiBuffer]=0
-                            
+        EpsiStamp[ii]     = int(dev_block[:55].split(b',')[0],16)
+        TimeStamp[ii]     = int(dev_block[:55].split(b',')[1],16)
+        Voltage[ii]       = int(dev_block[:55].split(b',')[2],16)
+        Checksum_aux1[ii] = int(dev_block[:55].split(b',')[3],16)
+        Checksum_aux2[ii] = int(dev_block[:55].split(b',')[4],16)
+        Checksum_map[ii]  = int(dev_block[:55].split(b',')[5],16)
+        if (len(dev_block.split(b'AUX1'))>1):
+            aux1block=dev_block[60:60+9*33].split(b'\r\n')[:-1]
+            ind_epsiblock=60+9*33+5
+            for k,sample in enumerate(aux1block):
+                indextime=int(sample.split(b',')[0],16)
+                if indextime>0:
+                    Aux1Stamp[ii*(len(aux1block))+k]=int(sample.split(b',')[0],16)*freq
+                    SBEsample.raw=sample.split(b',')[1]
+                    SBEsample =  SBE_temp(SBEcal,SBEsample)
+                    SBEsample =  SBE_Pres(SBEcal,SBEsample)
+                    SBEsample =  SBE_cond(SBEcal,SBEsample)
+                    T[(ii*(len(aux1block))+k)]= SBEsample.temperature
+                    P[(ii*(len(aux1block))+k)]= SBEsample.pressure
+                    C[(ii*(len(aux1block))+k)]= SBEsample.conductivity
+                else:
+                    T[(ii*(len(aux1block))+k)]= np.nan
+                    P[(ii*(len(aux1block))+k)]= np.nan
+                    C[(ii*(len(aux1block))+k)]= np.nan
+                    Aux1Stamp[(ii*(len(aux1block))+k)]=np.nan
+            else:
+                ind_epsiblock=60
 
-                    EPSI_time[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_time[(ii*len(epsiblock))%LepsiBuffer]+(k+1)/freq
-#                    t1[(ii*len(epsiblock)+k)%LepsiBuffer], \
-#                    t2[(ii*len(epsiblock)+k)%LepsiBuffer]  \
-#                                                = EPSI_temp_count(sample);
-#                    s1[(ii*len(epsiblock)+k)%LepsiBuffer], \
-#                    s2[(ii*len(epsiblock)+k)%LepsiBuffer] \
-#                                               = EPSI_shear_count(sample);
-#                    c[(ii*len(epsiblock)+k)%LepsiBuffer] \
-#                                               =EPSI_cond_count(sample);
-#                    a1[(ii*len(epsiblock)+k)%LepsiBuffer], \
-#                    a2[(ii*len(epsiblock)+k)%LepsiBuffer], \
-#                    a3[(ii*len(epsiblock)+k)%LepsiBuffer] \
-#                                               = EPSI_accel_count(sample);
-#                                               
-                    
-                    t2[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample,0);
-                    s1[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample,6);
-                    s2[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample,12);
-                    a1[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample,18);
-                    a3[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample,24);
+
+        epsiblock=dev_block[ind_epsiblock:]
+        for k in range(epsisample_per_block):
+            if (k==0):
+                EPSI_time[(ii*len(epsiblock))%LepsiBuffer]= \
+                                EPSI_time[(ii*len(epsiblock)-1)%LepsiBuffer]
+                                
+            if (np.isnan(EPSI_time[(ii*len(epsiblock))%LepsiBuffer])):
+                    EPSI_time[(ii*len(epsiblock))%LepsiBuffer]=0
+            EPSI_time[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_time[(ii*len(epsiblock))%LepsiBuffer]+(k+1)/freq
+
+            sample=epsiblock[k*EpsisampleWordLength:(k+1)*EpsisampleWordLength]
+            t1[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample.hex(),0);
+            t2[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample.hex(),6);
+            s1[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample.hex(),12);
+            s2[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample.hex(),18);
+            c[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample.hex(),24);
+            a1[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample.hex(),30);
+            a2[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample.hex(),36);
+            a3[(ii*len(epsiblock)+k)%LepsiBuffer]=EPSI_channel_count(sample.hex(),42);
+            print(a1)
 
 
 def animate(i,radio,radio1,Sl_ymin,Sl_ymax):
@@ -270,21 +257,21 @@ class EPSIsample_class:
 
 Aux1WordLength       = 0
 ADCWordlength        = 3
-number_of_sensor     = 5
+number_of_sensor     = 8
 epsisample_per_block = 160 # ???? 
 aux1sample_per_block = 9
 
 EpsisampleWordLength= ADCWordlength*number_of_sensor
 EPSIWordlength = ADCWordlength *  number_of_sensor * epsisample_per_block
 
-SBEcal      = get_CalSBE('/Users/Shared/EPSILOMETER/EPSILOMETER/SBE49/0133.cal')
+SBEcal      = get_CalSBE('0133.cal')
 
 
 if len(sys.argv)>=2:
    filename=sys.argv[1]
-   fid,eof=open_datafile('/Users/Shared/EPSILOMETER//NISKINE/epsifish1/d5/raw/'+filename)
+   fid,eof=open_datafile(filename)
 else:
-   filename='/Users/Shared/EPSILOMETER//NISKINE/epsifish1/d5/raw/epsifish1_d5.dat' 
+   filename='epsi_raw.dat' 
    fid,eof=open_datafile(filename)
    
 fid,eof=seekend_datafile(fid,eof)

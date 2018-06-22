@@ -104,6 +104,10 @@ def EPSI_accel_big(sample):
     A2  = Volt2g(Count2Volt_bipol(int(sample[36:42],16)))
     A3  = Volt2g(Count2Volt_bipol(int(sample[42:48],16)))
     return A1,A2,A3 
+def EPSI_channel_bivolt(sample,posi):
+    Cha  = Count2Volt_bipol(int(sample[posi:posi+6],16))
+    return Cha
+
 def EPSI_channel_unig(sample,posi):
     Cha  = Volt2g(Count2Volt_unipol(int(sample[posi:posi+6],16)))
     return Cha
