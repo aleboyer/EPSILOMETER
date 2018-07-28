@@ -12,6 +12,9 @@
 #include <termios.h>
 #include <unistd.h>
 #include <errno.h>
+#include <string.h>
+#include <time.h>
+
 
 struct termios  config;
 
@@ -20,14 +23,22 @@ int main() {
     FILE *fileData;
     int baudrate=460800;
     
-    const char *device = "/dev/tty.usbserial-FTYVXOH6";
+    //char device[100];
+    //const char *device = "/dev/tty.usbserial-FTYVXOH6";
+    //printf("Port Path?\n");
+    //scanf("%s",device);
+    //printf("log in to %s\n", device);
     
     
-    uint8_t buffer[1];
+    uint8_t buffer=0;
     
-    fReadData  = open(device, O_RDWR | O_NOCTTY | O_NDELAY);
-    
-    fileData=fopen("/Users/aleboyer/ARNAUD/SCRIPPS/EPSILOMETER/epsi_raw.dat","w");
+    //fReadData  = open(device, O_RDWR | O_NOCTTY | O_NDELAY);
+    fReadData  = open("/dev/tty.usbserial-FTYVXOLZ", O_RDWR | O_NOCTTY | O_NDELAY);
+//    fReadData  = open("/dev/tty.usbserial-FTYVXOH6", O_RDWR | O_NOCTTY | O_NDELAY);tty.usbserial-FTYVXOLZ
+    int countfile=0;
+    char filename[100];
+    sprintf (filename, "/Users/aleboyer/ARNAUD/SCRIPPS/DEV/bench132/epsiauto/raw/epsi_raw%04d.bin", countfile);
+    fileData=fopen(filename,"w");
     
     if(fReadData == -1) {
         printf( "failed to open port\n" );
@@ -90,18 +101,72 @@ int main() {
     printf("config.c_ispeed=%lx\n",config.c_ispeed);
     printf("config.c_ospeed=%lx\n",config.c_ospeed);
     
+    
     //the configuration is changed any data received and not read will be discarded.
     tcsetattr(fReadData, TCSAFLUSH, &config);
-    
+
+    time_t Ltime;
     int count=0;
+    int count1=0;
+    int State=0;
     while(1){
-        if (read(fReadData,&buffer,1)>0){
-            fwrite(&buffer,1,1,fileData);  // file print
-            fflush(fileData);
-            printf("%s:%i\n","coucou",count);
-            count ++;
-            
+        switch (State){
+            case 0:
+                if (read(fReadData,&buffer,1)>0){
+                    if (buffer==0x24){
+                        printf("$");
+                        if (read(fReadData,&buffer,1)>0){
+                            if (buffer==0x4d){
+                               printf("M");
+                               if (read(fReadData,&buffer,1)>0){
+                                   if (buffer==0x41){
+                                       printf("A\n");
+                                       while (count<=4205){
+                                           if (read(fReadData,&buffer,1)>0){
+                                               count++;
+                                           }
+                                       }
+                                       if (read(fReadData,&buffer,1)>0){
+                                           if(buffer==0xa){
+                                               State=1;
+                                               printf("State1\n");
+                                               printf("%x\n",buffer);
+                                           }
+                                       }
+                               }
+                            }
+                        }
+                    }
                 }
+            }
+            break;
+            case 1:
+                count=0;
+                Ltime =time(NULL);
+                fprintf(fileData,"$TIME%ld\r\n",Ltime);  // file print
+                fflush(fileData);
+                while (count<4210){
+                    if (read(fReadData,&buffer,1)>0){
+                        if ((count==0) & (buffer!=36) ){
+                            printf("%x\n",buffer);
+                            printf("State0\n");
+                            State=0;
+                        }
+                        fwrite(&buffer,1,1,fileData);  // file print
+                        fflush(fileData);
+                        count ++;
+                    }
+                }
+                count1++;
+                if (count1 % 120==0){
+                    fclose(fileData);
+                    count1=0;
+                    countfile++;
+                    sprintf (filename, "/Users/aleboyer/ARNAUD/SCRIPPS/DEV/bench132/epsiauto/raw/epsi_raw%0d.bin", countfile);
+                    fileData=fopen(filename,"w");
+                }
+                break;
+        }
     } // while(1)
 } //end main
 
