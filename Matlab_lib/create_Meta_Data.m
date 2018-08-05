@@ -1,5 +1,14 @@
 function Meta_Data=create_Meta_Data(file)
 
+% . input: file
+% . path toward the Meta_Data .dat file you want to process
+% . output: Meta_Data.
+% . Meta_Data contain the path to calibration file and EPSI configuration
+% . needed to process the epsi data
+
+%  Created by Arnaud Le Boyer on 7/28/18.
+
+
 fid=fopen(file,'r');
 count=0;
 while(count<10)

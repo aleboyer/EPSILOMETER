@@ -1,10 +1,17 @@
 function [EPSI,AUX,posi]=EPSI_Readbin(file,posi,Meta_Data)
     
-%  input:
-%  output:
+%  input: Meta_Data
+%  created with Meta_Data=create_Meta_Data(file). Meta_Data contain the
+%  path to calibration file and EPSI configuration needed to process the
+%  epsi data
+%         file
+%  path to raw .bin file
+%         posi
+%  position of the last read of this file. not really usefull so far since
+%  I always re-read from the beginning. It will be used if we use bigger
+%  raw .bin files
 %
 %  Created by Arnaud Le Boyer on 7/28/18.
-%  Copyright © 2018 Arnaud Le Boyer. All rights reserved.
 
     fprintf('start reading file %s at position %i \n',file,posi);
     fid=fopen(file,'r');
@@ -21,7 +28,7 @@ function [EPSI,AUX,posi]=EPSI_Readbin(file,posi,Meta_Data)
         Start_time=datenum(datetime( str2double(Allblocks(6:15)), 'ConvertFrom', 'posixtime' ));
         index_startblock=17;
     else
-        L_Header=63;
+        L_Header=61;
         ind_Madreblock=strfind(Allblocks,'$MADRE');
         Start_time=0;
         index_startblock=1;
@@ -31,14 +38,21 @@ function [EPSI,AUX,posi]=EPSI_Readbin(file,posi,Meta_Data)
     % Hardcoded good length for a Madre block. it depends on the number of
     % channel, if we send binary or ascii, if we have a sea bird or not.
     % TODO: This can be computed/automatized using Meta_data.dat in raw/
-    %L_epsiblock=160*3*nb_channels+5+2;
-    L_epsiblock=160*3*nb_channels+5;
     if ~isempty(Meta_Data.SBEcal)
-        L_AUXblock=301;
+        L_AUXblock=302;
     else
         L_AUXblock=0;
     end
-    L_goodMadreblock=L_Header+L_AUXblock+L_epsiblock+1;
+    
+    switch Meta_Data.PROCESS.recording_mode
+        case 'SD'
+            L_epsiblock=160*3*nb_channels+5+2;
+            L_goodMadreblock=L_Header+L_AUXblock+L_epsiblock;
+        case 'STREAMING'
+            L_epsiblock=160*3*nb_channels+5+2;
+            L_goodMadreblock=L_Header+L_AUXblock+L_epsiblock;
+    end
+
     if length(uL_Madreblock)>1
         warning('Blocks are not all the same size, issue in streaming')
         badL=uL_Madreblock(uL_Madreblock~=L_goodMadreblock);
@@ -46,17 +60,19 @@ function [EPSI,AUX,posi]=EPSI_Readbin(file,posi,Meta_Data)
             warning(' % i is a bad block',find(L_Madreblock==badL(i)))
         end
     end
-    N_goodMadreblock=sum(L_Madreblock==L_goodMadreblock)+1;
-
-    fprintf('%i blocks to process \n',N_goodMadreblock);
+    N_goodMadreblock=sum(L_Madreblock==L_goodMadreblock);
+    
     ind1_Madreblock=ind_Madreblock(L_Madreblock==L_goodMadreblock);
     % split the data in Madre blocks
     Madreblocks=arrayfun(@(x) Allblocks(x:x+L_goodMadreblock-3),ind1_Madreblock,'un',0);
     posi=ind1_Madreblock(end)+L_goodMadreblock-1;
-    if length(Allblocks)-posi==L_goodMadreblock-2
-        Madreblocks{N_goodMadreblock}=Allblocks(ind1_Madreblock(end)+L_goodMadreblock:ind1_Madreblock(end)+2*L_goodMadreblock-3);
-        posi=ind1_Madreblock(end)+2*L_goodMadreblock-1;
-    end
+   % if length(Allblocks)-posi==L_goodMadreblock-2
+   if length(Allblocks)-posi==L_goodMadreblock
+       N_goodMadreblock=N_goodMadreblock+1;
+       Madreblocks{N_goodMadreblock}=Allblocks(ind1_Madreblock(end)+L_goodMadreblock:ind1_Madreblock(end)+2*L_goodMadreblock-3);
+       posi=ind1_Madreblock(end)+2*L_goodMadreblock-1;
+   end
+   fprintf('%i blocks to process \n',N_goodMadreblock);
     % Handle the last block. The last block length is L_goodMadreblock - 2 bytes
     % because \r\n come at the begining of the next header. This choice is made
     % in the firmware. Do not be upset, it is no biggy ...

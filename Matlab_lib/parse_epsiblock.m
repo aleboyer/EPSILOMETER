@@ -2,6 +2,17 @@ function [index,timestamp,sderror,chsum1,alti,chsumepsi,...
           AUX1index,T,C,P,S,sig,...
           EPSIchannels]=parse_epsiblock(Madreblock,Meta_Data)
 
+% . parse 1 epsi block. 
+% . read the Header: the epsi sample index, a time stamp, the SD error
+% . flag, the AUX1 check sum, the AUX2 check sum or the altimeter and the 
+% . EPSI block check sum.
+% . if needed read the AUX1 block convert SBE data into celsius, psu, and db 
+% . read the epsi block, convert t1,t2,s1,s2 counts into volts and a1,a2,a3
+% . into m.s^{-2} (g units) 
+      
+% . Created by Arnaud Le Boyer on 7/28/18.
+      
+      
 % Madreblock=Madreblocks{1};
 % nb_channels = 8;
 nb_channels = str2double(Meta_Data.PROCESS.nb_channels);
@@ -17,7 +28,7 @@ ind_EPSI   = strfind(Madreblock,'$EPSI');
 
 % exemple Header
 % $MADRE   71e80,58da55d9,       9,       0,  229a15,      15
-Headerraw = Madreblock(7:ind_AUX1-3); 
+Headerraw = Madreblock(8:ind_AUX1-3); 
 if ~isempty(Meta_Data.SBEcal)
     AUX1raw   = Madreblock(ind_AUX1+5:ind_EPSI-2);
 end
