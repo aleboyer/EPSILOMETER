@@ -30,10 +30,10 @@ disp('Start concatanate')
 
 listepsi=dir([epsiDIR 'epsi_raw*.mat']);
 listctd=dir([ctdDIR 'ctd_raw*.mat']);
-[~,Iepsi]=sort(datenum(vertcat(listepsi.date)));
-[~,Ictd]=sort(datenum(vertcat(listctd.date)));
-listepsi=listepsi(Iepsi);
-listctd=listctd(Ictd);
+%[~,Iepsi]=sort(datenum(vertcat(listepsi.date)));
+%[~,Ictd]=sort(datenum(vertcat(listctd.date)));
+%listepsi=listepsi(Iepsi);
+%listctd=listctd(Ictd);
 
 for f=lastfile:length(listepsi)
     load([epsiDIR  listepsi(f).name],'EPSI');

@@ -22,6 +22,8 @@ function Epsilon_class=calc_binned_epsi(MS,epsi_bin)
     %  the whole process
     if iscell(MS)
         S_MS=[MS{:}];
+    else
+        S_MS=MS;
     end
         
     %% create common k(cpm) axis

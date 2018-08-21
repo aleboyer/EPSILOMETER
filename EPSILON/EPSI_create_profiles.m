@@ -1,5 +1,7 @@
 function EPSI_create_profiles(Meta_Data)
 
+%  split times series into profiles
+%
 %  input: Meta_Data
 %  created with Meta_Data=create_Meta_Data(file). Meta_Data contain the
 %  path to calibration file and EPSI configuration needed to process the

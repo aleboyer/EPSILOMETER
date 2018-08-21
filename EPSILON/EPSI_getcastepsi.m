@@ -15,11 +15,13 @@
 %
 %  Created by Arnaud Le Boyer on 7/28/18.
 
-data=rmfield(data,'index');
-data=rmfield(data,'sderror');
-data=rmfield(data,'chsum1');
-data=rmfield(data,'alti');
-data=rmfield(data,'chsumepsi');
+if isfield(data,'index')
+    data=rmfield(data,'index');
+    data=rmfield(data,'sderror');
+    data=rmfield(data,'chsum1');
+    data=rmfield(data,'alti');
+    data=rmfield(data,'chsumepsi');
+end
 
  
 epsidown=cellfun( @(x) find(data.epsitime>=CTDtime(x(1)) & data.epsitime<=CTDtime(x(end))),down,'un',0);

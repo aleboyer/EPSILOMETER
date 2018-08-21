@@ -204,9 +204,9 @@ inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
 % find out wich acceleration channel will correct the best the shear
 % channels
 if ~isempty(inds1)
-    maxa1=max(mean(Co12(inds1,inda1-1,:,:),3));
-    maxa2=max(mean(Co12(inds1,inda2-1,:,:),3));
-    maxa3=max(mean(Co12(inds1,inda3-1,:,:),3));
+    maxa1=max(mean(Co12(inds1,inda1-1,:,2:end),3));
+    maxa2=max(mean(Co12(inds1,inda2-1,:,2:end),3));
+    maxa3=max(mean(Co12(inds1,inda3-1,:,2:end),3));
     if isempty(maxa1);maxa1=0;inda1=0;end
     if isempty(maxa2);maxa2=0;inda2=0;end
     if isempty(maxa3);maxa3=0;inda3=0;end
@@ -220,9 +220,9 @@ inda1=find(cellfun(@(x) strcmp(x,'a1'),channels));
 inda2=find(cellfun(@(x) strcmp(x,'a2'),channels));
 inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
 if ~isempty(inds2)
-    maxa1=max(mean(Co12(inds2,inda1-1,:,:),3));
-    maxa2=max(mean(Co12(inds2,inda2-1,:,:),3));
-    maxa3=max(mean(Co12(inds2,inda3-1,:,:),3));
+    maxa1=max(mean(Co12(inds2,inda1-1,:,2:end),3));
+    maxa2=max(mean(Co12(inds2,inda2-1,:,2:end),3));
+    maxa3=max(mean(Co12(inds2,inda3-1,:,2:end),3));
     if isempty(maxa1);maxa1=0;inda1=0;end
     if isempty(maxa2);maxa2=0;inda2=0;end
     if isempty(maxa3);maxa3=0;inda3=0;end

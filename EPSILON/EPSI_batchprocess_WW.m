@@ -1,4 +1,4 @@
-function EPSI_batchprocess_epsifish(Meta_Data)
+function EPSI_batchprocess_WW(Meta_Data)
 
 %  input: Meta_Data
 %  created with Meta_Data=create_Meta_Data(file). Meta_Data contain the
@@ -20,8 +20,8 @@ addpath(genpath('toolbox/'))
 if ~exist([L1path 'Turbulence_Profiles.mat'],'file')
     %% 	get data
     load([L1path 'Profiles_' Meta_Data.deployement '.mat'],'CTDProfile','EpsiProfile');
-    CTD_Profiles=CTDProfile.datadown;
-    EPSI_Profiles=EpsiProfile.datadown;
+    CTD_Profiles=CTDProfile.dataup;
+    EPSI_Profiles=EpsiProfile.dataup;
     
     %% Parameters fixed by data structure
     % length of 1 scan in second
@@ -39,23 +39,22 @@ if ~exist([L1path 'Turbulence_Profiles.mat'],'file')
     f=(df:df:FS/2)'; % frequency vector for spectra
     MS = struct([]);
     
-    flag_vehicle=1;
     % add pressure from ctd to the epsi profile. This should be ter mporary until
     % the addition of the pressure sensor on Epsi
-    for i=1:length(EPSI_Profiles)
+%    for i=1:length(EPSI_Profiles)
+    for i=1:185
         EPSI_Profiles{i}.P=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.P,EPSI_Profiles{i}.epsitime);
         EPSI_Profiles{i}.T=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.T,EPSI_Profiles{i}.epsitime);
         EPSI_Profiles{i}.S=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.S,EPSI_Profiles{i}.epsitime);
-        MS{i}=calc_turbulence_epsifish(EPSI_Profiles{i},tscan,f,Fcut_epsilon,Meta_Data);
-        Quality_check_profile(EPSI_Profiles{i},MS(i),Meta_Data,Fcut_epsilon,flag_vehicle,i)
+        MS{i}=calc_turbulence_epsiWW(EPSI_Profiles{i},tscan,f,Fcut_epsilon,Meta_Data);
     end
-    save([L1path 'Turbulence_Profiles.mat'],'MS')
+    save([L1path 'Turbulence_Profiles.mat'],'MS','-v7.3')
 else
     load([L1path 'Turbulence_Profiles.mat'],'MS')
 end
 
 % compite binned epsilon for all profiles
-Epsilon_class=calc_binned_epsi(MS);
+Epsilon_class=calc_binned_epsi(MS(10:60));
 Chi_class=calc_binned_chi(MS);
 
 % plot binned epsilon for all profiles

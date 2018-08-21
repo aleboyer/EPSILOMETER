@@ -23,6 +23,8 @@ Lepsiblock  = Nepsisample*Lepsisample;
 
 if ~isempty(Meta_Data.SBEcal)
     ind_AUX1   = strfind(Madreblock,'$AUX1');
+else
+    ind_AUX1   = 62;
 end
 ind_EPSI   = strfind(Madreblock,'$EPSI');
 
@@ -66,7 +68,8 @@ if ~isempty(Meta_Data.SBEcal)
     T=real(T);C=real(C);
     S=sw_salt(C*10./sw_c3515,T,P);
     sig=sw_pden(S,T,P,0);
-
+else
+    AUX1index=(1:9)*nan;T=(1:9)*nan;S=(1:9)*nan;sig=(1:9)*nan;P=(1:9)*nan;C=(1:9)*nan;
 end
 
 %% parse EPSIblock
