@@ -97,6 +97,8 @@ int main() {
     else{
         printf(" baud rate is 460800\n");
     }
+    config.c_ispeed = 460800;
+    config.c_ospeed = 460800;
     printf("Whatttt2\n");
     printf("config.c_ispeed=%lx\n",config.c_ispeed);
     printf("config.c_ospeed=%lx\n",config.c_ospeed);

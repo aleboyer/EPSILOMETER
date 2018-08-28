@@ -290,26 +290,22 @@ for j=1:nbscan
         MS.Paccel_k(j,:,3)     =  interp1(k(j,:),squeeze(P11k(inda3,j,:)),k_all);        % Accel 3 spec  as function of k
     end
     % compute epsilon in eps1_mmp
-    if ~isempty(inds1)
-        [MS.epsilon(j,1),MS.kc(j,1)]=eps1_mmp(k_all,MS.Pshear_k(j,:,1),MS.kvis(j),dk(j),MS.kmax(j)); 
-        [kpan,Ppan] = panchev(MS.epsilon(j,1),MS.kvis(j));
-        MS.Ppan(j,:,1)=interp1(kpan,Ppan,k_all);
-    end
-    if ~isempty(inds2)
-        [MS.epsilon(j,2),MS.kc(j,2)]=eps1_mmp(k_all,MS.Pshear_k(j,:,2),MS.kvis(j),dk(j),MS.kmax(j));
-        [kpan,Ppan] = panchev(MS.epsilon(j,2),MS.kvis(j));
-        MS.Ppan(j,:,2)=interp1(kpan,Ppan,k_all);
-    end
-
-    %% TODO check to see if we need P1 in V^2 Hz^{-1} or if we can change it to degC Hz^{-1}
     if ~isempty(indt1)
-        MS.fc_index(j,1)=FPO7_cutoff(f1,squeeze(P11(indt1,j,:)).*squeeze(TFtemp(j,:)).');
-        MS.chi(j,1)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,1:MS.fc_index(j,1),1));
+        [MS.epsilon(j,1),MS.kc(j,1)]=eps1_mmp(k_all,MS.Pshear_k(j,:,1),MS.kvis(j),dk(j),MS.kmax(j)); 
     end
     if ~isempty(indt2)
-        MS.fc_index(j,2)=FPO7_cutoff(f1,squeeze(P11(indt2,j,:)).*squeeze(TFtemp(j,:)).');
-        MS.chi(j,2)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,1:MS.fc_index(j,2),2));
+        [MS.epsilon(j,2),MS.kc(j,2)]=eps1_mmp(k_all,MS.Pshear_k(j,:,2),MS.kvis(j),dk(j),MS.kmax(j));
     end
+    [kpan,Ppan] = panchev(MS.epsilon(j,1),MS.kvis(j));
+    MS.Ppan(j,:,1)=interp1(kpan,Ppan,k_all);
+    [kpan,Ppan] = panchev(MS.epsilon(j,2),MS.kvis(j));
+    MS.Ppan(j,:,2)=interp1(kpan,Ppan,k_all);
+
+    %% TODO check to see if we need P1 in V^2 Hz^{-1} or if we can change it to degC Hz^{-1}
+    MS.fc_index(j,1)=FPO7_cutoff(f1,squeeze(P11(indt1,j,:)).*squeeze(TFtemp(j,:)).');
+    MS.fc_index(j,2)=FPO7_cutoff(f1,squeeze(P11(indt2,j,:)).*squeeze(TFtemp(j,:)).');
+    MS.chi(j,1)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,1:MS.fc_index(j,1),1));
+    MS.chi(j,2)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,1:MS.fc_index(j,2),2));
 end
 
 
