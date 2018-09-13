@@ -170,9 +170,9 @@ for c=1:length(All_channels)
         case{'a1','a2','a3'}
             % correct transfert functions for accel spectra
             P11(ind,:,:)=squeeze(P11(ind,:,:))./...
-                (ones(nbscan,1)*h_freq.electAccel).^2;
+                (ones(nbscan,1)*h_freq.electAccel);
             P1(ind,:,:) =squeeze(P1(ind,:,:))./...
-                (ones(nbscan,1)*sqrt(h_freq.electAccel)).^2;
+                (ones(nbscan,1)*sqrt(h_freq.electAccel));
             nb_channel=nb_channel+1;
         case{'s1'}
             TF1 =@(x) (Sv(1).*x/(2*G)).^2 .* h_freq.shear .* haf_oakey(f1,x);     
@@ -258,6 +258,8 @@ MS.P1f = P1;
 MS.kmax=MS.fmax./MS.w; % Lowest estimate below pump spike in 1024-pt record
 
 
+% get FPO7 channel average noise to compute chi
+FPO7noise=load([Meta_Data.CALIpath 'FPO7_noise.mat'],'n0','n1','n2','n3');
 
 % calc epsilon by integrating to k with 90% variance of Panchev spec
 % unless spectrum is noisy at lower k.
@@ -307,7 +309,7 @@ for j=1:nbscan
         MS.chi(j,1)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,1:MS.fc_index(j,1),1));
     end
     if ~isempty(indt2)
-        MS.fc_index(j,2)=FPO7_cutoff(f1,squeeze(P11(indt2,j,:)).*squeeze(TFtemp(j,:)).');
+        MS.fc_index(j,2)=FPO7_cutoff(f1,squeeze(P11(indt2,j,:)).*squeeze(TFtemp(j,:)).',FPO7noise);
         MS.chi(j,2)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,1:MS.fc_index(j,2),2));
     end
 end

@@ -189,8 +189,10 @@ spl2 = strsplit(l,':');
 Meta_Data.(strtrim(spl{1})).(strtrim(spl1{1})).(strtrim(spl2{1}))=strtrim(spl2{2});
 
 
-
 fclose(fid);
+
+Meta_Data.CALIpath='CALIBRATION/ELECTRONICS/';
+
 Meta_Data
 save([Meta_Data.RAWpath ...
     'Meta_' Meta_Data.mission ...

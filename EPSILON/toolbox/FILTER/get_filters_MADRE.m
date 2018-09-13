@@ -24,16 +24,17 @@ end
         
         ca_filter = load('FILTER/charge_coeffilt.mat');
         epsi_ca   = interp1(ca_filter.freq,ca_filter.coef_filt ,f);
-        gain_ca      = .5; %TODO check the charge amp gain with sean
-        helectronics= epsi_ca*gain_ca;% charge amp from sean spec sheet
+        gain_ca      = 1; %TODO check the charge amp gain with sean
+        H.electshear= epsi_ca*gain_ca;% charge amp from sean spec sheet
         H.gainshear=1;
         H.adcshear=H.gainshear.*Hs1filter;
-        H.electshear=helectronics.^2;
-        H.shear=H.electshear .* H.adcshear.^2;
+        H.shear=H.electshear.^2 .* H.adcshear.^2;
         
         %% FPO7 channels
+        Tdiff_filter = load('FILTER/Tdiff_filt.mat');
+        Tdiff_H = interp1(Tdiff_filter.freq,Tdiff_filter.coef_filt ,f);
         H.gainFPO7=1;
-        H.electFPO7 = H.gainFPO7.*Ht1filter;
+        H.electFPO7 = (H.gainFPO7.*Ht1filter.*Tdiff_H).^2;
         
         %speed% convert to m/s
         %tau=0.005 * speed^(-0.32); % thermistor time constant

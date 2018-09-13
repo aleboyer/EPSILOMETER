@@ -1,4 +1,4 @@
-function fc_index=FPO7_cutoff(f,spec)
+function fc_index=FPO7_cutoff(f,spec,FPO7noise)
 % thcut1_t1_1_mmp
 %   Usage: fc_index=thcut1_t1_1_mmp(f,spec)
 %      f is a vector of frequencies
@@ -19,7 +19,8 @@ function fc_index=FPO7_cutoff(f,spec)
 
 f=f(:); spec=spec(:);
 % fit coefficients for log10(noise spectrum) vs log10(f)
-n0=-7.8; n1=-0.0634538; n2=0.3421899; n3=-0.3141283;
+%n0=-7.8; n1=-0.0634538; n2=0.3421899; n3=-0.3141283;
+n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
 
 logf=log10(f);
 noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;

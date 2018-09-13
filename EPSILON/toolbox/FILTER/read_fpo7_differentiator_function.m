@@ -1,32 +1,41 @@
-fid=fopen('mpafp07filter6a.txt');
-C=textscan(fid,'%s %s %s','Headerlines',1);
-freq=char(C{1});
-freq=str2num(freq);
+fid=fopen('EpsidTdt_H/Epsi_FPO7dTdt_ri.txt');
+C=textscan(fid,'%f %f,%f %f,%f','Headerlines',1);
 
-valueIn=C{2}(:);
-valueIn1=zeros(1,length(valueIn));
-for n=1:length(valueIn)
-    if valueIn{n}(2)=='-'
-        
-        valueIn1(n)=str2num(valueIn{n}(2:22));
-    else
-        valueIn1(n)=str2num(valueIn{n}(2:21));
-    end
-end
+figure
+hold on
+semilogx(C{1},C{2})
+semilogx(C{1},C{4})
+set(gca,'Xscale','log')
 
-valueOut=C{3}(:);
-valueOut1=zeros(1,length(valueOut));
-for n=1:length(valueOut)
-    if valueOut{n}(2)=='-'
-        
-        valueOut1(n)=str2num(valueOut{n}(2:22));
-    else
-        valueOut1(n)=str2num(valueOut{n}(2:21));
-    end
-end
+coef_filt=C{4};
+freq=C{1};
+
+save('Tdiff_filt.mat','coef_filt','freq');
 
 
-coef_filt=10.^(valueOut1/20); % value of the spice model given by sean are in dB
-coef_filt=coef_filt./max(coef_filt);
-save('toolbox/FILTER/FPO7_coeffilt.mat','coef_filt','freq');
+
+
+
+% fid=fopen('EpsidTdt_H/Epsi_FPO7dTdt.txt');
+% C=textscan(fid,'%s %s','Headerlines',1);
+% cfreq=char(C{1});
+% freq=zeros(length(cfreq),1);
+% for i=1:length(cfreq)
+%     freq(i)=str2double(cfreq(i,:));
+% end
+% 
+% value=C{2}(:);
+% value1=zeros(1,length(value));
+% for n=1:length(value)
+%     if value{n}(2)=='-'
+%         
+%         value1(n)=str2num(value{n}(2:23));
+%     else
+%         value1(n)=str2num(value{n}(2:22));
+%     end
+% end
+% 
+% coef_filt=10.^(value1/20); % value of the spice model given by sean are in dB
+
+% save('Tdiff_filt.mat','coef_filt','freq');
 
