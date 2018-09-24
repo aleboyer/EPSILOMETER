@@ -114,7 +114,7 @@ test_noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
 
 figure
 hold on
-loglog(f1,squeeze(nanmean(P11(1,:,:),2)),'m--')
+l0=loglog(f1,squeeze(nanmean(P11(1,:,:),2)),'m--');
 loglog(f1,squeeze(nanmean(P11(2,:,:),2)),'m--')
 loglog(f1,squeeze(nanmean(P11(3,:,:),2)),'b--')
 loglog(f1,squeeze(nanmean(P11(4,:,:),2)),'b--')
@@ -133,12 +133,13 @@ l7=loglog(f1,a3m,'rs-');
 set(gca,'Xscale','log','Yscale','log')
 
 n20=loglog(f1,f1*0+def_noise(20),'--','Color',[.5 .5 .5],'linewidth',2);
+n24=loglog(f1,f1*0+def_noise(24),'--','Color',[.1 .1 .1],'linewidth',2);
 n16=loglog(f1,f1*0+def_noise(16),'.-','Color',[.3 .3 .3],'linewidth',2);
 An=loglog(f1,Accelnoise,'--','Color',[.1 .1 .1],'linewidth',2);
 Emp=loglog(f1,10.^test_noise,'m-','linewidth',2);
 
 grid on
-legend([l1 l2 l3 l4 l5 l6 l7 n20 n16 An Emp],{'t1','t2','s1','s2','a1','a2','a3','20 bit','16 bit','Accel noise','Poly-noise'})
+legend([l0,l1 l2 l3 l4 l5 l6 l7 n24 n20 n16 An Emp],{'no TF','t1','t2','s1','s2','a1','a2','a3','24 bit','20 bit','16 bit','Accel noise','Poly-noise'},'location','Southwest')
 set(gca,'fontsize',15)
 ylabel('V^2 / Hz','fontsize',15)
 xlabel('Hz','fontsize',15)

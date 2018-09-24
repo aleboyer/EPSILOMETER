@@ -32,14 +32,17 @@ end
         
         %% FPO7 channels
         Tdiff_filter = load('FILTER/Tdiff_filt.mat');
-        Tdiff_H = interp1(Tdiff_filter.freq,Tdiff_filter.coef_filt ,f);
+        % ALB screw up
+        % from Mike's email. Tdiff filter is (i think) in Volt/Hz and this is the real part of the what mikes sent.
+        % Should we use real(Vin/Vout) instead of real(Vout)
+        Tdiff_H = interp1(Tdiff_filter.freq,Tdiff_filter.coef_filt ,f); 
         H.gainFPO7=1;
         H.electFPO7 = (H.gainFPO7.*Ht1filter.*Tdiff_H).^2;
         
         %speed% convert to m/s
         %tau=0.005 * speed^(-0.32); % thermistor time constant
-        H.magsq=@(speed)(1 ./ (1+((2*pi*(0.005 * speed^(-0.32))).*f).^2).^2); % magnitude-squared
-        H.phase=@(speed)(-2*atan( 2*pi*f*(0.005 * speed^(-0.32))));
+        H.magsq=@(speed)(1 ./ (1+((2*pi*(0.005 * speed^(-0.32))).*f).^2).^2); % magnitude-squared no units
+        H.phase=@(speed)(-2*atan( 2*pi*f*(0.005 * speed^(-0.32))));   % no units
         H.FPO7=@(speed)(H.electFPO7.^2 .* H.magsq(speed));
 
         %% Accel channels

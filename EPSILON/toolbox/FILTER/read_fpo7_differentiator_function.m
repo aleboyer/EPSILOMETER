@@ -1,15 +1,18 @@
 fid=fopen('EpsidTdt_H/Epsi_FPO7dTdt_ri.txt');
 C=textscan(fid,'%f %f,%f %f,%f','Headerlines',1);
 
-figure
-hold on
-semilogx(C{1},C{2})
-semilogx(C{1},C{4})
-set(gca,'Xscale','log')
+Vin=complex(C{2},C{3});
+Vout=complex(C{4},C{5});
 
-coef_filt=C{4};
+coef_filt=abs(Vout./Vin);
 freq=C{1};
 
+figure
+hold on
+semilogx(C{1},coef_filt)
+set(gca,'Xscale','log')
+pause
+close all
 save('Tdiff_filt.mat','coef_filt','freq');
 
 
