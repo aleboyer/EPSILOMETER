@@ -60,8 +60,13 @@ if ~isempty(Meta_Data.SBEcal)
                 AUX1index(j)=parse_index(parse_aux1{j});
                 [T(j),C(j),P(j)]=parse_sample(parse_aux1{j});
             catch
-                AUX1index(j)=parse_index(parse_aux1{j-1});
-                [T(j),C(j),P(j)]=parse_sample(parse_aux1{j-1});
+                try
+                    AUX1index(j)=parse_index(parse_aux1{j-1});
+                    [T(j),C(j),P(j)]=parse_sample(parse_aux1{j-1});
+                catch
+                    AUX1index(j)=0;
+                    T(j)=0;C(j)=0;P(j)=0;
+                end
             end
         end
     end
@@ -75,12 +80,13 @@ end
 %% parse EPSIblock
 % parse all 160 epsi sample from epsi raw
 EPSIblock=arrayfun(@(x) EPSIraw(x:x+Lepsisample-1), ...
-                          1:Lepsisample:Lepsiblock,'un',0);
-% convert all ADC samples (3 bytes) to a uint32 number of counts 
+    1:Lepsisample:Lepsiblock,'un',0);
+% convert all ADC samples (3 bytes) to a uint32 number of counts
 channel_count=@(x) (cell2mat(arrayfun(@(y)  ...
-           (typecast([fliplr(x(y:y+adcword-1)) 0],'uint32')),...
-           1:adcword:Lepsisample,'un',0)));
-% 
+    (typecast([fliplr(x(y:y+adcword-1)) 0],'uint32')),...
+    1:adcword:Lepsisample,'un',0)));
+%
 EPSIchannels=cell2mat(cellfun(@(x) channel_count(x),EPSIblock,'un',0).');
 EPSIchannels=EPSI_count2volt(EPSIchannels,Meta_Data);
 EPSIchannels=EPSI_volt2g(EPSIchannels,Meta_Data);
+

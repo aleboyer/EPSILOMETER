@@ -11,6 +11,8 @@ function Meta_Data=EPSI_MakeMatFromRaw(Meta_Data)
 %  Created by Arnaud Le Boyer on 7/28/18.
 %  Copyright © 2018 Arnaud Le Boyer. All rights reserved.
 
+epsiDIR=Meta_Data.Epsipath;
+ctdDIR=Meta_Data.CTDpath;
 
 if strcmp(Meta_Data.aux1.SN,'0000')==0
     Meta_Data.SBEcal=get_CalSBE(Meta_Data.aux1.cal_file);
@@ -20,18 +22,18 @@ end
 switch Meta_Data.PROCESS.recording_mode
     case 'SD'
         rawDIR=Meta_Data.SDRAWpath;
+        listraw=dir([Meta_Data.SDRAWpath '*bin']);
+        listmat=dir([epsiDIR 'SDepsi_raw' listraw(1).name(end-6:end-5) 'mat']);
     case 'STREAMING'
         rawDIR=Meta_Data.RAWpath;
+        listraw=dir([Meta_Data.RAWpath '*bin']);
+        listmat=dir([epsiDIR 'STRepsi_raw' listraw(1).name(end-6:end-5) 'mat']);
 end
-epsiDIR=Meta_Data.Epsipath;
-ctdDIR=Meta_Data.CTDpath;
-listraw=dir([rawDIR '*bin']);
-listmat=dir([epsiDIR '*.mat']);
 [dateraw,Iraw]=sort(datenum(vertcat(listraw.date)));
 [datemat,~]=sort(datenum(vertcat(listmat.date)));
 
 listraw=listraw(Iraw);
-
+%listraw=listraw(1:5);
 if isempty(dateraw)
     fprintf('no .bin file data in %s \n',rawDIR)
 end
@@ -42,9 +44,17 @@ if isempty(datemat)
         posi_start=0;
         file=[rawDIR listraw(f).name];
         [EPSI,AUX,posi]=EPSI_Readbin(file,posi_start,Meta_Data);
-        save([epsiDIR 'epsi_raw' listraw(f).name(end-6:end-3) 'mat'],'EPSI');
-        save([ctdDIR  'ctd_raw' listraw(f).name(end-6:end-3) 'mat'],'AUX');
-        save([epsiDIR 'lastreadfile.mat'],'file','posi','f');
+        switch Meta_Data.PROCESS.recording_mode
+            case 'SD'
+                save([epsiDIR 'SDepsi_raw' listraw(f).name(end-8:end-3) 'mat'],'EPSI');
+                save([ctdDIR  'SDctd_raw' listraw(f).name(end-8:end-3) 'mat'],'AUX');
+                save([epsiDIR 'SDlastreadfile.mat'],'file','posi','f');
+            case 'STREAMING'
+                save([epsiDIR 'STRepsi_raw' listraw(f).name(end-8:end-3) 'mat'],'EPSI');
+                save([ctdDIR  'STRctd_raw' listraw(f).name(end-8:end-3) 'mat'],'AUX');
+                save([epsiDIR 'STRlastreadfile.mat'],'file','posi','f');
+        end
+               
     end
 else
     load([epsiDIR 'lastreadfile.mat'],'file','f');
@@ -53,9 +63,16 @@ else
         posi_start=0;
         file=[rawDIR listraw(f).name];
         [EPSI,AUX,posi]=EPSI_Readbin(file,posi_start,Meta_Data);
-        save([epsiDIR 'epsi_raw' listraw(f).name(end-6:end-3) 'mat'],'EPSI');
-        save([ctdDIR  'ctd_raw' listraw(f).name(end-6:end-3) 'mat'],'AUX');
-        save([epsiDIR 'lastreadfile.mat'],'file','posi','f');
+        switch Meta_Data.PROCESS.recording_mode
+            case 'SD'
+                save([epsiDIR 'SDepsi_raw' listraw(f).name(end-6:end-3) 'mat'],'EPSI');
+                save([ctdDIR  'SDctd_raw' listraw(f).name(end-6:end-3) 'mat'],'AUX');
+                save([epsiDIR 'SDlastreadfile.mat'],'file','posi','f');
+            case 'STREAMING'
+                save([epsiDIR 'STRepsi_raw' listraw(f).name(end-6:end-3) 'mat'],'EPSI');
+                save([ctdDIR  'STRctd_raw' listraw(f).name(end-6:end-3) 'mat'],'AUX');
+                save([epsiDIR 'STRlastreadfile.mat'],'file','posi','f');
+        end
     end
 
     

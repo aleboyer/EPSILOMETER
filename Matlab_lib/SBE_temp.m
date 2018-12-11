@@ -11,4 +11,3 @@ function SBEsample=SBE_temp(SBEcal,SBEsample)
     SBEsample.temperature = 1/SBEsample.temperature - 273.15;
 end
 
-

@@ -1,4 +1,4 @@
-function [k,P1,P11,Co12]=get_profile_spectrum(data,k)
+function [k,P1,P11,Co12]=mod_epsi_get_profile_spectrum(data,k)
 %
 %  input: data
 % . data : epsi data
@@ -7,7 +7,7 @@ function [k,P1,P11,Co12]=get_profile_spectrum(data,k)
 
 
     switch length(size(data))
-        case 3
+        case 3 % reshape into 2D matrice for fft and then reshape
             [nb_sensor,nb_scan,Lscan]=size(data);
             data=reshape(data,[nb_sensor* nb_scan Lscan]);
             Lax1=nb_sensor* nb_scan;

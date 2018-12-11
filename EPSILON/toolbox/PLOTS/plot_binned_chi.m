@@ -14,7 +14,7 @@ F1 = figure(1);clf
 set(F1,'position',[100 50 2000 1100])
 axes('position',[.05 .1 .82 .78])
 
-[Nchi,Neps,L]=size(Chi_class.Pbatch22);
+[Nchi,Neps,L]=size(Chi_class.Pbatch11);
 
 if nargin<4
     indplot=[1 Nchi*Neps];
@@ -25,22 +25,22 @@ H=get_filters_MADRE(Meta_Data,NOISE.k_granite);
 noise=NOISE.spec_granite./H.FPO7(.6);
 noise=interp1(NOISE.k_granite/.6,noise,Chi_class.k);
 
-dataP=reshape(Chi_class.mPphiT22,[Nchi*Neps,L]);
+dataP=reshape(Chi_class.mPphiT11,[Nchi*Neps,L]);
 inddata=find(nansum(dataP,2)>0);
 indplot1=max([indplot(1) 1]):min([indplot(end) length(inddata)]);
 inddata=inddata(indplot1);
 [chi,epsilon]=meshgrid(Chi_class.chibin,Chi_class.epsibin);
 chi=chi(:);epsilon=epsilon(:);
-databatch=reshape(Chi_class.Pbatch22,[Nchi*Neps,L]);
+databatch=reshape(Chi_class.Pbatch11,[Nchi*Neps,L]);
 databatch(databatch==0)=nan;
 cmap = parula(length(inddata)+1);
 
 bb = loglog(Chi_class.kbatch,databatch(inddata,:),'color',[1 1 1]*.7,'linewidth',1);
 hold on
-b1 = loglog(Chi_class.kbatch,squeeze(Chi_class.Pbatch22(1,1,:)),'o-','color',[1 1 1]*.25,'linewidth',2);
-b2 = loglog(Chi_class.kbatch,squeeze(Chi_class.Pbatch22(1,end,:)),'+-','color',[1 1 1]*.4,'linewidth',2);
-b3 = loglog(Chi_class.kbatch,squeeze(Chi_class.Pbatch22(end,1,:)),'d-','color',[1 1 1]*.5,'linewidth',2);
-b4 = loglog(Chi_class.kbatch,squeeze(Chi_class.Pbatch22(end,end,:)),'s-','color',[1 1 1]*.1,'linewidth',2);
+b1 = loglog(Chi_class.kbatch,squeeze(Chi_class.Pbatch11(1,1,:)),'o-','color',[1 1 1]*.25,'linewidth',2);
+b2 = loglog(Chi_class.kbatch,squeeze(Chi_class.Pbatch11(1,end,:)),'+-','color',[1 1 1]*.4,'linewidth',2);
+b3 = loglog(Chi_class.kbatch,squeeze(Chi_class.Pbatch11(end,1,:)),'d-','color',[1 1 1]*.5,'linewidth',2);
+b4 = loglog(Chi_class.kbatch,squeeze(Chi_class.Pbatch11(end,end,:)),'s-','color',[1 1 1]*.1,'linewidth',2);
 for i=1:length(inddata)
     j=inddata(i);
     ll(i)=loglog(Chi_class.k,squeeze(dataP(j,:)),'Color',cmap(i,:),'linewidth',2);

@@ -11,7 +11,7 @@ function Epsilon_class=calc_binned_epsi(MS,epsi_bin)
 
     %% create epsi_bin or include min and max epsi value to epsi_bin
     if nargin<2
-        epsi_bin=10.^(-10:.5:-4.5);
+        epsi_bin=10.^(-9:.5:-4.5);
     end
     
     % trick for conditional anonymous function
@@ -57,8 +57,10 @@ function Epsilon_class=calc_binned_epsi(MS,epsi_bin)
     Epsilon_class.nbin2=cellfun(@length,index2);
     Epsilon_class.Pshear1=cellfun(@(x) squeeze(Psheark(1,x,:)),index1,'un',0);
     Epsilon_class.Pshear2=cellfun(@(x) squeeze(Psheark(2,x,:)),index2,'un',0);
-    Epsilon_class.mPshear1=cell2mat(cellfun(@(x) nanmean(x,1),Epsilon_class.Pshear1,'un',0).');
-    Epsilon_class.mPshear2=cell2mat(cellfun(@(x) nanmean(x,1),Epsilon_class.Pshear2,'un',0).');
+%    Epsilon_class.mPshear1=cell2mat(cellfun(@(x) nanmean(x,1),Epsilon_class.Pshear1,'un',0).');
+%    Epsilon_class.mPshear2=cell2mat(cellfun(@(x) nanmean(x,1),Epsilon_class.Pshear2,'un',0).');
+    Epsilon_class.mPshear1=cell2mat(cellfun(@(x) median(x,1),Epsilon_class.Pshear1,'un',0).');
+    Epsilon_class.mPshear2=cell2mat(cellfun(@(x) median(x,1),Epsilon_class.Pshear2,'un',0).');
     Epsilon_class.kvis=cellfun(@(x) nanmean(kvis(x)),index1,'un',0);
     Epsilon_class.kvis=cellfun(@(x) iif(isnan(x),nanmean([Epsilon_class.kvis{:}]),~isnan(x),x), ...
                    Epsilon_class.kvis,'un',0);

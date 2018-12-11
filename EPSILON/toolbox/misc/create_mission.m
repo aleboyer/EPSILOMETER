@@ -1,12 +1,9 @@
 %% Create folder and meta data structure of an Epsilometer mission
 %  The schematic of this structure can be found on confluence
 
-addpath toolbox/
-addpath toolbox/FILTER/
-
 
 %% Define main names 
-Meta_Data.mission='DEV';
+Meta_Data.mission='';
 Meta_Data.vehicle_name='SD';
 Meta_Data.deployement='d1';
 Meta_Data.path_mission='/Volumes/DataDrive/';

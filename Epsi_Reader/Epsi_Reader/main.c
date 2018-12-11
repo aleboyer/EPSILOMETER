@@ -21,7 +21,7 @@ struct termios  config;
 int main() {
     int fReadData;
     FILE *fileData;
-    int baudrate=460800;
+    uint32_t baudrate=115200;
     
     //char device[100];
     //const char *device = "/dev/tty.usbserial-FTYVXOH6";
@@ -37,7 +37,7 @@ int main() {
 //    fReadData  = open("/dev/tty.usbserial-FTYVXOH6", O_RDWR | O_NOCTTY | O_NDELAY);tty.usbserial-FTYVXOLZ
     int countfile=0;
     char filename[100];
-    sprintf (filename, "/Users/aleboyer/ARNAUD/SCRIPPS/DEV/bench132/epsiauto/raw/epsi_raw%04d.bin", countfile);
+    sprintf (filename, "/Users/aleboyer/ARNAUD/SCRIPPS/DEV/bench132/SD_FIX/raw/epsi_raw%04U.bin", countfile);
     fileData=fopen(filename,"w");
     
     if(fReadData == -1) {
@@ -80,25 +80,25 @@ int main() {
     cfsetispeed (&config, baudrate);
 
     printf("Whatttt1\n");
-    printf("testspeed %i\n",460800);
+    printf("testspeed %i\n",baudrate);
     printf("config.c_ispeed=%lx\n",config.c_ispeed);
     printf("config.c_ospeed=%lx\n",config.c_ospeed);
     
-    if(config.c_ispeed != 460800 || config.c_ispeed != 460800) {
-        printf(" Serial Port baud rate is not 460800\n");
-        config.c_ispeed = 460800;
-        config.c_ospeed = 460800;
+    if(config.c_ispeed != baudrate || config.c_ispeed != baudrate) {
+        printf(" Serial Port baud rate is not %U\n",baudrate);
+        config.c_ispeed = baudrate;
+        config.c_ospeed = baudrate;
         printf("config.c_ispeed=%lx\n",config.c_ispeed);
         printf("config.c_ospeed=%lx\n",config.c_ospeed);
-        printf(" now baud rate is 460800\n");
+        printf(" now baud rate is %U\n",baudrate);
         
         
     }
     else{
-        printf(" baud rate is 460800\n");
+        printf(" baud rate is %U\n",baudrate);
     }
-    config.c_ispeed = 460800;
-    config.c_ospeed = 460800;
+    config.c_ispeed = baudrate;
+    config.c_ospeed = baudrate;
     printf("Whatttt2\n");
     printf("config.c_ispeed=%lx\n",config.c_ispeed);
     printf("config.c_ospeed=%lx\n",config.c_ospeed);
@@ -164,7 +164,7 @@ int main() {
                     fclose(fileData);
                     count1=0;
                     countfile++;
-                    sprintf (filename, "/Users/aleboyer/ARNAUD/SCRIPPS/DEV/bench132/epsiauto/raw/epsi_raw%0d.bin", countfile);
+                    sprintf (filename, "/Users/aleboyer/ARNAUD/SCRIPPS/DEV/bench132/epsiauto/raw/epsi_raw%04U.bin", countfile);
                     fileData=fopen(filename,"w");
                 }
                 break;

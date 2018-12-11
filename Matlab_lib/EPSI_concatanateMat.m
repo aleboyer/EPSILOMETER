@@ -49,6 +49,13 @@ for f=lastfile:length(listepsi)
     end
 end
 
+epsitime(epsitime<epsitime(1))=nan;
+for n=1:nbchannels
+    eval(sprintf('%s(isnan(epsitime))=nan;',name_channels{n}));
+    eval(sprintf('intoutlier=isoutlier(%s);',name_channels{n}));
+    eval(sprintf('%s(intoutlier)=nan;',name_channels{n}));
+end
+
 lastfile=f;
 
 T=T(~isnan(ctdtime));

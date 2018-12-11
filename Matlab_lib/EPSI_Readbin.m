@@ -83,7 +83,7 @@ function [EPSI,AUX,posi]=EPSI_Readbin(file,posi,Meta_Data)
     EPSI.chsum1=zeros(1,N_goodMadreblock);
     EPSI.alti=zeros(1,N_goodMadreblock);
     EPSI.chsumepsi=zeros(1,N_goodMadreblock);
-    AUX1index=zeros(1,9*N_goodMadreblock);
+    AUX.index=zeros(1,9*N_goodMadreblock);
     AUX.T=zeros(1,9*N_goodMadreblock);
     AUX.C=zeros(1,9*N_goodMadreblock);
     AUX.P=zeros(1,9*N_goodMadreblock);
@@ -93,7 +93,6 @@ function [EPSI,AUX,posi]=EPSI_Readbin(file,posi,Meta_Data)
     EPSI.epsitime    =zeros(1,160*N_goodMadreblock);
     index1    =zeros(1,160*N_goodMadreblock);
 
-    Sampling_freq=str2double(Meta_Data.Firmware.sampling_frequency(1:3));
     tic
     for i=1:N_goodMadreblock
         if mod(i,100)==0
@@ -102,13 +101,11 @@ function [EPSI,AUX,posi]=EPSI_Readbin(file,posi,Meta_Data)
             tic
         end
         [EPSI.index(i),EPSI.timestamp(i),EPSI.sderror(i),EPSI.chsum1(i),EPSI.alti(i),EPSI.chsumepsi(i),...
-            AUX1index(1+(i-1)*9:i*9),AUX.T(1+(i-1)*9:i*9),AUX.C(1+(i-1)*9:i*9),AUX.P(1+(i-1)*9:i*9),...
+            AUX.index(1+(i-1)*9:i*9),AUX.T(1+(i-1)*9:i*9),AUX.C(1+(i-1)*9:i*9),AUX.P(1+(i-1)*9:i*9),...
             AUX.S(1+(i-1)*9:i*9),AUX.sig(1+(i-1)*9:i*9),...
             EPSI.EPSIchannels(1+(i-1)*160:i*160,:)]=parse_epsiblock(Madreblocks{i}(index_startblock:end),Meta_Data);
         index1(1+(i-1)*160:i*160)=EPSI.index(i)+(1:160)-1; 
     end
-    AUX.ctdtime=Start_time+AUX1index/Sampling_freq/86400;
-    EPSI.epsitime=double(Start_time+index1/Sampling_freq/86400); 
 end
 
     

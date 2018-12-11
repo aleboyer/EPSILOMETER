@@ -27,9 +27,10 @@ function Chi_class=calc_binned_chi(MS,epsi_bin)
     end
         
     %% create common k(cpm) axis
+    ktot=sort(unique([S_MS.k]));
     maxk = max([S_MS.k]);
     mink = min([S_MS.k]);
-    dk   = min([S_MS.k]);
+    dk   = ktot(2);
     k    = mink:dk:maxk;
     
     % project Epsilon fields onto the common k and omega axis 

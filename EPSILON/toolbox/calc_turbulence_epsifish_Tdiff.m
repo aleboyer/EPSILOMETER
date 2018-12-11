@@ -1,4 +1,4 @@
-function [MS]=calc_turbulence_epsifish(Profile,tscan,f,fmax,Meta_Data)
+function [MS]=calc_turbulence_epsifish_Tdiff(Profile,tscan,f,fmax,Meta_Data)
 
 %  MS structure for Micro Structure. Inside MS you ll find
 %  temperature spectra in degC Hz^-1
@@ -71,31 +71,12 @@ nbscan=2*nbscan-1;
 Profile = compute_fallrate_downcast(Profile);
 Profile.w=Profile.w/100;
 
-% on line calibration of the FPO7s
-% ALB screw up
-if isfield(Profile,'t1')
-    ind_nonan1=find(~isnan(Profile.t1));
-    CALFPO7_1=polyfit(Profile.t1(ind_nonan1),Profile.T(ind_nonan1),3);
-else
-    CALFPO7_1=[];
-end
-    
-% ALB screw up
-if isfield(Profile,'t2')
-    ind_nonan2=find(~isnan(Profile.t2));
-    CALFPO7_2=polyfit(Profile.t2(ind_nonan2),Profile.T(ind_nonan2),3);
-else
-    CALFPO7_2=[];
-end
-    
-    
-
 %TODO probably check nan at previous step
 All_channels=fields(Profile);
 for c=1:length(All_channels)
     wh_channels=All_channels{c};
-    Profile.(wh_channels)=fillmissing(Profile.(wh_channels),'linear');
-    Profile.(wh_channels)=filloutliers(Profile.(wh_channels),'linear');
+    Profile.(wh_channels)=fillmissing(double(Profile.(wh_channels)),'linear');
+    Profile.(wh_channels)=filloutliers(double(Profile.(wh_channels)),'linear');
 end
 
 %% define the index in the profile for each scan
@@ -122,9 +103,9 @@ for c=1:length(All_channels)
     ind=find(cellfun(@(x) strcmp(x,wh_channels),channels));
     switch wh_channels
         case {'t1','t2','s1','s2'}
-            data(ind,:,:) = cell2mat(cellfun(@(x) Profile.(wh_channels)(x),MS.indscan,'un',0).');
+            data(ind,:,:) = cell2mat(cellfun(@(x) Profile.(wh_channels)(x),MS.indscan,'un',0)).';
         case {'a1','a2','a3'}
-            data(ind,:,:) = cell2mat(cellfun(@(x,y) Profile.(wh_channels)(x)./y,MS.indscan,num2cell(MS.w),'un',0).');
+            data(ind,:,:) = cell2mat(cellfun(@(x,y) Profile.(wh_channels)(x)./y,MS.indscan,num2cell(MS.w),'un',0)).';
     end
 end
 
@@ -135,7 +116,7 @@ MS.ktemp=kt(MS.s,MS.t,MS.pr).';
 
 
 % Profile Power and Co spectrum and Coherence. (Coherence still needs to be averaged over few scans afterwork)
-[f1,P1,P11,Co12]=get_profile_spectrum(data,f);
+[f1,P1,P11,Co12]=mod_epsi_get_profile_spectrum(data,f);
 %TODO comment on the Co12 sturcutre and think about reducing the size of
 %the Coherence spectra (doublon)
 
@@ -146,6 +127,7 @@ Lf1=length(indf1);
 
 P11= 2*P11(:,:,indf1);
 P1 = 2*P1(:,:,indf1);
+P11_temp=0.*P11(1:2,:,:);
 %% get MADRE filters
 h_freq=get_filters_MADRE(Meta_Data,f1);
 
@@ -173,26 +155,26 @@ for c=1:length(All_channels)
                 (ones(nbscan,1)*sqrt(h_freq.electAccel));
             nb_channel=nb_channel+1;
         case{'s1'}
-            TF1 =@(x) (Sv(1).*x/(2*G)).^2 .* h_freq.shear .* haf_oakey(f1,x);     
+            TF1 =@(x) (Sv(1).*x/(2*G)) .* h_freq.shear .* sqrt(haf_oakey(f1,x));     
             TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w),'un',0).');
             P11(ind,:,:) = squeeze(P11(ind,:,:)) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
             P1(ind,:,:)  = squeeze(P1(ind,:,:)) ./ sqrt(TFshear);      % vel frequency spectra m^2/s^-2 Hz^-1
         case{'s2'}
-            TF1 =@(x) (Sv(2).*x/(2*G)).^2 .* h_freq.shear .* haf_oakey(f1,x);     
+            TF1 =@(x) (Sv(2).*x/(2*G)) .* h_freq.shear .* sqrt(haf_oakey(f1,x));     
             TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w),'un',0).');
             P11(ind,:,:) = squeeze(P11(ind,:,:)) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
             P1(ind,:,:)  = squeeze(P1(ind,:,:)) ./ sqrt(TFshear);      % vel frequency spectra m^2/s^-2 Hz^-1
         case{'t1','t2'}
-            % ALB screw up
-            % Big issue because I am converting t1-t2 earlier as if they were still in ?C but they are in ?C/s
+            if strcmp(wh_channels,'t1')
+                P11_temp(1,:,:) = squeeze(P11(ind,:,:)); % keep Volt spectrum for FPO7_cutoff 
+            else
+                P11_temp(2,:,:) = squeeze(P11(ind,:,:)); % keep Volt spectrum for FPO7_cutoff 
+            end
             P11(ind,:,:) = Emp_Corr_fac * squeeze(P11(ind,:,:)).*dTdV.^2./TFtemp; % Temperature gradient frequency spectra should be ?C^2/s^-2 Hz^-1 ???? 
             P1(ind,:,:)  = Emp_Corr_fac * squeeze(P1(ind,:,:)).*dTdV./sqrt(TFtemp);  % Temperature gradient frequency spectra should be ?C^2/s^-2 Hz^-1
     end
 end
 
-
-%% correct frequency shear spectra with acceleration
-Co12=abs(smoothdata(Co12(:,:,:,indf1),3,'movmean',ceil(60/tscan)));
 indt1=find(cellfun(@(x) strcmp(x,'t1'),channels));
 indt2=find(cellfun(@(x) strcmp(x,'t2'),channels));
 inds1=find(cellfun(@(x) strcmp(x,'s1'),channels));
@@ -201,42 +183,23 @@ inda1=find(cellfun(@(x) strcmp(x,'a1'),channels));
 inda2=find(cellfun(@(x) strcmp(x,'a2'),channels));
 inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
 
-% find out wich acceleration channel will correct the best the shear
-% channels
-if ~isempty(inds1)
-    maxa1=max(mean(Co12(inds1,inda1-1,:,2:end),3));
-    maxa2=max(mean(Co12(inds1,inda2-1,:,2:end),3));
-    maxa3=max(mean(Co12(inds1,inda3-1,:,2:end),3));
-    if isempty(maxa1);maxa1=0;inda1=0;end
-    if isempty(maxa2);maxa2=0;inda2=0;end
-    if isempty(maxa3);maxa3=0;inda3=0;end
-    maxCor=[maxa1 maxa2 maxa3];
-    indacc=[inda1 inda2 inda3];
-    indacc=indacc(maxCor==max(maxCor));
-    % correction 
-    P11(inds1,:,:)=squeeze(P11(inds1,:,:)).*(1-squeeze(Co12(inds1,indacc-1,:,:)));
-end
-inda1=find(cellfun(@(x) strcmp(x,'a1'),channels));
-inda2=find(cellfun(@(x) strcmp(x,'a2'),channels));
-inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
-if ~isempty(inds2)
-    maxa1=max(mean(Co12(inds2,inda1-1,:,2:end),3));
-    maxa2=max(mean(Co12(inds2,inda2-1,:,2:end),3));
-    maxa3=max(mean(Co12(inds2,inda3-1,:,2:end),3));
-    if isempty(maxa1);maxa1=0;inda1=0;end
-    if isempty(maxa2);maxa2=0;inda2=0;end
-    if isempty(maxa3);maxa3=0;inda3=0;end
-    maxCor=[maxa1 maxa2 maxa3];
-    indacc=[inda1 inda2 inda3];
-    indacc=indacc(maxCor==max(maxCor));
-    %correction
-    P11(inds2,:,:)=squeeze(P11(inds2,:,:)).*(1-squeeze(Co12(inds2,indacc-1,:,:)));
-end
-inda1=find(cellfun(@(x) strcmp(x,'a1'),channels));
-inda2=find(cellfun(@(x) strcmp(x,'a2'),channels));
-inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
-
-
+%% correct frequency shear spectra with acceleration
+% Co12=abs(smoothdata(Co12(:,:,:,indf1),3,'movmean',ceil(60/tscan)));
+% % find out wich acceleration channel will correct the best the shear
+% % channels
+% if ~isempty(inds1)
+%     maxa1=max(mean(Co12(inds1,inda1-1,:,2:end),3));
+%     maxa2=max(mean(Co12(inds1,inda2-1,:,2:end),3));
+%     maxa3=max(mean(Co12(inds1,inda3-1,:,2:end),3));
+%     if isempty(maxa1);maxa1=0;inda1=0;end
+%     if isempty(maxa2);maxa2=0;inda2=0;end
+%     if isempty(maxa3);maxa3=0;inda3=0;end
+%     maxCor=[maxa1 maxa2 maxa3];
+%     indacc=[inda1 inda2 inda3];
+%     indacc=indacc(maxCor==max(maxCor));
+%     % correction 
+%     P11(inds1,:,:)=squeeze(P11(inds1,:,:)).*(1-squeeze(Co12(inds1,indacc-1,:,:)));
+% end
 
 % convert frequency to wavenumber
 k=cell2mat(cellfun(@(x) f1/x, num2cell(MS.w),'un',0).');
@@ -304,14 +267,29 @@ for j=1:nbscan
     end
 
     %% TODO check to see if we need P1 in V^2 Hz^{-1} or if we can change it to degC Hz^{-1}
-    if ~isempty(indt1)
-        MS.fc_index(j,1)=FPO7_cutoff(f1,squeeze(P11(indt1,j,:)).*squeeze(TFtemp(j,:)).');
+     if ~isempty(indt1)
+         MS.fc_index(j,1)=FPO7_cutoff(f1,squeeze(P11_temp(1,j,:)).',FPO7noise);
         MS.chi(j,1)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,1:MS.fc_index(j,1),1));
     end
     if ~isempty(indt2)
-        MS.fc_index(j,2)=FPO7_cutoff(f1,squeeze(P11(indt2,j,:)).*squeeze(TFtemp(j,:)).',FPO7noise);
+        MS.fc_index(j,2)=FPO7_cutoff(f1,squeeze(P11_temp(2,j,:)).',FPO7noise);
         MS.chi(j,2)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,1:MS.fc_index(j,2),2));
     end
+    
+    figure(10)
+    n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
+    logf=log10(f1);
+    noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
+
+
+    hold on
+    loglog(f1,squeeze(P11_temp(1,j,:)),'r')
+    loglog(f1,squeeze(P11_temp(2,j,:)),'b')
+    loglog(f1,10.^noise,'k')
+    set(gca,'Xscale','log','Yscale','log')
+    pause
+    close
+
 end
 
 

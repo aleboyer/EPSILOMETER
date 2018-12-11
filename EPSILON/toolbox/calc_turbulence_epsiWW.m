@@ -120,15 +120,33 @@ for c=1:length(All_channels)
     ind=find(cellfun(@(x) strcmp(x,wh_channels),channels));
     switch wh_channels
         case 't1'
+            try 
             data(ind,:,:) = cell2mat(cellfun(@(x) ...
                 polyval(CALFPO7_1,Profile.t1(x)),MS.indscan,'un',0).');
+            catch 
+            data(ind,:,:) = cell2mat(cellfun(@(x) ...
+                polyval(CALFPO7_1,Profile.t1(x).'),MS.indscan,'un',0).');
+            end
         case 't2'
+            try
             data(ind,:,:) = cell2mat(cellfun(@(x) ...
                 polyval(CALFPO7_2,Profile.t2(x)),MS.indscan,'un',0).');
+            catch
+            data(ind,:,:) = cell2mat(cellfun(@(x) ...
+                polyval(CALFPO7_2,Profile.t2(x).'),MS.indscan,'un',0).');
+            end
         case {'s1','s2'}
+            try
             data(ind,:,:) = cell2mat(cellfun(@(x) Profile.(wh_channels)(x),MS.indscan,'un',0).');
+            catch
+            data(ind,:,:) = cell2mat(cellfun(@(x) Profile.(wh_channels)(x).',MS.indscan,'un',0).');
+            end
         case {'a1','a2','a3'}
+            try
             data(ind,:,:) = cell2mat(cellfun(@(x,y) Profile.(wh_channels)(x)./y,MS.indscan,num2cell(MS.w),'un',0).');
+            catch
+            data(ind,:,:) = cell2mat(cellfun(@(x,y) Profile.(wh_channels)(x).'./y,MS.indscan,num2cell(MS.w),'un',0).');
+            end
     end
 end
 
@@ -159,8 +177,6 @@ Sv        = [str2double(Meta_Data.epsi.s1.Sv),str2double(Meta_Data.epsi.s2.Sv)];
 Emp_Corr_fac=1;
 TFtemp=cell2mat(cellfun(@(x) h_freq.FPO7(x),num2cell(MS.w),'un',0).');
 
-
-
 nb_channel=1;
 for c=1:length(All_channels)
     wh_channels=All_channels{c};
@@ -186,7 +202,6 @@ end
 MS.Pf_nocor =  P11;
 
 %% correct frequency shear spectra with acceleration
-Co12=abs(smoothdata(Co12(:,:,:,indf1),3,'movmean',ceil(60/tscan)));
 indt1=find(cellfun(@(x) strcmp(x,'t1'),channels));
 indt2=find(cellfun(@(x) strcmp(x,'t2'),channels));
 inds1=find(cellfun(@(x) strcmp(x,'s1'),channels));
@@ -195,42 +210,10 @@ inda1=find(cellfun(@(x) strcmp(x,'a1'),channels));
 inda2=find(cellfun(@(x) strcmp(x,'a2'),channels));
 inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
 
-% find out wich acceleration channel will correct the best the shear
-% channels
-if ~isempty(inds1)
-    maxa1=max(mean(Co12(inds1,inda1-1,:,2:end),3));
-    maxa2=max(mean(Co12(inds1,inda2-1,:,2:end),3));
-    maxa3=max(mean(Co12(inds1,inda3-1,:,2:end),3));
-    if isempty(maxa1);maxa1=0;inda1=0;end
-    if isempty(maxa2);maxa2=0;inda2=0;end
-    if isempty(maxa3);maxa3=0;inda3=0;end
-    maxCor=[maxa1 maxa2 maxa3];
-    indacc=[inda1 inda2 inda3];c
-    indacc=indacc(maxCor==max(maxCor));
-    % correction 
-    P11(inds1,:,:)=squeeze(P11(inds1,:,:)).*(1-squeeze(Co12(inds1,indacc-1,:,:)));
-end
-inda1=find(cellfun(@(x) strcmp(x,'a1'),channels));
-inda2=find(cellfun(@(x) strcmp(x,'a2'),channels));
-inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
-if ~isempty(inds2)
-    maxa1=max(mean(Co12(inds2,inda1-1,:,2:end),3));
-    maxa2=max(mean(Co12(inds2,inda2-1,:,2:end),3));
-    maxa3=max(mean(Co12(inds2,inda3-1,:,2:end),3));
-    if isempty(maxa1);maxa1=0;inda1=0;end
-    if isempty(maxa2);maxa2=0;inda2=0;end
-    if isempty(maxa3);maxa3=0;inda3=0;end
-    maxCor=[maxa1 maxa2 maxa3];
-    indacc=[inda1 inda2 inda3];
-    indacc=indacc(maxCor==max(maxCor));
-    %correction
-    P11(inds2,:,:)=squeeze(P11(inds2,:,:)).*(1-squeeze(Co12(inds2,indacc-1,:,:)));
-end
-inda1=find(cellfun(@(x) strcmp(x,'a1'),channels));
-inda2=find(cellfun(@(x) strcmp(x,'a2'),channels));
-inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
+Co12=interp1(Meta_Data.Coherence.k,Meta_Data.Coherence.Coherence,f1);
 
-
+ P11(inds1,:,:)=squeeze(P11(inds1,:,:)).*(1-ones(nbscan,1)*squeeze(Co12));
+ P11(inds2,:,:)=squeeze(P11(inds2,:,:)).*(1-ones(nbscan,1)*squeeze(Co12));
 
 % convert frequency to wavenumber
 k=cell2mat(cellfun(@(x) f1/x, num2cell(MS.w),'un',0).');

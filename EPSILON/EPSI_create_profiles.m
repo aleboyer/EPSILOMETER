@@ -14,13 +14,26 @@ CTDpath=Meta_Data.CTDpath;
 Epsipath=Meta_Data.Epsipath;
 L1path=Meta_Data.L1path;
 
-CTD=load([CTDpath 'ctd_' Meta_Data.deployement '.mat'],'ctdtime','T','P','S','sig');
+CTD=load([CTDpath 'ctd_' Meta_Data.deployement '.mat'],'aux1time','T','P','S','sig');
 EPSI=load([Epsipath 'epsi_' Meta_Data.deployement '.mat']);
-
+CTD.ctdtime=CTD.aux1time;
 
 [CTDProfile.up,CTDProfile.down,CTDProfile.dataup,CTDProfile.datadown] = ...
-                                               EPSI_getcastctd(CTD,20);
-                                           
+                                               EPSI_getcastctd(CTD,.3);
+close all
+plot(CTD.ctdtime,CTD.P)
+hold on
+for i=1:length(CTDProfile.up)
+       plot(CTDProfile.dataup{i}.ctdtime,CTDProfile.dataup{i}.P,'r')
+end
+for i=1:length(CTDProfile.down)
+       plot(CTDProfile.datadown{i}.ctdtime,CTDProfile.datadown{i}.P,'g')
+end
+print('-dpng2',[Meta_Data.CTDpath 'Profiles_Pr.png'])
+close all
+
+
+
 [EpsiProfile.up,EpsiProfile.down,EpsiProfile.dataup,EpsiProfile.datadown] =...
                                                      EPSI_getcastepsi(EPSI,CTD.ctdtime,CTDProfile.up,CTDProfile.down);
 
