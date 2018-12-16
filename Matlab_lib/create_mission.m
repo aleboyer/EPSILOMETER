@@ -1,11 +1,10 @@
-
-MISSION_NAME='DEV';
-VEHICLE_NAME='bench132';
-DEPLOYMENT_NAME='SD_FIX';
-PATH_MISSION='/Users/aleboyer/ARNAUD/SCRIPPS/';
-SCRIPT_MISSION='/Users/aleboyer/ARNAUD/SCRIPPS/';
+MISSION_NAME='ArrowII_epsi';
+VEHICLE_NAME='WW';
+DEPLOYMENT_NAME='d1';
+PATH_MISSION='/Volumes/DataDrive/';
+SCRIPT_MISSION='/Users/aleboyer/ARNAUD/SCRIPPS/EPSILOMETER/';
  
-if exist(fullfile(PATH_MISSION,MISSION_NAME,VEHICLE_NAME,DEPLOYMENT_NAME)) ~= 7
+if exist(fullfile(PATH_MISSION,MISSION_NAME,VEHICLE_NAME,DEPLOYMENT_NAME),'dir') ~= 7
     mkdir(fullfile(PATH_MISSION,MISSION_NAME,VEHICLE_NAME,DEPLOYMENT_NAME),'ctd')
     mkdir(fullfile(PATH_MISSION,MISSION_NAME,VEHICLE_NAME,DEPLOYMENT_NAME),'epsi')
     mkdir(fullfile(PATH_MISSION,MISSION_NAME,VEHICLE_NAME,DEPLOYMENT_NAME),'L1')
@@ -18,10 +17,10 @@ RECORDING_MODE='SD';  % other choice is SD or STREAMING
 NB_CHANNEL='8';
 CHANNELS='t1,t2,s1,s2,c,a1,a2,a3';
  
-PROBE_S1_SN='109';
-PROBE_S2_SN='123';
-PROBE_T1_SN='123';
-PROBE_T2_SN='120';
+PROBE_S1_SN='216';
+PROBE_S2_SN='218';
+PROBE_T1_SN='218';
+PROBE_T2_SN='217';
 PROBE_C_SN='000';
 PROBE_SHEAR_CALFILE='/Users/aleboyer/ARNAUD/SCRIPPS/EPSILOMETER/CALIBRATION/SHEAR_PROBES';
  
@@ -54,7 +53,7 @@ FIRMWARE_ADCaccelfilt='sinc4';
  
 Meta_Data.mission = MISSION_NAME;
 Meta_Data.vehicle_name = VEHICLE_NAME;
-Meta_Data.deployement = DEPLOYMENT_NAME;
+Meta_Data.deployment = DEPLOYMENT_NAME;
 Meta_Data.path_mission = PATH_MISSION;
  
 Meta_Data.root = fullfile(PATH_MISSION,MISSION_NAME,VEHICLE_NAME,DEPLOYMENT_NAME); 
@@ -126,14 +125,15 @@ Meta_Data.epsi.c.SN = str2double(PROBE_C_SN);
 Meta_Data.epsi.c.ADCfilter = FIRMWARE_ADCcondfilt;
 Meta_Data.epsi.c.ADCconf = FIRMWARE_ADCcond;
 
+
 if strcmp(RECORDING_MODE,'SD')
    save([Meta_Data.SDRAWpath ...
     'Meta_' Meta_Data.mission ...
-    '_' Meta_Data.deployement '.mat'],'Meta_Data')
+    '_' Meta_Data.deployment '.mat'],'Meta_Data')
 end
 if strcmp(RECORDING_MODE,'STREAMING')
    save([Meta_Data.RAWpath ...
     'Meta_' Meta_Data.mission ...
-    '_' Meta_Data.deployement '.mat'],'Meta_Data')
+    '_' Meta_Data.deployment '.mat'],'Meta_Data')
 end
 

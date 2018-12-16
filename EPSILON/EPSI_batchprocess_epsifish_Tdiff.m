@@ -18,7 +18,7 @@ L1path=Meta_Data.L1path;
 
 if ~exist([L1path 'Turbulence_Profiles.mat'],'file')
     %% 	get data
-    load([L1path 'Profiles_' Meta_Data.deployement '.mat'],'CTDProfile','EpsiProfile');
+    load([L1path 'Profiles_' Meta_Data.deployment '.mat'],'CTDProfile','EpsiProfile');
     CTD_Profiles=CTDProfile.datadown;
     EPSI_Profiles=EpsiProfile.datadown;
     
@@ -41,8 +41,7 @@ if ~exist([L1path 'Turbulence_Profiles.mat'],'file')
     flag_vehicle=1;
     % add pressure from ctd to the epsi profile. This should be ter mporary until
     % the addition of the pressure sensor on Epsi
-%    for i=1:length(EPSI_Profiles)
-    for i=[6 7 8 9]
+    for i=1:length(EPSI_Profiles)
         EPSI_Profiles{i}.P=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.P,EPSI_Profiles{i}.epsitime);
         EPSI_Profiles{i}.T=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.T,EPSI_Profiles{i}.epsitime);
         EPSI_Profiles{i}.S=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.S,EPSI_Profiles{i}.epsitime);
@@ -55,18 +54,18 @@ else
 end
 
 % compite binned epsilon for all profiles
-Epsilon_class=calc_binned_epsi(MS([6 7 8 9]));
-Chi_class=calc_binned_chi(MS([6 7 8 9]));
+Epsilon_class=calc_binned_epsi(MS);
+Chi_class=calc_binned_chi(MS);
 
 % plot binned epsilon for all profiles
 F1=figure(1);F2=figure(2);
-[F1,F2]=plot_binned_epsilon(Epsilon_class,[Meta_Data.mission '-' Meta_Data.deployement],F1,F2);
-print(F1,[L1path Meta_Data.deployement '_binned_epsilon1_t3s.png'],'-dpng2')
-print(F2,[L1path Meta_Data.deployement '_binned_epsilon2_t3s.png'],'-dpng2')
+[F1,F2]=plot_binned_epsilon(Epsilon_class,[Meta_Data.mission '-' Meta_Data.deployment],F1,F2);
+print(F1,[L1path Meta_Data.deployment '_binned_epsilon1_t3s.png'],'-dpng2')
+print(F2,[L1path Meta_Data.deployment '_binned_epsilon2_t3s.png'],'-dpng2')
 
-[F1,F2]=plot_binned_chi(Chi_class,Meta_Data,[Meta_Data.mission '-' Meta_Data.deployement]);
-print(F1,[L1path Meta_Data.deployement '_binned_chi22_c_t3s.png'],'-dpng2')
-print(F2,[L1path Meta_Data.deployement '_binned_chi21_c_t3s.png'],'-dpng2')
+[F1,F2]=plot_binned_chi(Chi_class,Meta_Data,[Meta_Data.mission '-' Meta_Data.deployment]);
+print(F1,[L1path Meta_Data.deployment '_binned_chi22_c_t3s.png'],'-dpng2')
+print(F2,[L1path Meta_Data.deployment '_binned_chi21_c_t3s.png'],'-dpng2')
 
 
 MSempty=cellfun(@isempty,MS);

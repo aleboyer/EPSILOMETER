@@ -20,11 +20,19 @@
 
 addpath ../EPSILON/toolbox/
 
-
 file='/Users/aleboyer/ARNAUD/SCRIPPS/EPSILOMETER/CALIBRATION/ELECTRONICS/MADRE_MAP/MM1/epsi/MM1.mat'
+%file='/Volumes/DataDrive/GRANITE/For_Arnaud_Sept2018/benchtest_for_alb/aug30_11/epsi/epsi_aug30_11.mat'
 load('/Users/aleboyer/ARNAUD/SCRIPPS/EPSILOMETER/CALIBRATION/ELECTRONICS/MADRE_MAP/MM1/raw/Meta_DEV_MM1.mat')
 
 EPSI=load(file);
+F=fieldnames(EPSI);
+T1=numel(EPSI.epsitime);
+for f=1:length(F)
+    wh_f=F{f};
+    if numel(EPSI.(wh_f))==numel(EPSI.epsitime)
+        EPSI.(wh_f)=EPSI.(wh_f)(T1/2:end);
+    end
+end
 
 tscan     =  5;
 % sample rate channels
@@ -102,14 +110,22 @@ Accelnoise=45e-6^2+0*f1;
 
 logf=log10(f1);
 Empnoise=log10(squeeze(nanmean(P11(1,:,:),2)));
+Empnoiseshear=log10(squeeze(nanmean(P11(3,:,:),2)));
 Emp_FPO7noise=polyfit(logf(2:end).',Empnoise(2:end),3);
+Emp_shearnoise=polyfit(logf(2:end).',Empnoiseshear(2:end),3);
 %test_noise=polyval(Emp_FPO7noise,logf);
 n3=Emp_FPO7noise(1);
 n2=Emp_FPO7noise(2);
 n1=Emp_FPO7noise(3);
 n0=Emp_FPO7noise(4);
 
+n3s=Emp_shearnoise(1);
+n2s=Emp_shearnoise(2);
+n1s=Emp_shearnoise(3);
+n0s=Emp_shearnoise(4);
+
 test_noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
+test_snoise=n0s+n1s.*logf+n2s.*logf.^2+n3s.*logf.^3;
 
 
 figure
@@ -137,9 +153,10 @@ n24=loglog(f1,f1*0+def_noise(24),'--','Color',[.1 .1 .1],'linewidth',2);
 n16=loglog(f1,f1*0+def_noise(16),'.-','Color',[.3 .3 .3],'linewidth',2);
 An=loglog(f1,Accelnoise,'--','Color',[.1 .1 .1],'linewidth',2);
 Emp=loglog(f1,10.^test_noise,'m-','linewidth',2);
+Emps=loglog(f1,10.^test_snoise,'c-','linewidth',2);
 
 grid on
-legend([l0,l1 l2 l3 l4 l5 l6 l7 n24 n20 n16 An Emp],{'no TF','t1','t2','s1','s2','a1','a2','a3','24 bit','20 bit','16 bit','Accel noise','Poly-noise'},'location','Southwest')
+legend([l0,l1 l2 l3 l4 l5 l6 l7 n24 n20 n16 An Emp Emps],{'no TF','t1','t2','s1','s2','a1','a2','a3','24 bit','20 bit','16 bit','Accel noise','TF-noise','Sh-noise'},'location','Southwest')
 set(gca,'fontsize',15)
 ylabel('V^2 / Hz','fontsize',15)
 xlabel('Hz','fontsize',15)
@@ -150,4 +167,5 @@ fig=gcf;fig.PaperPosition = [0 0 20 10];
 print([Meta_Data.L1path Meta_Data.deployement '.png'],'-dpng')
 
 save([Meta_Data.CALIpath 'FPO7_noise.mat'],'n0','n1','n2','n3')
+save([Meta_Data.CALIpath 'shear_noise.mat'],'n0s','n1s','n2s','n3s')
 

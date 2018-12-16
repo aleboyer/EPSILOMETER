@@ -87,12 +87,14 @@ indStamp=indStamp(IA);
 mask=IA*0+1;
 mask(epsitime(iepsi1(IA))<datenum('01-01-1970'))=nan;
 
-SD.aux1.T=SBE_temp_v2(Meta_Data.SBEcal,a.aux1.T_raw(indStamp)).*mask;
-SD.aux1.P=SBE_Pres_v2(Meta_Data.SBEcal,a.aux1.P_raw(indStamp),a.aux1.PT_raw(indStamp)).*mask;
-SD.aux1.C=SBE_cond_v2(Meta_Data.SBEcal,a.aux1.C_raw(indStamp),SD.aux1.T,SD.aux1.P).*mask;
-SD.aux1.S=sw_salt(SD.aux1.C*10./sw_c3515,SD.aux1.T,SD.aux1.P);
-SD.aux1.sig=sw_pden(SD.aux1.S,SD.aux1.T,SD.aux1.P,0);
-SD.aux1.aux1time=epsitime(iepsi1(IA));
+if isfield(Meta_Data,'SBECal')
+    SD.aux1.T=SBE_temp_v2(Meta_Data.SBEcal,a.aux1.T_raw(indStamp)).*mask;
+    SD.aux1.P=SBE_Pres_v2(Meta_Data.SBEcal,a.aux1.P_raw(indStamp),a.aux1.PT_raw(indStamp)).*mask;
+    SD.aux1.C=SBE_cond_v2(Meta_Data.SBEcal,a.aux1.C_raw(indStamp),SD.aux1.T,SD.aux1.P).*mask;
+    SD.aux1.S=sw_salt(SD.aux1.C*10./sw_c3515,SD.aux1.T,SD.aux1.P);
+    SD.aux1.sig=sw_pden(SD.aux1.S,SD.aux1.T,SD.aux1.P,0);
+    SD.aux1.aux1time=epsitime(iepsi1(IA));
+end
 
 
 

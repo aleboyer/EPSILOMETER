@@ -14,8 +14,8 @@ CTDpath=Meta_Data.CTDpath;
 Epsipath=Meta_Data.Epsipath;
 L1path=Meta_Data.L1path;
 
-CTD=load([CTDpath 'ctd_' Meta_Data.deployement '.mat'],'aux1time','T','P','S','sig');
-EPSI=load([Epsipath 'epsi_' Meta_Data.deployement '.mat']);
+CTD=load([CTDpath 'ctd_' Meta_Data.deployment '.mat'],'aux1time','T','P','S','sig');
+EPSI=load([Epsipath 'epsi_' Meta_Data.deployment '.mat']);
 CTD.ctdtime=CTD.aux1time;
 
 [CTDProfile.up,CTDProfile.down,CTDProfile.dataup,CTDProfile.datadown] = ...
@@ -38,9 +38,9 @@ close all
                                                      EPSI_getcastepsi(EPSI,CTD.ctdtime,CTDProfile.up,CTDProfile.down);
 
                                                  
-fprintf('Saving data in %sProfiles_%s.mat\n',L1path,Meta_Data.deployement)
+fprintf('Saving data in %sProfiles_%s.mat\n',L1path,Meta_Data.deployment)
 
-save([L1path 'Profiles_' Meta_Data.deployement '.mat'],'CTDProfile','EpsiProfile','-v7.3');
+save([L1path 'Profiles_' Meta_Data.deployment '.mat'],'CTDProfile','EpsiProfile','-v7.3');
 
 
 

@@ -25,9 +25,9 @@ a = mod_read_epsi_raw(filenames);
 if ~isfield(a.epsi,'c')
     a.epsi.c=a.epsi.ramp_count;
 end
-SD=mod_epsi_sd_buildtime(Meta_Data,a)
+SD=mod_epsi_sd_buildtime(Meta_Data,a);
 
-save([Meta_Data.SDRAWpath 'SD' Meta_Data.deployement '.mat'],'a','-v7.3')
+save([Meta_Data.SDRAWpath 'SD' Meta_Data.deployment '.mat'],'a','-v7.3')
 
 ax(1)=subplot(311);plot(sort(a.madre.EpsiStamp),a.madre.EpsiStamp)
 ax(2)=subplot(312);plot(sort(a.madre.EpsiStamp(1:end-1)),diff(a.madre.EpsiStamp))
@@ -37,17 +37,19 @@ print('-dpng2',[Meta_Data.SDRAWpath 'check_timestamp.png'])
 close all
 
 % save CTD
-clear F
-F=fieldnames(SD.aux1);
-command=[];
-for f=1:length(F)
-    wh_F=F{f};
-    eval(sprintf('%s=SD.aux1.%s;',wh_F,wh_F))
-    command=[command ',' sprintf('''%s''',F{f})];
+if isfield(SD,'aux1')
+    clear F
+    F=fieldnames(SD.aux1);
+    command=[];
+    for f=1:length(F)
+        wh_F=F{f};
+        eval(sprintf('%s=SD.aux1.%s;',wh_F,wh_F))
+        command=[command ',' sprintf('''%s''',F{f})];
+    end
+    command=sprintf('save(''%sctd_%s.mat''%s)',ctdDIR,Meta_Data.deployment,command);
+    disp(command)
+    eval(command);
 end
-command=sprintf('save(''%sctd_%s.mat''%s)',ctdDIR,Meta_Data.deployement,command);
-disp(command)
-eval(command);
 
 
 
@@ -60,7 +62,7 @@ for f=1:length(F)
     eval(sprintf('%s=SD.epsi.%s;',wh_F,wh_F))
     command=[command ',' sprintf('''%s''',F{f})];
 end
-command=sprintf('save(''%sepsi_%s.mat''%s)',epsiDIR,Meta_Data.deployement,command);
+command=sprintf('save(''%sepsi_%s.mat''%s)',epsiDIR,Meta_Data.deployment,command);
 disp(command)
 eval(command);
 

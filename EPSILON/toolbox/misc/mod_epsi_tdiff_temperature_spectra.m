@@ -1,4 +1,4 @@
-function mod_epsi_tdiff_temperature_spectra(Meta_Data,EPSI_Profile,CTD_Profile,dTdV,titre,np,dsp,tscan)
+function mod_epsi_tdiff_temperature_spectra(Meta_Data,EPSI_Profile,CTD_Profile,titre,np,dsp,tscan)
 
 %tscan=(CTD_Profile.ctdtime(end)-CTD_Profile.ctdtime(1))*86400;
 epsi_df=325;
@@ -7,6 +7,8 @@ epsi_Lscan  = tscan*epsi_df; % epsi sampling frequency is
 ctd_Lscan   = tscan*ctd_df;
 epsi_T      = length(EPSI_Profile.epsitime);
 ctd_T       = length(CTD_Profile.ctdtime);
+
+dTdV=[Meta_Data.epsi.t1.dTdV Meta_Data.epsi.t2.dTdV];
 
 fprintf('epsi time series %3.2f seconds.\n',epsi_T/epsi_df)
 fprintf('ctd time series %3.2f seconds.\n',ctd_T/ctd_df)
@@ -50,22 +52,22 @@ P11_epsi = 2*squeeze(P11_epsi(:,:,epsi_indk));
 
 h_freq=get_filters_MADRE(Meta_Data,epsi_k);
 % Sensitivity of probe, nominal
-dTdV1=dTdV(1); %1/0.018 V/deg  set for Granite t1
-dTdV2=dTdV(2); % weird value to matrch granite t1
+dTdV(1)=Meta_Data.epsi.t1.dTdV; %1/0.018 V/deg  set for Granite t1
+dTdV(2)=Meta_Data.epsi.t2.dTdV; % weird value to matrch granite t1
 ind_t=1;
 % compute fpo7 filters (they are speed dependent)
 TFtemp=cell2mat(cellfun(@(x) h_freq.FPO7(x),num2cell(w),'un',0).');
 
-P11_TFepsi(1,:,:)=squeeze(P11_epsi(1,:,:))*dTdV1.^2./TFtemp;
-P11_TFepsi(2,:,:)=squeeze(P11_epsi(2,:,:))*dTdV2.^2./TFtemp;
+P11_TFepsi(1,:,:)=squeeze(P11_epsi(1,:,:))*dTdV(1).^2./TFtemp;
+P11_TFepsi(2,:,:)=squeeze(P11_epsi(2,:,:))*dTdV(2).^2./TFtemp;
 
 P11_T(1,:) = squeeze(nanmean(P11_TFepsi(1,:,:),2)); % Temperature gradient frequency spectra should be ?C^2/s^-2 Hz^-1 ???? 
 P11_T(2,:) = squeeze(nanmean(P11_TFepsi(2,:,:),2)); % Temperature gradient frequency spectra should be ?C^2/s^-2 Hz^-1 ???? 
 
 P11_Tctd = nanmean(P11_ctd);
 %P11_Tctd = P11_ctd;
-A=squeeze(nanmean(P11_epsi(ind_t,:,:),2)).*dTdV(ind_t).^2;
-B=squeeze(nanmean(P11_epsi(ind_t,:,:),2)).*dTdV(ind_t).^2./h_freq.electFPO7.'.^2;
+A=squeeze(nanmean(P11_epsi(1,:,:),2)).*dTdV(1).^2;
+B=squeeze(nanmean(P11_epsi(1,:,:),2)).*dTdV(1).^2./h_freq.electFPO7.'.^2;
 
 FPO7noise=load([Meta_Data.CALIpath 'FPO7_noise.mat'],'n0','n1','n2','n3');
 n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
@@ -78,24 +80,25 @@ mmp_noise=mmp_n0+mmp_n1.*logf+mmp_n2.*logf.^2+mmp_n3.*logf.^3;
 close all
 hold on
 loglog(ctd_k,P11_Tctd,'r','linewidth',2)
-loglog(epsi_k,10.^(noise).*dTdV(ind_t).^2,'m','linewidth',2)
-loglog(epsi_k,10.^(mmp_noise).*dTdV(ind_t).^2,'m--','linewidth',2)
+loglog(epsi_k,10.^(noise).*dTdV(1).^2,'m','linewidth',2)
+%loglog(epsi_k,10.^(mmp_noise).*dTdV(1).^2,'m--','linewidth',2)
 loglog(epsi_k,A,'Color',.6* [1 1 1],'linewidth',2)
 loglog(epsi_k,B,'Color',.4* [1 1 1],'linewidth',2)
-loglog(epsi_k,P11_T(ind_t,:),'Color',.1* [1 1 1],'linewidth',2)
+loglog(epsi_k,P11_T(2,:),'c','linewidth',2)
+loglog(epsi_k,P11_T(1,:),'Color',.1* [1 1 1],'linewidth',2)
 
 set(gca,'XScale','log','YScale','log')
 xlabel('Hz','fontsize',20)
 ylabel('C^2/Hz','fontsize',20)
 titre=sprintf('%s cast %i - temperature',titre,np);
 title(titre,'fontsize',20)
-legend('SBE49','noise','mmp noise','raw','t./TF_{Tdiff}','t')
+legend('SBE49','noise','raw','t1./TF_{Tdiff}','t2','t1','location','southwest')
 grid on
 ylim([1e-13 1])
 xlim([1/15 170])
 set(gca,'fontsize',20)
 
-filename=sprintf('%sTctd_Tepsi_comp_cast%i_t%i.png',Meta_Data.L1path,np,ind_t);
+filename=sprintf('%sTctd_Tepsi_comp_cast%i_t%i.png',Meta_Data.L1path,np,1);
 print('-dpng2',filename)
 if dsp==1
     for i=1:nbscan

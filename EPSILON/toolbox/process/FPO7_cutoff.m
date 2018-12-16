@@ -28,14 +28,15 @@ n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
 logf=log10(f);
 noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
 
-logspec=log10(spec);
-medspec=medfilt1(logspec,5); % 5th order median filter
-%smoospec=smoothdata(logspec,'movmean',5); % 5th order median filter
+% %TODO: why the log10(1.5)?
+% logspec=log10(spec);
+% medspec=medfilt1(logspec,5); % 5th order median filter
+% noisy=find(medspec<log10(1.5)+noise);
 
-%TODO: why the log10(1.5)?
-%noisy=find(medspec<log10(1.5)+noise);
-%ALB
-noisy=find(medspec<noise-1.5);
+%MHA
+medspec=medfilt1(spec,5); % 5th order median filter
+SN_min=3;
+noisy=find(medspec<SN_min.*10.^(noise));
 if isempty(noisy)
 	fc_index=length(f);
 else
