@@ -32,7 +32,7 @@ n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
 shearnoise=load([Meta_Data.CALIpath 'shear_noise.mat'],'n0s','n1s','n2s','n3s');
 n0s=shearnoise.n0s; n1s=shearnoise.n1s; n2s=shearnoise.n2s; n3s=shearnoise.n3s;
 noise_tdiff0=10.^(n0+n1.*logf+n2.*logf.^2+n3.*logf.^3);
-noise_tdiff=noise_tdiff0.*dTdV(1).^2./h_freq.electFPO7.^2./h_freq.Tdiff.^2;
+%noise_tdiff=noise_tdiff0.*dTdV(1).^2./h_freq.electFPO7.^2./h_freq.Tdiff.^2;
 
 noise_notdiff=spec_notdiff.*dTdV(1).^2./h_freq.electFPO7.^2;
 
@@ -144,11 +144,13 @@ Gr=9.81;
 for k=1:length(MS{l}.kvis)
     % noise stuff
     k_noise=MS{l}.f./MS{l}.w(k);
+    noise_tdiff=noise_tdiff0.*dTdV(1).^2./h_freq.FPO7(MS{l}.w(k));
     tdiffnoise_k= (2*pi*k_noise).^2 .* noise_tdiff.*MS{l}.w(k);        % T1_k spec  as function of k
+    noise_notdiff=noise_notdiff./h_freq.magsq(MS{l}.w(k));
     notdiffnoise_k= (2*pi*k_noise).^2 .* noise_notdiff.*MS{l}.w(k);        % T1_k spec  as function of k
     
 
-    TFshear=(Sv(1).*MS{l}.w(k)/(2*Gr)).^2 .* h_freq.shear;
+    TFshear=(Sv(1).*MS{l}.w(k)/(2*Gr)).^2 .* h_freq.shear.* haf_oakey(MS{l}.f,MS{l}.w(k));
     snoise_k= (2*pi*k_noise).^2 .* snoise.*MS{l}.w(k)./TFshear;        % T1_k spec  as function of k
 
     

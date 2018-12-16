@@ -105,7 +105,7 @@ for c=1:length(All_channels)
         case {'t1','t2','s1','s2'}
             data(ind,:,:) = cell2mat(cellfun(@(x) Profile.(wh_channels)(x),MS.indscan,'un',0)).';
         case {'a1','a2','a3'}
-            data(ind,:,:) = cell2mat(cellfun(@(x,y) Profile.(wh_channels)(x)./y,MS.indscan,num2cell(MS.w),'un',0)).';
+            data(ind,:,:) = cell2mat(cellfun(@(x,y) Profile.(wh_channels)(x),MS.indscan,'un',0)).';
     end
 end
 
@@ -116,7 +116,7 @@ MS.ktemp=kt(MS.s,MS.t,MS.pr).';
 
 
 % Profile Power and Co spectrum and Coherence. (Coherence still needs to be averaged over few scans afterwork)
-[f1,P1,P11,Co12]=mod_epsi_get_profile_spectrum(data,f);
+[f1,~,P11,Co12]=mod_epsi_get_profile_spectrum(data,f);
 %TODO comment on the Co12 sturcutre and think about reducing the size of
 %the Coherence spectra (doublon)
 

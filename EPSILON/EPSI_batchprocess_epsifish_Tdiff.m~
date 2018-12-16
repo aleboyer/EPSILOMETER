@@ -44,17 +44,20 @@ if ~exist([L1path 'Turbulence_Profiles.mat'],'file')
     % but it will always varies.  
     % add pressure from ctd to the epsi profile. This should be ter mporary until
     % the addition of the pressure sensor on Epsi
+    F=fields(EPSI_Profiles{1});
     for i=1:length(EPSI_Profiles)
         epsitime=linspace(EPSI_Profiles{i}.epsitime(1),...
             EPSI_Profiles{i}.epsitime(end),...
             numel(EPSI_Profiles{i}.epsitime));
-        ctdtime=linspace(CTD_Profiles{i}.ctdtime(1),...
-            CTD_Profiles{i}.ctdtime(end),...
-            numel(CTD_Profiles{i}.ctdtime));
-        EPSI_Profiles{i}.P=interp1(ctdtime,CTD_Profiles{i}.P,epsitime);
-        EPSI_Profiles{i}.T=interp1(ctdtime,CTD_Profiles{i}.T,epsitime);
-        EPSI_Profiles{i}.S=interp1(ctdtime,CTD_Profiles{i}.S,epsitime);
-        EPSI_Profiles{i}.epsitime=epsitime;
+        epsitimeold=EPSI_Profiles{i}.epsitime;
+        EPSI_Profiles{i}.P=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.P,epsitime);
+        EPSI_Profiles{i}.T=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.T,epsitime);
+        EPSI_Profiles{i}.S=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.S,epsitime);
+        for fi=1:length(F)
+            wh_field=F{f};
+            EPSI_Profiles{i}.(wh_field)=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.P,epsitime)
+        end
+        
         MS{i}=calc_turbulence_epsifish_Tdiff(EPSI_Profiles{i},tscan,f,Fcut_epsilon,Meta_Data);
         Quality_check_profile(EPSI_Profiles{i},MS(i),Meta_Data,Fcut_epsilon,flag_vehicle,i)
     end
