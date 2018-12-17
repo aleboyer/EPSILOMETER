@@ -1,8 +1,10 @@
-function mod_epsi_tdiff_temperature_spectra(Meta_Data,EPSI_Profile,CTD_Profile,titre,np,dsp,tscan)
+function mod_epsi_tdiff_temperature_spectra(Meta_Data,EPSI_Profile,CTD_Profile,titre,np,dsp,tscan,ctd_df)
 
 %tscan=(CTD_Profile.ctdtime(end)-CTD_Profile.ctdtime(1))*86400;
 epsi_df=325;
-ctd_df=16;
+%ctd_df=16; % SBE
+%ctd_df=6; % RBR
+
 epsi_Lscan  = tscan*epsi_df; % epsi sampling frequency is 
 ctd_Lscan   = tscan*ctd_df;
 epsi_T      = length(EPSI_Profile.epsitime);

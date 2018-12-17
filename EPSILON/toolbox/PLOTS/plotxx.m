@@ -1,4 +1,4 @@
-function [ax,hl1,hl2] = plotxx(x1,y1,x2,y2,xlabels,ylabels);
+function [ax,hl1,hl2] = plotxx(x1,y1,x2,y2,xlabels,ylabels,ax_parent);
 %function [ax,hl1,hl2] = plotxx(x1,y1,x2,y2,xlabels,ylabels,ax_parent);
 %PLOTXX - Create graphs with x axes on both top and bottom 
 %
@@ -61,8 +61,8 @@ elseif ~iscellstr(ylabels)
    error('Input ylabels must be a cell array')
 end
 
-%ax(1)=ax_parent;
-ax(1)=gca;
+ax(1)=ax_parent;
+%ax(1)=gca;
 hl1=line(x1,y1,'Color','k','Parent',ax(1));
 %set(ax(1),'Position',[0.12 0.12 0.75 0.70])
 set(ax(1),'XColor','k','YColor','k');
