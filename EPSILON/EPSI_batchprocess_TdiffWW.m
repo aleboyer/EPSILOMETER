@@ -9,24 +9,21 @@ function EPSI_batchprocess_TdiffWW(Meta_Data)
 %  Copyright © 2018 Arnaud Le Boyer. All rights reserved.
 
 
-
-L1path=Meta_Data.L1path;
-
 %% add the needed toobox  move that to create Meta file
 %addpath /Users/aleboyer/ARNAUD/SCRIPPS/WireWalker/scripts/mixing_library/mixing_library/private1/seawater
 addpath(genpath('toolbox/'))
 
 
-if ~exist([L1path 'Turbulence_Profiles.mat'],'file')
+if ~exist([Meta_Data.L1path 'Turbulence_Profiles.mat'],'file')
     %% 	get data
-    load([L1path 'Profiles_' Meta_Data.deployement '.mat'],'CTDProfile','EpsiProfile');
+    load([Meta_Data.L1path 'Profiles_' Meta_Data.deployment '.mat'],'CTDProfile','EpsiProfile');
 %     CTD_Profiles=CTDProfile.dataup;
 %     EPSI_Profiles=EpsiProfile.dataup;
     CTD_Profiles=CTDProfile;
     EPSI_Profiles=EpsiProfile;
-    for i=1:length(EPSI_Profiles)
-        EPSI_Profiles{i}.c=double(EPSI_Profiles{i}.c);
-    end
+%     for i=1:length(EPSI_Profiles)
+%         EPSI_Profiles{i}.c=double(EPSI_Profiles{i}.c);
+%     end
     
     %% Parameters fixed by data structure
     % length of 1 scan in second
@@ -47,36 +44,47 @@ if ~exist([L1path 'Turbulence_Profiles.mat'],'file')
     % add pressure from ctd to the epsi profile. This should be ter mporary until
     % the addition of the pressure sensor on Epsi
     for i=1:length(EPSI_Profiles)
-        EPSI_Profiles{i}.P=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.P,EPSI_Profiles{i}.epsitime);
-        EPSI_Profiles{i}.T=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.T,EPSI_Profiles{i}.epsitime);
-        EPSI_Profiles{i}.S=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.S,EPSI_Profiles{i}.epsitime);
-        EPSI_Profiles{i}.P=EPSI_Profiles{i}.P(:);
-        EPSI_Profiles{i}.T=EPSI_Profiles{i}.T(:);
-        EPSI_Profiles{i}.S=EPSI_Profiles{i}.S(:);
-        EPSI_Profiles{i}.epsitime=EPSI_Profiles{i}.epsitime(:);
-        EPSI_Profiles{i}.flagSDSTR=EPSI_Profiles{i}.flagSDSTR(:);
+        epsitime=linspace(EPSI_Profiles{i}.epsitime(1),...
+            EPSI_Profiles{i}.epsitime(end),...
+            numel(EPSI_Profiles{i}.epsitime));
+        ctdtime=linspace(CTD_Profiles{i}.ctdtime(1),...
+            CTD_Profiles{i}.ctdtime(end),...
+            numel(CTD_Profiles{i}.ctdtime));
+        EPSI_Profiles{i}.P=interp1(ctdtime,CTD_Profiles{i}.P,epsitime);
+        EPSI_Profiles{i}.T=interp1(ctdtime,CTD_Profiles{i}.T,epsitime);
+        EPSI_Profiles{i}.S=interp1(ctdtime,CTD_Profiles{i}.S,epsitime);
+        EPSI_Profiles{i}.epsitime=epsitime;
+%         EPSI_Profiles{i}.P=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.P,EPSI_Profiles{i}.epsitime);
+%         EPSI_Profiles{i}.T=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.T,EPSI_Profiles{i}.epsitime);
+%         EPSI_Profiles{i}.S=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.S,EPSI_Profiles{i}.epsitime);
+%         EPSI_Profiles{i}.P=EPSI_Profiles{i}.P(:);
+%         EPSI_Profiles{i}.T=EPSI_Profiles{i}.T(:);
+%         EPSI_Profiles{i}.S=EPSI_Profiles{i}.S(:);
+%         EPSI_Profiles{i}.epsitime=EPSI_Profiles{i}.epsitime(:);
+%         EPSI_Profiles{i}.flagSDSTR=EPSI_Profiles{i}.flagSDSTR(:);
         MS{i}=calc_turbulence_TDIFFepsiWW(EPSI_Profiles{i},tscan,f,Fcut_epsilon,Meta_Data);
         Quality_check_profile_tdiff(EPSI_Profiles{i},MS(i),Meta_Data,Fcut_epsilon,-1,i)
 
     end
-    save([L1path 'Turbulence_Profiles.mat'],'MS','-v7.3')
+    save([Meta_Data.L1path 'Turbulence_Profiles.mat'],'MS','-v7.3')
 else
-    load([L1path 'Turbulence_Profiles.mat'],'MS')
+    load([Meta_Data.L1path 'Turbulence_Profiles.mat'],'MS')
 end
 
 % compite binned epsilon for all profiles
 indnul=cellfun(@(x) ~isempty(x),MS);
 Epsilon_class=calc_binned_epsi(MS(indnul));
-Chi_class=calc_binned_chi(MS);
+Chi_class=calc_binned_chi(MS(indnul));
 
 % plot binned epsilon for all profiles
-[F1,F2]=plot_binned_epsilon(Epsilon_class,[Meta_Data.mission '-' Meta_Data.deployement]);
-print(F1,[L1path Meta_Data.deployement '_binned_epsilon1_t3s.png'],'-dpng2')
-print(F2,[L1path Meta_Data.deployement '_binned_epsilon2_t3s.png'],'-dpng2')
+F1=figure(1);F2=figure(2);
+[F1,F2]=plot_binned_epsilon(Epsilon_class,[Meta_Data.mission '-' Meta_Data.deployment],F1,F2);
+print(F1,[L1path Meta_Data.deployment '_binned_epsilon1_t3s.png'],'-dpng2')
+print(F2,[L1path Meta_Data.deployment '_binned_epsilon2_t3s.png'],'-dpng2')
 
-%[F1,F2]=plot_binned_chi(Chi_class,Meta_Data,[Meta_Data.mission '-' Meta_Data.deployement]);
-%print(F1,[L1path Meta_Data.deployement '_binned_chi22_c_t3s.png'],'-dpng2')
-%print(F2,[L1path Meta_Data.deployement '_binned_chi21_c_t3s.png'],'-dpng2')
+[F1,F2]=plot_binned_chi(Chi_class,Meta_Data,[Meta_Data.mission '-' Meta_Data.deployment]);
+print(F1,[L1path Meta_Data.deployment '_binned_chi22_c_t3s.png'],'-dpng2')
+print(F2,[L1path Meta_Data.deployment '_binned_chi21_c_t3s.png'],'-dpng2')
 
 
 MSempty=cellfun(@isempty,MS);
@@ -94,7 +102,7 @@ Map_epsilon1=cell2mat(Map_epsilon1.');
 Map_epsilon2=cell2mat(Map_epsilon2.');
 Map_chi1=cell2mat(Map_chi1.');
 Map_chi2=cell2mat(Map_chi2.');
-save([L1path  'Turbulence_grid.mat'],'Map_epsilon1','Map_epsilon2','Map_chi1','Map_chi2','Map_time','zaxis')
+save([Meta_Data.L1path  'Turbulence_grid.mat'],'Map_epsilon1','Map_epsilon2','Map_chi1','Map_chi2','Map_time','zaxis')
 
 close all
 
@@ -122,7 +130,7 @@ figure;
 colormap('jet')
 pcolor(Map_time,zaxis,log10(real(Map_epsilon2.')));shading flat;axis ij
 colorbar
-caxis([-9,-6])
+caxis([-9,-3])
 set(gca,'XTickLabelRotation',45)
 datetick
 cax=colorbar;

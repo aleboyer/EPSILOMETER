@@ -29,13 +29,11 @@ NOISE=load('/Users/aleboyer/ARNAUD/SCRIPPS/EPSILOMETER/CALIBRATION/ELECTRONICS/c
 spec_notdiff=interp1(NOISE.k_granite,NOISE.spec_granite,MS{l}.f);
 FPO7noise=load([Meta_Data.CALIpath 'FPO7_noise.mat'],'n0','n1','n2','n3');
 n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
-shearnoise=load([Meta_Data.CALIpath 'shear_noise.mat'],'n0s','n1s','n2s','n3s');
-n0s=shearnoise.n0s; n1s=shearnoise.n1s; n2s=shearnoise.n2s; n3s=shearnoise.n3s;
 noise_tdiff0=10.^(n0+n1.*logf+n2.*logf.^2+n3.*logf.^3);
-%noise_tdiff=noise_tdiff0.*dTdV(1).^2./h_freq.electFPO7.^2./h_freq.Tdiff.^2;
-
 noise_notdiff=spec_notdiff.*dTdV(1).^2./h_freq.electFPO7.^2;
 
+shearnoise=load([Meta_Data.CALIpath 'shear_noise.mat'],'n0s','n1s','n2s','n3s');
+n0s=shearnoise.n0s; n1s=shearnoise.n1s; n2s=shearnoise.n2s; n3s=shearnoise.n3s;
 snoise=10.^(n0s+n1s.*logf+n2s.*logf.^2+n3s.*logf.^3);
 
 
@@ -326,13 +324,15 @@ for k=1:length(MS{l}.kvis)
     % movie stuff
     frame=getframe(gcf);
     writeVideo(v,frame)
-    delete(A);
-    delete(B);
-    delete(C);
-    delete(D);
-    delete(E);
-    delete(F);
-    delete(G);
+    if k<length(MS{l}.kvis)
+        delete(A);
+        delete(B);
+        delete(C);
+        delete(D);
+        delete(E);
+        delete(F);
+        delete(G);
+    end
    
 end
 % movie stuff

@@ -17,7 +17,7 @@ epsifile=[Meta_Data.Epsipath 'epsi_' Meta_Data.deployment];
 SD  =load(epsifile);
 CTD = load(ctdfile);
 
-CTDProfile=CTD.RBRprofiles;
+CTDProfile=CTD.RBRprofiles.dataup;
 %Epsi.Sensor5 = Epsi.Sensor1*nan;
 EpsiProfile  = get_cast_epsiWW(SD,CTDProfile);
 for i=1:length(CTDProfile)

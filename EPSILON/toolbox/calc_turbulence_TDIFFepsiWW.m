@@ -74,11 +74,11 @@ Profile.w=-Profile.w/1e7;
 
 %TODO probably check nan at previous step
 All_channels=fields(Profile);
-for c=1:length(All_channels)
-    wh_channels=All_channels{c};
-    Profile.(wh_channels)=fillmissing(Profile.(wh_channels),'linear');
-    Profile.(wh_channels)=filloutliers(Profile.(wh_channels),'linear');
-end
+% for c=1:length(All_channels)
+%     wh_channels=All_channels{c};
+%     Profile.(wh_channels)=fillmissing(Profile.(wh_channels),'linear');
+%     Profile.(wh_channels)=filloutliers(Profile.(wh_channels),'linear');
+% end
 
 %% define the index in the profile for each scan
 total_indscan = arrayfun(@(x) (1+floor(Lscan/2)*(x-1):1+floor(Lscan/2)*(x-1)+Lscan-1),1:nbscan,'un',0);
@@ -125,9 +125,9 @@ if nbscan>3
     indf1=indf1(1:end-1);
     f1=f1(indf1);
     Lf1=length(indf1);
-    
+
     P11= 2*P11(:,:,indf1);
-    P1= 2*P1(:,:,indf1);
+    Co12=Co12(:,:,:,indf1);
     %% get MADRE filters
     h_freq=get_filters_MADRE(Meta_Data,f1);
     
@@ -151,23 +151,18 @@ if nbscan>3
                 % correct transfert functions for accel spectra
                 P11(ind,:,:)=squeeze(P11(ind,:,:))./...
                     (ones(nbscan,1)*h_freq.electAccel);
-                P1(ind,:,:) =squeeze(P1(ind,:,:))./...
-                    (ones(nbscan,1)*sqrt(h_freq.electAccel));
                 nb_channel=nb_channel+1;
             case{'s1'}
                 TF1 =@(x) (Sv(1).*x/(2*G)).^2 .* h_freq.shear .* haf_oakey(f1,x);
                 TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w),'un',0).');
                 P11(ind,:,:) = squeeze(P11(ind,:,:)) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
-                P1(ind,:,:)  = squeeze(P1(ind,:,:)) ./ sqrt(TFshear);      % vel frequency spectra m^2/s^-2 Hz^-1
             case{'s2'}
                 TF1 =@(x) (Sv(2).*x/(2*G)).^2 .* h_freq.shear .* haf_oakey(f1,x);
                 TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w),'un',0).');
                 P11(ind,:,:) = squeeze(P11(ind,:,:)) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
-                P1(ind,:,:)  = squeeze(P1(ind,:,:)) ./ sqrt(TFshear);      % vel frequency spectra m^2/s^-2 Hz^-1
             case{'t1','t2'}
                 % ALB: Am I converting t1-t2 earlier as if they were still in ?C but they are in ?C/s
                 P11(ind,:,:) = Emp_Corr_fac * squeeze(P11(ind,:,:)).*dTdV.^2./TFtemp; % Temperature gradient frequency spectra should be ?C^2/s^-2 Hz^-1 ????
-                P1(ind,:,:)  = Emp_Corr_fac * squeeze(P1(ind,:,:)).*dTdV./sqrt(TFtemp);  % Temperature gradient frequency spectra should be ?C^2/s^-2 Hz^-1
         end
     end
     
@@ -175,9 +170,9 @@ if nbscan>3
     indt2=find(cellfun(@(x) strcmp(x,'t2'),channels));
     inds1=find(cellfun(@(x) strcmp(x,'s1'),channels));
     inds2=find(cellfun(@(x) strcmp(x,'s2'),channels));
-    inda1=find(cellfun(@(x) strcmp(x,'a1'),channels));
-    inda2=find(cellfun(@(x) strcmp(x,'a2'),channels));
-    inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
+%     inda1=find(cellfun(@(x) strcmp(x,'a1'),channels));
+%     inda2=find(cellfun(@(x) strcmp(x,'a2'),channels));
+%     inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
     
     
     % convert frequency to wavenumber
@@ -194,7 +189,8 @@ if nbscan>3
     MS.f   = f1;
     MS.k   = k_all;
     MS.Pf  = P11;
-    MS.P1f = P1;
+    MS.Co12 = Co12;
+
     % Set kmax for integration to highest bin below pump spike,
     % which is between 49 and 52 Hz in a 1024-pt spectrum
     MS.kmax=MS.fmax./MS.w; % Lowest estimate below pump spike in 1024-pt record
@@ -209,7 +205,6 @@ if nbscan>3
     %MS.PphiT_k=zeros(nbscan,).*nan;
     MS.PphiT_k=zeros(nbscan,Lk_all,2).*nan;
     MS.Pshear_k=zeros(nbscan,Lk_all,2).*nan;
-    MS.Paccell_k=zeros(nbscan,Lk_all,3).*nan;
     for j=1:nbscan
         fprintf('scan %i over %i \n',j,nbscan)
         if ~isempty(indt1)
@@ -224,15 +219,15 @@ if nbscan>3
         if ~isempty(inds2)
             MS.Pshear_k(j,:,2) = (2*pi*k_all).^2 .* interp1(k(j,:),squeeze(P11k(inds2,j,:)),k_all);        % shear spec  as function of k
         end
-        if ~isempty(inda1)
-            MS.Paccel_k(j,:,1)     =  interp1(k(j,:),squeeze(P11k(inda1,j,:)),k_all);        % Accel 1 spec  as function of k
-        end
-        if ~isempty(inda2)
-            MS.Paccel_k(j,:,2)     =  interp1(k(j,:),squeeze(P11k(inda2,j,:)),k_all);        % Accel 2 spec  as function of k
-        end
-        if ~isempty(inda3)
-            MS.Paccel_k(j,:,3)     =  interp1(k(j,:),squeeze(P11k(inda3,j,:)),k_all);        % Accel 3 spec  as function of k
-        end
+%         if ~isempty(inda1)
+%             MS.Paccel_k(j,:,1)     =  interp1(k(j,:),squeeze(P11k(inda1,j,:)),k_all);        % Accel 1 spec  as function of k
+%         end
+%         if ~isempty(inda2)
+%             MS.Paccel_k(j,:,2)     =  interp1(k(j,:),squeeze(P11k(inda2,j,:)),k_all);        % Accel 2 spec  as function of k
+%         end
+%         if ~isempty(inda3)
+%             MS.Paccel_k(j,:,3)     =  interp1(k(j,:),squeeze(P11k(inda3,j,:)),k_all);        % Accel 3 spec  as function of k
+%         end
         % compute epsilon in eps1_mmp
         if ~isempty(inds1)
             [MS.epsilon(j,1),MS.kc(j,1)]=eps1_mmp(k_all,MS.Pshear_k(j,:,1),MS.kvis(j),dk(j),MS.kmax(j));
@@ -246,7 +241,7 @@ if nbscan>3
         end
         %% TODO check to see if we need P1 in V^2 Hz^{-1} or if we can change it to degC Hz^{-1}
         if ~isempty(indt1)
-            MS.fc_index(j,1)=FPO7_cutoff(f1,squeeze(P11(indt1,j,:)).*squeeze(TFtemp(j,:)).');
+            MS.fc_index(j,1)=FPO7_cutoff(f1,squeeze(P11(indt1,j,:)).*squeeze(TFtemp(j,:)).',FPO7noise);
             MS.chi(j,1)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,1:MS.fc_index(j,1),1));
         end
         if ~isempty(indt2)
