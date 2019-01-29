@@ -1,4 +1,4 @@
-function [F1,F2]=plot_binned_epsilon(Epsilon_class,title_string,F1,F2)
+function [F1,F2]=plot_binned_epsilon(Epsilon_class,title_string,F1,F2,Meta_Data)
 
 %  input: 
 %  Epsilon_class : averaged temperature gradiant spectra classified by epsilon value
@@ -6,6 +6,20 @@ function [F1,F2]=plot_binned_epsilon(Epsilon_class,title_string,F1,F2)
 %  indplot: index of the epsilon value you want to plot (TODO: directly the epsilon values instead of the indexes)
 %
 %  Created by Arnaud Le Boyer on 7/28/18.
+
+
+% get shear channel average noise to compute epsi
+f=1/3:1/3:320/2;
+logf=log10(f);
+w_th=.65; %theoratical (estimated) speed w_th
+Sv = [Meta_Data.epsi.s1.Sv,Meta_Data.epsi.s2.Sv]; % TODO get Sv directly from the database
+Gr=9.81;
+h_freq=get_filters_MADRE(Meta_Data,f);
+shearnoise=load(fullfile(Meta_Data.CALIpath,'shear_noise.mat'),'n0s','n1s','n2s','n3s');
+n0s=shearnoise.n0s; n1s=shearnoise.n1s; n2s=shearnoise.n2s; n3s=shearnoise.n3s;
+snoise=10.^(n0s+n1s.*logf+n2s.*logf.^2+n3s.*logf.^3);
+TFshear=(Sv(1).*w_th/(2*Gr)).^2 .* h_freq.shear.* haf_oakey(f,w_th);
+snoise_k= (2*pi*f./w_th).^2 .* snoise.*w_th./TFshear;        % T1_k spec  as function of k
 
 
 figure(F1)
@@ -36,10 +50,12 @@ for i=1:length(Epsilon_class.bin)
             'fontsize',20,'Parent',ax1)
     end
     ll(i)=loglog(ax1,Epsilon_class.k,Epsilon_class.mPshear1(i,:),'Color',cmap(i,:),'linewidth',2);
+    loglog(ax1,f./w_th,10*snoise_k,'Color',[.2 .2 .2],'linewidth',2);
+    
 end
 
 xlim(ax1,[mink maxk])
-ylim(ax1,[minP maxP])
+ylim(ax1,[.001*minP maxP])
 grid(ax1,'on')
 xlabel(ax1,'k [cpm]')
 ylabel(ax1,'[s^{-2} / cpm]')
@@ -49,7 +65,8 @@ title(ax1,[title_string '- Shear1'])
 nanind=find(nansum(Epsilon_class.mPshear1,2)>0);
 legend_string=arrayfun(@(x) sprintf('log_{10}(\\epsilon)~%2.1f',x),log10(Epsilon_class.bin),'un',0);
 hl=gridLegend(ll(nanind),2,legend_string{nanind},'location','northwest');
-set(hl,'fontsize',10)
+set(hl,'fontsize',5)
+hl.Position=[.01 .75 .25 .25];
 
 ax2=axes('position',[.7 .1 .25 .82]);
 
@@ -90,9 +107,10 @@ for i=1:length(Epsilon_class.bin)
     end
     ll(i)=loglog(ax3,Epsilon_class.k,Epsilon_class.mPshear2(i,:),'Color',cmap(i,:),'linewidth',2);
 end
+loglog(ax3,f./w_th,snoise_k,'Color',[.2 .2 .2],'linewidth',2);
 
 xlim(ax3,[mink maxk])
-ylim(ax3,[minP maxP])
+ylim(ax3,[.001*minP maxP])
 grid(ax3,'on')
 xlabel(ax3,'k [cpm]')
 ylabel(ax3,'[s^{-2} / cpm]')
@@ -103,6 +121,7 @@ nanind=find(nansum(Epsilon_class.mPshear2,2)>0);
 legend_string=arrayfun(@(x) sprintf('log_{10}(\\epsilon)~%2.1f',x),log10(Epsilon_class.bin),'un',0);
 hl=gridLegend(ll(nanind),2,legend_string{nanind},'location','northwest');
 set(hl,'fontsize',10)
+hl.Position=[.01 .75 .25 .25];
 
 ax4=axes('position',[.7 .1 .25 .82]);
 

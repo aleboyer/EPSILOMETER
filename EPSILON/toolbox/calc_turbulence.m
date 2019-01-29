@@ -1,4 +1,4 @@
-function [MS]=calc_turbulence_epsifish_Tdiff(Profile,tscan,f,fmax,Meta_Data)
+function [MS]=calc_turbulence(Profile,tscan,f,fmax,Meta_Data,dsp,i)
 
 %  MS structure for Micro Structure. Inside MS you ll find
 %  temperature spectra in degC Hz^-1
@@ -50,7 +50,7 @@ function [MS]=calc_turbulence_epsifish_Tdiff(Profile,tscan,f,fmax,Meta_Data)
 %  Created by Arnaud Le Boyer on 7/28/18.
 
 %% get channels
-channels=strsplit(Meta_Data.PROCESS.channels,',');
+channels=Meta_Data.PROCESS.channels;
 nb_channels=length(channels);
 %% Gravity  ... of the situation :)
 G       = 9.81;
@@ -68,8 +68,17 @@ nbscan=2*nbscan-1;
 %% define the fall rate of the Profile. 
 %  Add Profile.w with w the vertical vel. 
 %  We are using the pressure from other sensors (CTD);
-Profile = compute_fallrate_downcast(Profile);
-Profile.w=Profile.w/100;
+switch Meta_Data.vehicle
+    case 'FISH'
+        Profile = compute_fallrate_downcast(Profile);
+    case 'WW'
+        Profile = compute_speed_upcast(Profile);
+        Profile.w=-Profile.w/1e7;
+end
+
+
+
+%Profile.w=Profile.w/1000;
 
 %TODO probably check nan at previous step
 All_channels=fields(Profile);
@@ -103,9 +112,9 @@ for c=1:length(All_channels)
     ind=find(cellfun(@(x) strcmp(x,wh_channels),channels));
     switch wh_channels
         case {'t1','t2','s1','s2'}
-            data(ind,:,:) = cell2mat(cellfun(@(x) Profile.(wh_channels)(x),MS.indscan,'un',0)).';
+            data(ind,:,:) = cell2mat(cellfun(@(x) filloutliers(Profile.(wh_channels)(x),'center','movmedian',5),MS.indscan,'un',0)).';
         case {'a1','a2','a3'}
-            data(ind,:,:) = cell2mat(cellfun(@(x,y) Profile.(wh_channels)(x),MS.indscan,'un',0)).';
+            data(ind,:,:) = cell2mat(cellfun(@(x) filloutliers(Profile.(wh_channels)(x),'center','movmedian',5),MS.indscan,'un',0)).';
     end
 end
 
@@ -133,7 +142,7 @@ Co12=Co12(:,:,:,indf1);
 h_freq=get_filters_MADRE(Meta_Data,f1);
 
 %%  get Sv for shear
-Sv        = [str2double(Meta_Data.epsi.s1.Sv),str2double(Meta_Data.epsi.s2.Sv)]; % TODO get Sv directly from the database
+Sv = [Meta_Data.epsi.s1.Sv,Meta_Data.epsi.s2.Sv]; % TODO get Sv directly from the database
 % Sensitivity of probe, nominal
 dTdV(1)=Meta_Data.epsi.t1.dTdV; %1/0.025 V/deg 
 dTdV(2)=Meta_Data.epsi.t2.dTdV; %1/0.025 V/deg 
@@ -156,13 +165,13 @@ for c=1:length(All_channels)
         case{'s1'}
             TF1 =@(x) (Sv(1).*x/(2*G)).^2 .* h_freq.shear .* haf_oakey(f1,x);     
             TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w),'un',0).');
-            P11(ind,:,:) = squeeze(P11(ind,:,:)) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
             P11_shear(1,:,:) = squeeze(P11(ind,:,:)); % keep Volt spectrum for noise check
+            P11(ind,:,:) = squeeze(P11(ind,:,:)) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
       case{'s2'}
             TF1 =@(x) (Sv(2).*x/(2*G)).^2 .* h_freq.shear .* haf_oakey(f1,x);     
             TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w),'un',0).');
-            P11(ind,:,:) = squeeze(P11(ind,:,:)) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
             P11_shear(2,:,:) = squeeze(P11(ind,:,:)); % keep Volt spectrum for noise check
+            P11(ind,:,:) = squeeze(P11(ind,:,:)) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
         case{'t1','t2'}
             if strcmp(wh_channels,'t1')
                 ind_dTdV=1;
@@ -179,27 +188,6 @@ indt1=find(cellfun(@(x) strcmp(x,'t1'),channels));
 indt2=find(cellfun(@(x) strcmp(x,'t2'),channels));
 inds1=find(cellfun(@(x) strcmp(x,'s1'),channels));
 inds2=find(cellfun(@(x) strcmp(x,'s2'),channels));
-% inda1=find(cellfun(@(x) strcmp(x,'a1'),channels));
-% inda2=find(cellfun(@(x) strcmp(x,'a2'),channels));
-% inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
-
-%% correct frequency shear spectra with acceleration
-% Co12=abs(smoothdata(Co12(:,:,:,indf1),3,'movmean',ceil(60/tscan)));
-% % find out wich acceleration channel will correct the best the shear
-% % channels
-% if ~isempty(inds1)
-%     maxa1=max(mean(Co12(inds1,inda1-1,:,2:end),3));
-%     maxa2=max(mean(Co12(inds1,inda2-1,:,2:end),3));
-%     maxa3=max(mean(Co12(inds1,inda3-1,:,2:end),3));
-%     if isempty(maxa1);maxa1=0;inda1=0;end
-%     if isempty(maxa2);maxa2=0;inda2=0;end
-%     if isempty(maxa3);maxa3=0;inda3=0;end
-%     maxCor=[maxa1 maxa2 maxa3];
-%     indacc=[inda1 inda2 inda3];
-%     indacc=indacc(maxCor==max(maxCor));
-%     % correction 
-%     P11(inds1,:,:)=squeeze(P11(inds1,:,:)).*(1-squeeze(Co12(inds1,indacc-1,:,:)));
-% end
 
 % convert frequency to wavenumber
 k=cell2mat(cellfun(@(x) f1/x, num2cell(MS.w),'un',0).');
@@ -222,15 +210,43 @@ MS.kmax=MS.fmax./MS.w; % Lowest estimate below pump spike in 1024-pt record
 
 
 % get FPO7 channel average noise to compute chi
-FPO7noise=load([Meta_Data.CALIpath 'FPO7_noise.mat'],'n0','n1','n2','n3');
+switch Meta_Data.MAP.temperature
+    case 'Tdiff'
+        FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_noise.mat'),'n0','n1','n2','n3');
+    otherwise
+        FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+end
 
 % calc epsilon by integrating to k with 90% variance of Panchev spec
 % unless spectrum is noisy at lower k.
 % Check that data window > 0.5 m, as needed for initial estimate
-%MS.PphiT_k=zeros(nbscan,).*nan;
 MS.PphiT_k=zeros(nbscan,Lk_all,2).*nan;
 MS.Pshear_k=zeros(nbscan,Lk_all,2).*nan;
-%MS.Paccell_k=zeros(nbscan,Lk_all,3).*nan;
+
+if dsp==1
+    % % movie stuff
+    v = VideoWriter(sprintf('%s_rawcast%i%s',Meta_Data.deployment,i,'.avi'));
+    v.FrameRate=5;
+    open(v)
+    
+    n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
+    logf=log10(f1);
+    noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
+    shearnoise=load([Meta_Data.CALIpath 'shear_noise.mat'],'n0s','n1s','n2s','n3s');
+    n0s=shearnoise.n0s; n1s=shearnoise.n1s; n2s=shearnoise.n2s; n3s=shearnoise.n3s;
+    snoise=n0s+n1s.*logf+n2s.*logf.^2+n3s.*logf.^3;
+    close all
+    figure(10)
+    set(gcf,'Position',[100 100 1000 1000])
+    ax(1)=axes('Position',[.1 .52 .8 .27]);
+    ax(3)=axes('Position',[.1 .83 .8 .08]);
+    ax(2)=axes('Position',[.1 .06 .8 .27]);
+    ax(4)=axes('Position',[.1 .36 .8 .08]);
+    
+    smin=-.03;smax=.03;
+    tmin=-3e-4;tmax=3e-4;
+end
+
 for j=1:nbscan
     fprintf('scan %i over %i \n',j,nbscan)
     if ~isempty(indt1)
@@ -245,76 +261,137 @@ for j=1:nbscan
     if ~isempty(inds2)
         MS.Pshear_k(j,:,2) = (2*pi*k_all).^2 .* interp1(k(j,:),squeeze(P11k(inds2,j,:)),k_all);        % shear spec  as function of k
     end
-%     if ~isempty(inda1)
-%         MS.Paccel_k(j,:,1)     =  interp1(k(j,:),squeeze(P11k(inda1,j,:)),k_all);        % Accel 1 spec  as function of k
-%     end
-%     if ~isempty(inda2)
-%         MS.Paccel_k(j,:,2)     =  interp1(k(j,:),squeeze(P11k(inda2,j,:)),k_all);        % Accel 2 spec  as function of k
-%     end
-%     if ~isempty(inda3)
-%         MS.Paccel_k(j,:,3)     =  interp1(k(j,:),squeeze(P11k(inda3,j,:)),k_all);        % Accel 3 spec  as function of k
-%     end
     % compute epsilon in eps1_mmp
     if ~isempty(inds1)
-        [MS.epsilon(j,1),MS.kc(j,1)]=eps1_mmp(k_all,MS.Pshear_k(j,:,1),MS.kvis(j),dk(j),MS.kmax(j)); 
-        [kpan,Ppan] = panchev(MS.epsilon(j,1),MS.kvis(j));
-        MS.Ppan(j,:,1)=interp1(kpan,Ppan,k_all);
+        if all(isnan(squeeze(P11k(inds1,j,:))))
+            MS.Ppan(j,:,1)=nan.*k_all;
+            MS.epsilon(j,1)=nan;
+            MS.kc(j,1)=nan;
+        else
+%            [MS.epsilon(j,1),MS.kc(j,1)]=eps1_mmp(k_all,MS.Pshear_k(j,:,1),MS.kvis(j),dk(j),MS.kmax(j)); 
+            [MS.epsilon(j,1),MS.kc(j,1)]=eps1_mmp(k_all,MS.Pshear_k(j,:,1),MS.kvis(j),dk_all,MS.kmax(j)); 
+            [kpan,Ppan] = panchev(MS.epsilon(j,1),MS.kvis(j));
+            MS.Ppan(j,:,1)=interp1(kpan,Ppan,k_all);
+        end
     end
     if ~isempty(inds2)
-        [MS.epsilon(j,2),MS.kc(j,2)]=eps1_mmp(k_all,MS.Pshear_k(j,:,2),MS.kvis(j),dk(j),MS.kmax(j));
-        [kpan,Ppan] = panchev(MS.epsilon(j,2),MS.kvis(j));
-        MS.Ppan(j,:,2)=interp1(kpan,Ppan,k_all);
+        if all(isnan(squeeze(P11k(inds2,j,:))))
+            MS.Ppan(j,:,1)=nan.*k_all;
+            MS.epsilon(j,2)=nan;
+            MS.kc(j,2)=nan;
+        else
+            %[MS.epsilon(j,2),MS.kc(j,2)]=eps1_mmp(k_all,MS.Pshear_k(j,:,2),MS.kvis(j),dk(j),MS.kmax(j));
+            [MS.epsilon(j,2),MS.kc(j,2)]=eps1_mmp(k_all,MS.Pshear_k(j,:,2),MS.kvis(j),dk_all,MS.kmax(j));
+            [kpan,Ppan] = panchev(MS.epsilon(j,2),MS.kvis(j));
+            MS.Ppan(j,:,2)=interp1(kpan,Ppan,k_all);
+        end
     end
 
      if ~isempty(indt1)
-         MS.fc_index(j,1)=FPO7_cutoff(f1,squeeze(P11_temp(1,j,:)).',FPO7noise);
-        MS.chi(j,1)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,1:MS.fc_index(j,1),1));
+        if all(isnan(squeeze(P11_temp(1,j,:)))) 
+            MS.chi(j,1)=nan;
+            MS.fc_index(j,1)=nan;
+        else
+            MS.fc_index(j,1)=FPO7_cutoff(f1,squeeze(P11_temp(1,j,:)).',FPO7noise);
+            MS.kcfpo7(j,1)=k_all(find(k_all<=k(j,MS.fc_index(j,1)),1,'last'));
+            krange=find(k_all<=k(j,MS.fc_index(j,1)));
+%            MS.chi(j,1)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,krange,1));
+            MS.chi(j,1)=6*MS.ktemp(j)*dk_all.*nansum(MS.PphiT_k(j,krange,1));
+        end
     end
     if ~isempty(indt2)
-        MS.fc_index(j,2)=FPO7_cutoff(f1,squeeze(P11_temp(2,j,:)).',FPO7noise);
-        MS.chi(j,2)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,1:MS.fc_index(j,2),2));
+        if all(isnan(squeeze(P11_temp(2,j,:))))
+            MS.chi(j,2)=nan;
+            MS.fc_index(j,2)=nan;
+        else
+            MS.fc_index(j,2)=FPO7_cutoff(f1,squeeze(P11_temp(2,j,:)).',FPO7noise);
+            MS.kcfpo7(j,2)=k_all(find(k_all<=k(j,MS.fc_index(j,2)),1,'last'));
+            krange=find(k_all<=k(j,MS.fc_index(j,2)));
+%            MS.chi(j,2)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,krange,2));
+            MS.chi(j,2)=6*MS.ktemp(j)*dk_all.*nansum(MS.PphiT_k(j,krange,2));
+        end
     end
     
-    shearnoise=load([Meta_Data.CALIpath 'shear_noise.mat'],'n0s','n1s','n2s','n3s');
-    n0s=shearnoise.n0s; n1s=shearnoise.n1s; n2s=shearnoise.n2s; n3s=shearnoise.n3s;
-    snoise=10.^(n0s+n1s.*logf+n2s.*logf.^2+n3s.*logf.^3);
+    if (dsp==1 && all(~isnan([MS.chi(j,1) MS.chi(j,2) MS.epsilon(j,1) MS.epsilon(j,2)])) )
+        
+        
+        loglog(ax(1),f1,squeeze(P11_temp(1,j,:)),'r')
+        hold(ax(1),'on')
+        loglog(ax(1),f1,squeeze(P11_temp(2,j,:)),'b')
+        if ~isempty(indt1)
+            loglog(ax(1),f1(1:MS.fc_index(j,1)),squeeze(P11_temp(1,j,1:MS.fc_index(j,1))),'c')
+        else
+            loglog(ax(1),f1(1:MS.fc_index(j,2)),squeeze(P11_temp(2,j,1:MS.fc_index(j,2))),'c')
+        end
+        loglog(ax(1),f1,10.^noise,'k')
+        ylim(ax(1),[1e-15 1e-5])
+        xlim(ax(1),f1([1 end]))
+        hold(ax(1),'off')
+        ylabel(ax(1),'t_{1,2} (V^2/Hz)','fontsize',20)
+        set(ax(1),'fontsize',15)
+        legend(ax(1),'t1 raw','t2','t1 signal','MADRE noise','location','southwest')
+        set(ax(1),'Xscale','log','Yscale','log')
+        grid(ax(1),'on')       
+        lab={};
+        if ~isempty(indt1)
+            plot(ax(3),(MS.indscan{j}-MS.indscan{j}(1))/320,detrend(squeeze(data(indt1,j,:))),'r');
+            lab{1}='t1';
+        end
+        hold(ax(3),'on')
+        if ~isempty(indt2)
+            plot(ax(3),(MS.indscan{j}-MS.indscan{j}(1))/320,detrend(squeeze(data(indt2,j,:))),'b');
+            lab{2}='t2';
+        end
+        hold(ax(3),'off')
+        legend(ax(3),lab(cellfun(@(x) ~isempty(x),lab)))
+        xlabel(ax(3),'s' ,'fontsize',20)
+        ylabel(ax(3),'V' ,'fontsize',20)
+        ylim(ax(3),[tmin tmax])
+        title(ax(3),{'raw Temperature', ...
+            sprintf(' %s %s Cast %i ',Meta_Data.mission,Meta_Data.deployment,i)}, ...
+                   'fontsize',20)
+        
+  
+               
+        loglog(ax(2),f1,squeeze(P11_shear(1,j,:)),'r')
+        hold(ax(2),'on')
+        loglog(ax(2),f1,squeeze(P11_shear(2,j,:)),'b')
+        ind_s1=find(k(j,:)<MS.kc(j,1));
+        loglog(ax(2),f1(ind_s1),squeeze(P11_shear(1,j,ind_s1)),'c')
+%         ind_s2=find(k(j,:)<MS.kc(j,1));
+%         loglog(ax(2),f1(ind_s2),squeeze(P11_shear(2,j,ind_s2)),'b')
+        loglog(ax(2),f1,10.^snoise,'k')
+        ylim(ax(2),[1e-15 1e-1])
+        xlim(ax(2),f1([1 end]))
+        hold(ax(2),'off')
+        set(ax(2),'Xscale','log','Yscale','log')
+        ylabel(ax(2),'s_{1,2} (V^2/Hz)','fontsize',20)
+        xlabel(ax(2),'Hz' ,'fontsize',20)
+        set(ax(2),'fontsize',15)
+        legend(ax(2),'s1 raw','s2','s1 signal','MADRE noise','location','southwest')
+        grid(ax(2),'on')       
 
-    figure(10)
-    ax(1)=subpplot(121)
-    n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
-    logf=log10(f1);
-    noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
-    hold on
-    loglog(f1,squeeze(P11_temp(1,j,:)),'r')
-    loglog(f1(1:MS.fc_index(j,1)),squeeze(P11_temp(1,j,1:MS.fc_index(j,1))),'c')
-    loglog(f1,squeeze(P11_temp(2,j,:)),'b')
-    loglog(f1,10.^noise,'k')
-    ylim([1e-15 1e-5])
-    xlim(f1([1 end]))
-    ylabel('t_{1,2} (V^2/Hz)','fontsize',20)
-    set(ax(1),'fontsize',15)
-    legend('t1','t2','MADRE noise')
-    set(ax(1),'Xscale','log','Yscale','log')
+        plot(ax(4),(MS.indscan{j}-MS.indscan{j}(1))/320,detrend(squeeze(data(inds1,j,:))),'r')
+        hold(ax(4),'on')
+        plot(ax(4),(MS.indscan{j}-MS.indscan{j}(1))/320,detrend(squeeze(data(inds2,j,:))),'b')
+        hold(ax(4),'off')
+        legend(ax(4),{'s1','s2'})
+        title(ax(4),'raw Shear','fontsize',20)
+        xlabel(ax(4),'s' ,'fontsize',20)
+        ylim(ax(4),[smin smax])
+        ylabel(ax(4),'V' ,'fontsize',20)
 
-    ax(2)=subpplot(122)
-    logf=log10(f1);
-    ind_s1=find(k(j,:)<MS.kc(j,1))
-    hold on
-    loglog(f1,squeeze(P11_shear(1,j,:)),'r')
-    loglog(f1(1:MS.fc_index(j,1)),squeeze(P11_temp(1,j,1:MS.fc_index(j,1))),'c')
-    loglog(f1,squeeze(P11_temp(2,j,:)),'b')
-    loglog(f1,10.^noise,'k')
-    ylim([1e-15 1e-5])
-    xlim(f1([1 end]))
-    set(gca,'Xscale','log','Yscale','log')
-    ylabel('s_1 (V^2/Hz)','fontsize',20)
-    set(ax(2),'fontsize',15)
-    legend('t1 raw','t1 signal','MADRE noise')
-
-    
-    pause(.1)
-    cla
-
+        
+        pause(.1)
+        frame=getframe(gcf);
+        writeVideo(v,frame)
+        cla(ax(3))
+        cla(ax(4))
+    end
+    % movie stuff
+end
+if dsp==1
+    close(v)
 end
 
 

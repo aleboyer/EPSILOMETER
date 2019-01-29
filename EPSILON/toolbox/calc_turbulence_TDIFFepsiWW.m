@@ -117,7 +117,7 @@ if nbscan>3
     % remove the mean to compute the fft
     
     % Profile Power and Co spectrum and Coherence. (Coherence still needs to be averaged over few scans afterwork)
-    [f1,P1,P11,Co12]=get_profile_spectrum(data,f);
+    [f1,~,P11,Co12]=get_profile_spectrum(data,f);
     %TODO comment on the Co12 sturcutre and think about reducing the size of
     %the Coherence spectra (doublon)
     
@@ -128,18 +128,22 @@ if nbscan>3
 
     P11= 2*P11(:,:,indf1);
     Co12=Co12(:,:,:,indf1);
+    Co12=squeeze(abs(smoothdata(Co12,3,'movmean',15)));
     %% get MADRE filters
     h_freq=get_filters_MADRE(Meta_Data,f1);
     
     %%  get Sv for shear
     Sv        = [Meta_Data.epsi.s1.Sv,Meta_Data.epsi.s2.Sv]; % TODO get Sv directly from the database
     % Sensitivity of probe, nominal
-    dTdV=40; %1/0.025 V/deg
-    
+    dTdV(1)=Meta_Data.epsi.t1.dTdV; %1/0.025 V/deg 
+    dTdV(2)=Meta_Data.epsi.t2.dTdV; %1/0.025 V/deg 
+
     %% compute fpo7 filters (they are speed dependent)
     Emp_Corr_fac=1;
     TFtemp=cell2mat(cellfun(@(x) h_freq.FPO7(x),num2cell(MS.w),'un',0).');
-    
+    P11_temp=0.*P11(1:2,:,:);
+%    P11_shear=0.*P11(1:2,:,:);
+
     
     
     nb_channel=1;
@@ -155,14 +159,20 @@ if nbscan>3
             case{'s1'}
                 TF1 =@(x) (Sv(1).*x/(2*G)).^2 .* h_freq.shear .* haf_oakey(f1,x);
                 TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w),'un',0).');
-                P11(ind,:,:) = squeeze(P11(ind,:,:)) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
+                P11(ind,:,:) = squeeze(P11(ind,:,:)).*(1-squeeze(Co12(ind,5,:,:))) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
             case{'s2'}
                 TF1 =@(x) (Sv(2).*x/(2*G)).^2 .* h_freq.shear .* haf_oakey(f1,x);
                 TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w),'un',0).');
-                P11(ind,:,:) = squeeze(P11(ind,:,:)) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
-            case{'t1','t2'}
-                % ALB: Am I converting t1-t2 earlier as if they were still in ?C but they are in ?C/s
-                P11(ind,:,:) = Emp_Corr_fac * squeeze(P11(ind,:,:)).*dTdV.^2./TFtemp; % Temperature gradient frequency spectra should be ?C^2/s^-2 Hz^-1 ????
+                P11(ind,:,:) = squeeze(P11(ind,:,:)).*(1-squeeze(Co12(ind,5,:,:))) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
+          case{'t1','t2'}
+            if strcmp(wh_channels,'t1')
+                ind_dTdV=1;
+                P11_temp(1,:,:) = squeeze(P11(ind,:,:)); % keep Volt spectrum for FPO7_cutoff 
+            else
+                ind_dTdV=2;
+                P11_temp(2,:,:) = squeeze(P11(ind,:,:)); % keep Volt spectrum for FPO7_cutoff 
+            end
+            P11(ind,:,:) = Emp_Corr_fac * squeeze(P11(ind,:,:)).*dTdV(ind_dTdV).^2./TFtemp; % Temperature gradient frequency spectra should be ?C^2/s^-2 Hz^-1 ???? 
         end
     end
     
@@ -241,11 +251,11 @@ if nbscan>3
         end
         %% TODO check to see if we need P1 in V^2 Hz^{-1} or if we can change it to degC Hz^{-1}
         if ~isempty(indt1)
-            MS.fc_index(j,1)=FPO7_cutoff(f1,squeeze(P11(indt1,j,:)).*squeeze(TFtemp(j,:)).',FPO7noise);
+            MS.fc_index(j,1)=FPO7_cutoff(f1,squeeze(P11_temp(1,j,:)).',FPO7noise);
             MS.chi(j,1)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,1:MS.fc_index(j,1),1));
         end
         if ~isempty(indt2)
-            MS.fc_index(j,2)=FPO7_cutoff(f1,squeeze(P11(indt2,j,:)).*squeeze(TFtemp(j,:)).',FPO7noise);
+            MS.fc_index(j,2)=FPO7_cutoff(f1,squeeze(P11_temp(2,j,:)).',FPO7noise);
             MS.chi(j,2)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,1:MS.fc_index(j,2),2));
         end
     end

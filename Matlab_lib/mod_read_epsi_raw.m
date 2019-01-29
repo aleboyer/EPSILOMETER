@@ -1,4 +1,4 @@
-function epsi = mod_read_epsi_raw(filename)
+function epsi = mod_read_epsi_raw(filename,Meta_Data)
 % SN_READ_EPSI_RAW - reads epsi raw data
 %
 % SN_READ_EPSI_RAW(FILENAME) returns a EPSI structure of variables described
@@ -12,13 +12,17 @@ function epsi = mod_read_epsi_raw(filename)
 %
 % Created 2018/10/15 San Nguyen
 %
+% add Meta_Data to automatize unipolar and bipolar config of the ADC and the
+% number channels
+% modified 2018/12/20 Arnaud Le Boyer 
+%
 
 % check if it is a single file or a directory and a set of files
 if ischar(filename) % dir or file
     switch exist(filename,'file')
         case 2 % if it is a file
             fid = fopen(filename,'r');
-            epsi = mod_read_epsi_raw(fid);
+            epsi = mod_read_epsi_raw(fid,Meta_Data);
             fclose(fid);
         case 7 % if it is a directory
             my_epsi_file = [];
@@ -34,7 +38,7 @@ if ischar(filename) % dir or file
                 % read the files in the directory
                 for i = 1:length(my_epsi_file)
                     disp(['reading ' my_epsi_file(i).name]);
-                    epsi{i} = mod_read_epsi_raw(fullfile(filename,my_epsi_file(i).name));
+                    epsi{i} = mod_read_epsi_raw(fullfile(filename,my_epsi_file(i).name),Meta_Data);
                 end
                 % combine all files into one MET structure
                 epsi = mod_combine_epsi(epsi{:});
@@ -48,7 +52,7 @@ elseif iscellstr(filename) % cell of files
     % read all files
     for i = 1:length(filename)
         disp(['reading ' filename{i}]);
-        epsi{i} = mod_read_epsi_raw(filename{i});
+        epsi{i} = mod_read_epsi_raw(filename{i},Meta_Data);
     end
     % combine all files into one epsi structure
     epsi = mod_combine_epsi(epsi{:});
@@ -58,7 +62,7 @@ else
         error('MATLAB:mod_read_epsi_raw:wrongFID','FID is invalid');
     end
     
-    epsi = mod_read_epsi_raw_file(filename);
+    epsi = mod_read_epsi_raw_file(filename,Meta_Data);
     
     return
 end
@@ -66,7 +70,7 @@ end
 end
 
 % reading epsi files through FID
-function EPSI = mod_read_epsi_raw_file(fid)
+function EPSI = mod_read_epsi_raw_file(fid,Meta_Data)
 tic
 % make sure the file marker begins at the start
 EPSI = epsi_ascii_parseheader(fid);
@@ -100,9 +104,7 @@ str = fread(fid,'*char')';
 ind_madre = strfind(str,'$MADRE');
 ind_aux1 = strfind(str,'$AUX1');
 toc
-if(isfield(EPSI,'header'))
-    system.time = char(zeros(numel(ind_madre),11));
-end
+
 madre.offset = 0;
 madre.name_length = 6;
 madre.epsi_stamp_offset = -1+madre.name_length;
@@ -119,17 +121,17 @@ madre.aux_chksum_length = 8;
 madre.map_chksum_length = 8;
 madre.fsync_err_length = 8;
 
-madre.epsi_stamp = char(zeros(numel(ind_madre),madre.epsi_stamp_length));
-madre.epsi_time = char(zeros(numel(ind_madre),madre.epsi_time_length));
-madre.altimeter = char(zeros(numel(ind_madre)*2,madre.alt_time_length));
-madre.fsync_err = char(zeros(numel(ind_madre),madre.fsync_err_length));
-madre.aux1_chksum = char(zeros(numel(ind_madre),madre.aux_chksum_length));
-madre.epsi_chksum = char(zeros(numel(ind_madre),madre.map_chksum_length));
-
 if (isempty(ind_aux1))
     aux1.offset = nan();
 else
-    aux1.offset = madre.offset+madre.name_length+madre.epsi_stamp_length+1+madre.epsi_time_length+1+madre.alt_time_length*2+1+madre.aux_chksum_length+1+madre.fsync_err_length+1+madre.map_chksum_length+2-1;
+    aux1.offset = madre.offset+ ...
+                  madre.name_length+ ...
+                  madre.epsi_stamp_length+1+ ...
+                  madre.epsi_time_length+1+ ...
+                  madre.alt_time_length*2+1+ ...
+                  madre.aux_chksum_length+1+ ...
+                  madre.fsync_err_length+1+ ...
+                  madre.map_chksum_length+2-1;
 end%60; %madre.offset+madre.name_length+madre.epsi_stamp_length+1+madre.epsi_time_length+1+madre.alt_time_length*4+2+madre.aux_chksum_length+1+madre.map_chksum_length+2-1;
 aux1.name_length = 5;
 aux1.stamp_offset = (0:8)*33+aux1.name_length+aux1.offset;
@@ -138,8 +140,6 @@ aux1.sbe_offset = (0:8)*33+9+aux1.name_length+aux1.offset;
 aux1.stamp_length = 8;
 aux1.sbe_length = 22;
 
-aux1.stamp = char(zeros(numel(ind_madre)*9,aux1.stamp_length));
-aux1.sbe = char(zeros(numel(ind_madre)*9,aux1.sbe_length));
 
 if isnan(aux1.offset)
     epsi.offset = madre.offset+madre.name_length+madre.epsi_stamp_length+1+madre.epsi_time_length+1+madre.alt_time_length*2+1+madre.aux_chksum_length+1+madre.fsync_err_length+1+madre.map_chksum_length+2-1;
@@ -148,73 +148,108 @@ else
 end
 epsi.name_length = 5;
 epsi.nblocks = 160;
-epsi.nchannels = 8;
+epsi.nchannels = Meta_Data.PROCESS.nb_channels;
 epsi.sample_freq = 320;
 epsi.sample_period = 1/epsi.sample_freq;
 epsi.bytes_per_channel = 3;
 epsi.total_length = epsi.nblocks*epsi.nchannels*epsi.bytes_per_channel;
-epsi.raw = int32(zeros(numel(ind_madre),epsi.total_length));
+
+% indbeg=find(diff(ind_madre)~=median(diff(ind_madre)),1,'last');
+% find the non corrupted (right length)
+indblock=ind_madre(diff(ind_madre)==median(diff(ind_madre)));
+
+% if isempty(indbeg)
+%     indbeg=1;
+% end
+% NBblock=numel(ind_madre)-indbeg+1;
+NBblock=numel(indblock);
+
+if(isfield(EPSI,'header'))
+    system.time = char(zeros(NBblock,11));
+end
+
+madre.epsi_stamp = char(zeros(NBblock,madre.epsi_stamp_length));
+madre.epsi_time = char(zeros(NBblock,madre.epsi_time_length));
+madre.altimeter = char(zeros(NBblock*2,madre.alt_time_length));
+madre.fsync_err = char(zeros(NBblock,madre.fsync_err_length));
+madre.aux1_chksum = char(zeros(NBblock,madre.aux_chksum_length));
+madre.epsi_chksum = char(zeros(NBblock,madre.map_chksum_length));
+
+aux1.stamp = char(zeros(NBblock*9,aux1.stamp_length));
+aux1.sbe = char(zeros(NBblock*9,aux1.sbe_length));
 
 EPSI.madre = struct(...
-    'EpsiStamp',NaN(numel(ind_madre),1),...
-    'TimeStamp',NaN(numel(ind_madre),1),...
-    'altimeter',NaN(numel(ind_madre),2),...
-    'fsync_err',NaN(numel(ind_madre),1),...
-    'Checksum_aux1',NaN(numel(ind_madre),1),...
-    'Checksum_map',NaN(numel(ind_madre),1));
+    'EpsiStamp',NaN(NBblock,1),...
+    'TimeStamp',NaN(NBblock,1),...
+    'altimeter',NaN(NBblock,2),...
+    'fsync_err',NaN(NBblock,1),...
+    'Checksum_aux1',NaN(NBblock,1),...
+    'Checksum_map',NaN(NBblock,1));
 if(isfield(EPSI,'header'))
-    EPSI.madre.time = NaN(numel(ind_madre),1);
+    EPSI.madre.time = NaN(NBblock,1);
 end
 EPSI.aux1 = struct(...
-    'Aux1Stamp',NaN(numel(ind_madre),9),...
-    'T_raw',NaN(numel(ind_madre),9),...
-    'C_raw',NaN(numel(ind_madre),9),...
-    'P_raw',NaN(numel(ind_madre),9),...
-    'PT_raw',NaN(numel(ind_madre),9));
-EPSI.epsi = struct(...
-    'EPSInbsample',NaN(numel(ind_madre),160),...
-    't1',NaN(numel(ind_madre),160),...
-    't2',NaN(numel(ind_madre),160),...
-    's1',NaN(numel(ind_madre),160),...
-    's2',NaN(numel(ind_madre),160),...
-    'a1',NaN(numel(ind_madre),160),...
-    'a2',NaN(numel(ind_madre),160),...
-    'a3',NaN(numel(ind_madre),160));
+    'Aux1Stamp',NaN(NBblock*9,1),...
+    'T_raw',NaN(NBblock*9,1),...
+    'C_raw',NaN(NBblock*9,1),...
+    'P_raw',NaN(NBblock*9,1),...
+    'PT_raw',NaN(NBblock*9,1));
 
+for cha=1:Meta_Data.PROCESS.nb_channels
+    wh_channel=Meta_Data.PROCESS.channels{cha};
+    EPSI.epsi.(wh_channel) = NaN(NBblock,epsi.nblocks);
+end
+EPSI.epsi.EPSInbsample=NaN(NBblock,epsi.nblocks);
 
 %%
 % tic
-for i=1:numel(ind_madre)
+check_endstr=mod(ind_madre(end)+epsi.offset+epsi.name_length+epsi.total_length ...
+                                - numel(str),epsi.total_length);
+if check_endstr==0
+    nb_block=NBblock;
+else
+    nb_block=NBblock-1;
+end
+aux1.stamp = char(zeros(nb_block*9,aux1.stamp_length));
+aux1.sbe = char(zeros(nb_block*9,aux1.sbe_length));
+epsi.raw = int32(zeros(nb_block,epsi.total_length));
+
+%for i=indbeg:nb_block
+for i=1:numel(indblock)
     if(isfield(EPSI,'header'))
         system.time(i,1:10) = str(ind_madre(i)-(10:-1:1));
     end
-    madre.epsi_stamp(i,:) = str(ind_madre(i)+(1:madre.epsi_stamp_length)+madre.epsi_stamp_offset);
-    madre.epsi_time(i,:) = str(ind_madre(i)+(1:madre.epsi_time_length)+madre.epsi_time_offset);
-    madre.aux1_chksum(i,:) = str(ind_madre(i)+(1:madre.aux_chksum_length)+madre.aux_chksum_offset);
-    madre.epsi_chksum(i,:) = str(ind_madre(i)+(1:madre.map_chksum_length)+madre.map_chksum_offset);
+    madre.epsi_stamp(i,:) = str(indblock(i)+(1:madre.epsi_stamp_length)+madre.epsi_stamp_offset);
+    madre.epsi_time(i,:) = str(indblock(i)+(1:madre.epsi_time_length)+madre.epsi_time_offset);
+    madre.aux1_chksum(i,:) = str(indblock(i)+(1:madre.aux_chksum_length)+madre.aux_chksum_offset);
+    madre.epsi_chksum(i,:) = str(indblock(i)+(1:madre.map_chksum_length)+madre.map_chksum_offset);
     for j=1:2
-        madre.altimeter((i-1)*2+j,:) = str(ind_madre(i)+(1:madre.alt_time_length)+madre.alt_time_offset(j));
+        madre.altimeter((i-1)*2+j,:) = str(indblock(i)+(1:madre.alt_time_length)+madre.alt_time_offset(j));
     end
-    madre.fsync_err(i,:) = str(ind_madre(i)+(1:madre.fsync_err_length)+madre.fsync_err_offset);
+    madre.fsync_err(i,:) = str(indblock(i)+(1:madre.fsync_err_length)+madre.fsync_err_offset);
     if ~isnan(aux1.offset)
         for j=1:9
-            aux1.stamp((i-1)*9+j,:) = str(ind_madre(i)+(1:aux1.stamp_length)+aux1.stamp_offset(j));
-            aux1.sbe((i-1)*9+j,:) = str(ind_madre(i)+(1:aux1.sbe_length)+aux1.sbe_offset(j));
+            aux1.stamp((i-1)*9+j,:) = str(indblock(i)+(1:aux1.stamp_length)+aux1.stamp_offset(j));
+            aux1.sbe((i-1)*9+j,:) = str(indblock(i)+(1:aux1.sbe_length)+aux1.sbe_offset(j));
         end
     end
-    epsi.raw(i,:) = int32(str(ind_madre(i)+epsi.offset+epsi.name_length+(1:epsi.total_length)));
+    %epsi.raw(i,:) = int32(str(ind_madre(i)+epsi.offset+epsi.name_length+(1:epsi.total_length)));
+    epsi.raw(i,:) = int32(str(indblock(i)+epsi.offset+epsi.name_length+(1:epsi.total_length)));
     
     
 end
 toc
 epsi.raw1 = epsi.raw(:,1:3:end)*256^2+epsi.raw(:,2:3:end)*256+epsi.raw(:,3:3:end);
 if(isfield(EPSI,'header'))
-    system.time(:,11) = newline;
-    
-    system.time = system.time';
-    system_time = textscan(system.time(:),'%f');
-    
-    EPSI.madre.time = system_time{1}/100/24/3600+EPSI.header.offset_time;
+    switch Meta_Data.PROCESS.recording_mod
+        case 'STREAMING'
+            system.time(:,11) = newline;
+            system.time = system.time';
+            system_time = textscan(system.time(:),'%f');
+            EPSI.madre.time = system_time{1}/100/24/3600+EPSI.header.offset_time;
+        case 'SD'
+            EPSI.madre.time=0;
+    end
 end
 EPSI.madre.EpsiStamp = hex2dec(madre.epsi_stamp);
 EPSI.madre.TimeStamp = hex2dec(madre.epsi_time);
@@ -223,15 +258,52 @@ EPSI.madre.fsync_err = hex2dec(madre.fsync_err);
 EPSI.madre.Checksum_aux1 = hex2dec(madre.aux1_chksum);
 EPSI.madre.Checksum_map = hex2dec(madre.epsi_chksum);
 
+% issues with the SD write and some bytes are not hex. if issues we scan
+% the whole sbe time series to find the bad bytes and then use the average 
+% increment from with the previous samples;
 if ~isnan(aux1.offset)
-    EPSI.aux1.Aux1Stamp = hex2dec(aux1.stamp);
-    EPSI.aux1.T_raw = hex2dec(aux1.sbe(:,1:6));
-    EPSI.aux1.C_raw = hex2dec(aux1.sbe(:,(1:6)+6));
-    EPSI.aux1.P_raw = hex2dec(aux1.sbe(:,(1:6)+12));
-    EPSI.aux1.PT_raw = hex2dec(aux1.sbe(:,(1:4)+18));
+    try 
+        EPSI.aux1.T_raw = hex2dec(aux1.sbe(:,1:6));
+        EPSI.aux1.C_raw = hex2dec(aux1.sbe(:,(1:6)+6));
+        EPSI.aux1.P_raw = hex2dec(aux1.sbe(:,(1:6)+12));
+        EPSI.aux1.PT_raw = hex2dec(aux1.sbe(:,(1:4)+18));
+    catch 
+        disp('bug in SBE hex bytes')
+        for kk=1:size(aux1.stamp,1)
+            if mod(kk,5000)==0
+                fprintf('%u over %u \n',kk,size(aux1.stamp,1));
+            end
+            try
+                EPSI.aux1.T_raw(kk) = hex2dec(aux1.sbe(kk,1:6));
+                EPSI.aux1.C_raw(kk) = hex2dec(aux1.sbe(kk,(1:6)+6));
+                EPSI.aux1.P_raw(kk) = hex2dec(aux1.sbe(kk,(1:6)+12));
+                EPSI.aux1.PT_raw(kk) = hex2dec(aux1.sbe(kk,(1:4)+18));
+            catch
+                EPSI.aux1.T_raw(kk) = EPSI.aux1.T_raw(kk-1)+ ...
+                                nanmean(diff(EPSI.aux1.T_raw(kk-10:kk-1)));
+                EPSI.aux1.C_raw(kk) = EPSI.aux1.C_raw(kk-1)+ ...
+                                nanmean(diff(EPSI.aux1.C_raw(kk-10:kk-1)));
+                EPSI.aux1.P_raw(kk) = EPSI.aux1.P_raw(kk-1)+ ...
+                                nanmean(diff(EPSI.aux1.C_raw(kk-10:kk-1)));
+                EPSI.aux1.PT_raw(kk) =EPSI.aux1.PT_raw(kk-1)+ ...
+                                nanmean(diff(EPSI.aux1.PT_raw(kk-10:kk-1)));
+            end
+        end
+    end
+    [EPSI.aux1.Aux1Stamp,ia0,~] =unique(hex2dec(aux1.stamp),'stable');
+    %ALB reorder the stamps and samples because until now we kept the zeros
+    % in the aux block
+    [EPSI.aux1.Aux1Stamp,ia1]=sort(EPSI.aux1.Aux1Stamp);
+    EPSI.aux1.T_raw  = EPSI.aux1.T_raw(ia0(ia1));
+    EPSI.aux1.C_raw  = EPSI.aux1.C_raw(ia0(ia1));
+    EPSI.aux1.P_raw  = EPSI.aux1.P_raw(ia0(ia1));
+    EPSI.aux1.PT_raw = EPSI.aux1.PT_raw(ia0(ia1));
+    
 end
 
-if(isfield(EPSI,'header'))
+% ALB: remove check on isfield
+if(isfield(Meta_Data,'SBEcal'))
+    EPSI.header=Meta_Data.SBEcal;
     EPSI = epsi_ascii_get_tempurature(EPSI);
     EPSI = epsi_ascii_get_pressure(EPSI);
     EPSI = epsi_ascii_get_conductivity(EPSI);
@@ -246,78 +318,50 @@ if ~isnan(aux1.offset)
     end
 end
 
-EPSI.epsi.t1_count = epsi.raw1(:,1:epsi.nchannels:end);
-EPSI.epsi.t2_count = epsi.raw1(:,2:epsi.nchannels:end);
-EPSI.epsi.s1_count = epsi.raw1(:,3:epsi.nchannels:end);
-EPSI.epsi.s2_count = epsi.raw1(:,4:epsi.nchannels:end);
-
-% work with various number of channels
-if epsi.nchannels < 8
-    if epsi.nchannels > 4
-        EPSI.epsi.a1_count = epsi.raw1(:,5:epsi.nchannels:end);
-    end
-    if epsi.nchannels > 5
-        EPSI.epsi.a2_count = epsi.raw1(:,6:epsi.nchannels:end);
-    end
-    if epsi.nchannels > 6
-        EPSI.epsi.a3_count = epsi.raw1(:,7:epsi.nchannels:end);
-    end
-else
-    EPSI.epsi.ramp_count = epsi.raw1(:,5:epsi.nchannels:end);
-    EPSI.epsi.a1_count = epsi.raw1(:,6:epsi.nchannels:end);
-    EPSI.epsi.a2_count = epsi.raw1(:,7:epsi.nchannels:end);
-    EPSI.epsi.a3_count = epsi.raw1(:,8:epsi.nchannels:end);
+for cha=1:Meta_Data.PROCESS.nb_channels
+    wh_channel=Meta_Data.PROCESS.channels{cha};
+    EPSI.epsi.([wh_channel '_count']) = epsi.raw1(:,cha:epsi.nchannels:end);
 end
+
 % input epsi sample stamp on each according to the sample sent via madre
 % record
-EPSI.epsi.EPSInbsample = repmat(1:epsi.nblocks,[numel(ind_madre) 1])+repmat(EPSI.madre.EpsiStamp,[1 epsi.nblocks])-epsi.nblocks;
+EPSI.epsi.EPSInbsample = repmat(1:epsi.nblocks,[NBblock 1])+repmat(EPSI.madre.EpsiStamp,[1 epsi.nblocks])-epsi.nblocks;
 if(isfield(EPSI,'header'))
     % delayed by 1 sample period assuming that it would take a bit of time
     % to transfer the data.
-    EPSI.epsi.time = (repmat(1:epsi.nblocks,[numel(ind_madre) 1])-epsi.nblocks-1)*epsi.sample_period/24/3600 + repmat(EPSI.madre.time,[1 epsi.nblocks]);
+    switch Meta_Data.PROCESS.recording_mod
+        case 'STREAMING'
+            EPSI.epsi.time = (repmat(1:epsi.nblocks,[NBblock 1])-epsi.nblocks-1)*epsi.sample_period/24/3600 + repmat(EPSI.madre.time,[1 epsi.nblocks]);
+        case 'SD'
+    end
 end
 full_range = 2.5;
 bit_counts = 24;
 gain = 1;
 acc_offset = 1.65;
 acc_factor = 0.66;
-% % bipolar
-% EPSI.epsi.t1=full_range/gain* ...
-%     (double(EPSI.epsi.t1_count)/2.^(bit_counts-1)-1);
-% EPSI.epsi.t2=full_range/gain* ...
-%     (double(EPSI.epsi.t2_count)/2.^(bit_counts-1)-1);
-% EPSI.epsi.s1=full_range/gain* ...
-%     (double(EPSI.epsi.s1_count)/2.^(bit_counts-1)-1);
-% EPSI.epsi.s2=full_range/gain* ...
-%     (double(EPSI.epsi.s2_count)/2.^(bit_counts-1)-1);
-% EPSI.epsi.a1 = full_range/gain* ...
-%     double(EPSI.epsi.a1_count)/2.^(bit_counts);
-% EPSI.epsi.a2 = full_range/gain* ...
-%     double(EPSI.epsi.a2_count)/2.^(bit_counts);
-% EPSI.epsi.a3 = full_range/gain* ...
-%     double(EPSI.epsi.a3_count)/2.^(bit_counts);
 
-% unipolar
- 
-EPSI.epsi.t1=full_range/gain* ...
-    double(EPSI.epsi.t1_count)/2.^(bit_counts);
-EPSI.epsi.t2=full_range/gain* ...
-    double(EPSI.epsi.t2_count)/2.^bit_counts;
-EPSI.epsi.s1=full_range/gain* ...
-    double(EPSI.epsi.s1_count)/2.^(bit_counts);
-EPSI.epsi.s2=full_range/gain* ...
-    double(EPSI.epsi.s2_count)/2.^(bit_counts);
-EPSI.epsi.a1 = full_range/gain* ...
-    double(EPSI.epsi.a1_count)/2.^(bit_counts);
-EPSI.epsi.a2 = full_range/gain* ...
-    double(EPSI.epsi.a2_count)/2.^(bit_counts);
-EPSI.epsi.a3 = full_range/gain* ...
-    double(EPSI.epsi.a3_count)/2.^(bit_counts);
+for cha=1:Meta_Data.PROCESS.nb_channels
+    wh_channel=Meta_Data.PROCESS.channels{cha};
+    switch Meta_Data.epsi.(wh_channel).ADCconf
+        case 'Bipolar'
+            EPSI.epsi.(wh_channel)=full_range/gain* ...
+                (double(EPSI.epsi.([wh_channel '_count']))/2.^(bit_counts-1)-1);
+        case 'Unipolar'
+            EPSI.epsi.(wh_channel)=full_range/gain* ...
+                double(EPSI.epsi.([wh_channel '_count']))/2.^(bit_counts);
 
+    end
+    switch wh_channel
+        case 'a1'
+            EPSI.epsi.a1 = (EPSI.epsi.a1-acc_offset)/acc_factor;
+        case 'a2'
+            EPSI.epsi.a2 = (EPSI.epsi.a2-acc_offset)/acc_factor;
+        case 'a3'
+            EPSI.epsi.a3 = (EPSI.epsi.a3-acc_offset)/acc_factor;
+    end
+end
 
-EPSI.epsi.a1 = (EPSI.epsi.a1-acc_offset)/acc_factor;
-EPSI.epsi.a2 = (EPSI.epsi.a2-acc_offset)/acc_factor;
-EPSI.epsi.a3 = (EPSI.epsi.a3-acc_offset)/acc_factor;
 
 epsi_fields = fieldnames(EPSI.epsi);
 
@@ -533,12 +577,12 @@ end
 %  reads and apply calibration to the conductivity data
 function EPSI = epsi_ascii_get_conductivity(EPSI)
 
-g = EPSI.header.cg;
-h = EPSI.header.ch;
-i = EPSI.header.ci;
-j = EPSI.header.cj;
-tcor = EPSI.header.ctcor;
-pcor = EPSI.header.cpcor;
+g = EPSI.header.g;
+h = EPSI.header.h;
+i = EPSI.header.i;
+j = EPSI.header.j;
+tcor = EPSI.header.tcor;
+pcor = EPSI.header.pcor;
 
 f = EPSI.aux1.C_raw/256/1000;
 

@@ -1,38 +1,82 @@
-%function mod_epsi_chi_epsi_checkprofile(MS,Meta_Data)
+function mod_epsi_chi_epsi_checkprofile(MS,Meta_Data,l)
 close all
-l=2;
+% l is the profile number
+% l=5;
 fontsize=20;
-titre={sprintf('%s',Meta_Data.deployment),sprintf('Cast %i',l)};
-fig=figure(2);
 set(gcf,'Position',[500 100 2000 1500])
 
-% acceleration and coherence with shear
-sma1=squeeze(nanmean(MS{l}.Pf(6,:,:),2));
-sma2=squeeze(nanmean(MS{l}.Pf(7,:,:),2));
-sma3=squeeze(nanmean(MS{l}.Pf(8,:,:),2));
-sms1=squeeze(nanmean(MS{l}.Pf(3,:,:),2));
-sms2=squeeze(nanmean(MS{l}.Pf(4,:,:),2));
 
-Co11=abs(squeeze(nanmean(MS{l}.Co12(3,5,:,:),3)));
-Co12=abs(squeeze(nanmean(MS{l}.Co12(3,6,:,:),3)));
-Co13=abs(squeeze(nanmean(MS{l}.Co12(3,7,:,:),3)));
-Co21=abs(squeeze(nanmean(MS{l}.Co12(4,5,:,:),3)));
-Co22=abs(squeeze(nanmean(MS{l}.Co12(4,6,:,:),3)));
-Co23=abs(squeeze(nanmean(MS{l}.Co12(4,7,:,:),3)));
+%
+channels=Meta_Data.PROCESS.channels;
+
+indt1=find(cellfun(@(x) strcmp(x,'t1'),channels));
+indt2=find(cellfun(@(x) strcmp(x,'t2'),channels));
+inds1=find(cellfun(@(x) strcmp(x,'s1'),channels));
+inds2=find(cellfun(@(x) strcmp(x,'s2'),channels));
+inda1=find(cellfun(@(x) strcmp(x,'a1'),channels));
+inda2=find(cellfun(@(x) strcmp(x,'a2'),channels));
+inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
+
+
+% acceleration and coherence with shear
+if ~isempty(inda1);sma1=squeeze(smoothdata(MS{l}.Pf(inda1,:,:),2,'movmean',20));
+else;sma1=0.*squeeze(MS{l}.Pf(1,:,:));end
+if ~isempty(inda2);sma2=squeeze(smoothdata(MS{l}.Pf(inda2,:,:),2,'movmean',20));
+else;sma2=0.*squeeze(MS{l}.Pf(1,:,:));end
+if ~isempty(inda3);sma3=squeeze(smoothdata(MS{l}.Pf(inda3,:,:),2,'movmean',20));
+else;sma3=0.*squeeze(MS{l}.Pf(1,:,:));end
+if ~isempty(inds1);sms1=squeeze(smoothdata(MS{l}.Pf(inds1,:,:),2,'movmean',20));
+else;sms1=0.*squeeze(MS{l}.Pf(1,:,:));end
+if ~isempty(inds2);sms2=squeeze(smoothdata(MS{l}.Pf(inds2,:,:),2,'movmean',20));
+else;sms2=0.*squeeze(MS{l}.Pf(1,:,:));end
+
+
+
+% Co11=abs(squeeze(nanmean(MS{l}.Co12(inds1,inda1-1,:,:),3)));
+% Co12=abs(squeeze(nanmean(MS{l}.Co12(inds1,inda2-1,:,:),3)));
+% Co13=abs(squeeze(nanmean(MS{l}.Co12(inds1,inda3-1,:,:),3)));
+% Co21=abs(squeeze(nanmean(MS{l}.Co12(inds2,inda1-1,:,:),3)));
+% Co22=abs(squeeze(nanmean(MS{l}.Co12(inds2,inda2-1,:,:),3)));
+% Co23=abs(squeeze(nanmean(MS{l}.Co12(inds2,inda3-1,:,:),3)));
+if ~isempty(inda1);Co11=abs(squeeze(smoothdata(MS{l}.Co12(inds1,inda1-1,:,:),3,'movmean',20)));
+else Co11=0.*squeeze(MS{l}.Pf(1,:,:));end
+if ~isempty(inda2);Co12=abs(squeeze(smoothdata(MS{l}.Co12(inds1,inda2-1,:,:),3,'movmean',20)));
+else Co12=0.*squeeze(MS{l}.Pf(1,:,:));end
+if ~isempty(inda3);Co13=abs(squeeze(smoothdata(MS{l}.Co12(inds1,inda3-1,:,:),3,'movmean',20)));
+else Co13=0.*squeeze(MS{l}.Pf(1,:,:));end
+if ~isempty(inda1);Co21=abs(squeeze(smoothdata(MS{l}.Co12(inds2,inda1-1,:,:),3,'movmean',20)));
+else Co21=0.*squeeze(MS{l}.Pf(1,:,:));end
+if ~isempty(inda2);Co22=abs(squeeze(smoothdata(MS{l}.Co12(inds2,inda2-1,:,:),3,'movmean',20)));
+else Co22=0.*squeeze(MS{l}.Pf(1,:,:));end
+if ~isempty(inda3);Co23=abs(squeeze(smoothdata(MS{l}.Co12(inds2,inda3-1,:,:),3,'movmean',20)));
+else Co23=0.*squeeze(MS{l}.Pf(1,:,:));end
+
+% if isempty(Co11);Co11=zeros(1,size(MS{l}.Pf,3));end
+% if isempty(Co12);Co12=zeros(1,size(MS{l}.Pf,3));end
+% if isempty(Co13);Co13=zeros(1,size(MS{l}.Pf,3));end
+% if isempty(Co21);Co21=zeros(1,size(MS{l}.Pf,3));end
+% if isempty(Co22);Co22=zeros(1,size(MS{l}.Pf,3));end
+% if isempty(Co23);Co23=zeros(1,size(MS{l}.Pf,3));end
+
+
+
 
 dTdV=[Meta_Data.epsi.t1.dTdV Meta_Data.epsi.t2.dTdV];
 
 % noise floor
 logf=log10(MS{l}.f);
 h_freq=get_filters_MADRE(Meta_Data,MS{l}.f);
-NOISE=load('/Users/aleboyer/ARNAUD/SCRIPPS/EPSILOMETER/CALIBRATION/ELECTRONICS/comparison_temp_granite_sproul.mat');
-spec_notdiff=interp1(NOISE.k_granite,NOISE.spec_granite,MS{l}.f);
-FPO7noise=load([Meta_Data.CALIpath 'FPO7_noise.mat'],'n0','n1','n2','n3');
+switch Meta_Data.MAP.temperature
+    case 'Tdiff'
+        FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_noise.mat'),'n0','n1','n2','n3');
+    otherwise
+        FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+end
 n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
-noise_tdiff0=10.^(n0+n1.*logf+n2.*logf.^2+n3.*logf.^3);
-noise_notdiff=spec_notdiff.*dTdV(1).^2./h_freq.electFPO7.^2;
+tnoise=10.^(n0+n1.*logf+n2.*logf.^2+n3.*logf.^3);
 
-shearnoise=load([Meta_Data.CALIpath 'shear_noise.mat'],'n0s','n1s','n2s','n3s');
+
+shearnoise=load(fullfile(Meta_Data.CALIpath,'shear_noise.mat'),'n0s','n1s','n2s','n3s');
 n0s=shearnoise.n0s; n1s=shearnoise.n1s; n2s=shearnoise.n2s; n3s=shearnoise.n3s;
 snoise=10.^(n0s+n1s.*logf+n2s.*logf.^2+n3s.*logf.^3);
 
@@ -68,24 +112,6 @@ a=4;
 a=5;
 plot(ax(a),MS{l}.w,MS{l}.pr)
 
-a=8;
-semilogx(ax(a),MS{l}.f,Co11)
-hold(ax(a),'on')
-semilogx(ax(a),MS{l}.f,Co12)
-semilogx(ax(a),MS{l}.f,Co13)
-
-grid(ax(a),'on')
-legend(ax(a),'a1','a2','a3','location','northwest')
-ax(a).YAxisLocation='right';
-xlim(ax(a),MS{l}.f([1 end]))
-ylim(ax(a),[0 1])
-ax(a).FontSize=fontsize;
-ax(a).XScale='log';
-ax(a).YScale='linear';
-ylabel(ax(a),'Coherence s1','fontsize',fontsize)
-xlabel(ax(a),'Hz','fontsize',fontsize)
-set(ax(a),'Xtick',[1 10 100])
-
 
 annotation('textbox',...
     [.56 .665 .135 .305],...
@@ -96,9 +122,9 @@ annotation('textbox',...
     ['MADRE ' Meta_Data.MADRE.SN ' rev ' Meta_Data.MADRE.rev],...
     ['MAP '   Meta_Data.MAP.SN   ' rev ' Meta_Data.MAP.rev],...
     [Meta_Data.aux1.name ' ' Meta_Data.aux1.SN],...
-    sprintf('s1 - SN: %s - Sv: %s', Meta_Data.epsi.s1.SN,Meta_Data.epsi.s1.Sv),...
+    sprintf('s1 - SN: %s - Sv: %3.2f', Meta_Data.epsi.s1.SN,Meta_Data.epsi.s1.Sv),...
     sprintf('     %s - %s', Meta_Data.epsi.s1.ADCfilter,Meta_Data.epsi.s1.ADCconf),...
-    sprintf('s2 - SN: %s - Sv:%s ',Meta_Data.epsi.s2.SN,Meta_Data.epsi.s2.Sv),...
+    sprintf('s2 - SN: %s - Sv:%3.2f ',Meta_Data.epsi.s2.SN,Meta_Data.epsi.s2.Sv),...
     sprintf('    %s - %s', Meta_Data.epsi.s2.ADCfilter,Meta_Data.epsi.s2.ADCconf),...
     sprintf('t1 - SN: %s - dTdV: %u ',Meta_Data.epsi.t1.SN,Meta_Data.epsi.t1.dTdV),...
     sprintf('    %s - %s',Meta_Data.epsi.t1.ADCfilter,Meta_Data.epsi.t1.ADCconf),...
@@ -112,12 +138,38 @@ annotation('textbox',...
     'LineWidth',2,...
     'BackgroundColor',[0.9  0.9 0.9],...
     'Color','k');
-    a=7;
-    loglog(ax(a),MS{l}.f,sma1)
+
+
+dTdV=[Meta_Data.epsi.t1.dTdV,Meta_Data.epsi.t2.dTdV];
+Sv=[Meta_Data.epsi.s1.Sv,Meta_Data.epsi.s2.Sv];
+Gr=9.81;
+for k=1:length(MS{l}.kvis)
+    
+    
+    % coherence plot
+    a=8;
+    H=semilogx(ax(a),MS{l}.f,Co11(k,:),'b');
     hold(ax(a),'on')
-    loglog(ax(a),MS{l}.f,sma2)
-    loglog(ax(a),MS{l}.f,sma3)
-    loglog(ax(a),MS{l}.f,sms1,'m')
+    I=semilogx(ax(a),MS{l}.f,Co12(k,:),'r');
+    J=semilogx(ax(a),MS{l}.f,Co13(k,:),'k');
+    grid(ax(a),'on')
+    legend(ax(a),'a1','a2','a3','location','northwest')
+    ax(a).YAxisLocation='right';
+    xlim(ax(a),MS{l}.f([1 end]))
+    ylim(ax(a),[0 1])
+    ax(a).FontSize=fontsize;
+    ax(a).XScale='log';
+    ax(a).YScale='linear';
+    ylabel(ax(a),'Coherence s1','fontsize',fontsize)
+    xlabel(ax(a),'Hz','fontsize',fontsize)
+    set(ax(a),'Xtick',[1 10 100])
+    %acceleration plot
+    a=7;
+    K=loglog(ax(a),MS{l}.f,sma1(k,:),'b');
+    hold(ax(a),'on')
+    L=loglog(ax(a),MS{l}.f,sma2(k,:),'r');
+    M=loglog(ax(a),MS{l}.f,sma3(k,:),'k');
+    N=loglog(ax(a),MS{l}.f,sms1(k,:),'m');
     set(ax(a),'Xticklabel','')
     grid(ax(a),'on')
     legend(ax(a),'a1','a2','a3','s1','location','southwest')
@@ -130,27 +182,27 @@ annotation('textbox',...
     ax(a).FontSize=fontsize;
     set(ax(a),'Xtick',[1 10 100])
     ylabel(ax(a),'g^2/Hz','fontsize',fontsize)
-  
     
-dTdV=[Meta_Data.epsi.t1.dTdV,Meta_Data.epsi.t2.dTdV];
-Sv=[str2double(Meta_Data.epsi.s1.Sv),str2double(Meta_Data.epsi.s2.Sv)];
-Gr=9.81;
-for k=1:length(MS{l}.kvis)
-%for k=30
+    
     % noise stuff
     k_noise=MS{l}.f./MS{l}.w(k);
-    noise_tdiff=noise_tdiff0.*dTdV(1).^2./h_freq.FPO7(MS{l}.w(k));
-    tdiffnoise_k= (2*pi*k_noise).^2 .* noise_tdiff.*MS{l}.w(k);        % T1_k spec  as function of k
-    noise_notdiff=noise_notdiff./h_freq.magsq(MS{l}.w(k));
-    notdiffnoise_k= (2*pi*k_noise).^2 .* noise_notdiff.*MS{l}.w(k);        % T1_k spec  as function of k
+    noise_t=tnoise.*dTdV(1).^2./h_freq.FPO7(MS{l}.w(k));
+    tnoise_k= (2*pi*k_noise).^2 .* noise_t.*MS{l}.w(k);        % T1_k spec  as function of k
     
 
     TFshear=(Sv(1).*MS{l}.w(k)/(2*Gr)).^2 .* h_freq.shear.* haf_oakey(MS{l}.f,MS{l}.w(k));
     snoise_k= (2*pi*k_noise).^2 .* snoise.*MS{l}.w(k)./TFshear;        % T1_k spec  as function of k
 
     
-    [kbatch,Pbatch] = batchelor(MS{l}.epsilon(k,1),MS{l}.chi(k,2), ...
+    [kbatch11,Pbatch11] = batchelor(MS{l}.epsilon(k,1),MS{l}.chi(k,1), ...
         MS{l}.kvis(k),MS{l}.ktemp(k));
+    [kbatch12,Pbatch12] = batchelor(MS{l}.epsilon(k,1),MS{l}.chi(k,2), ...
+        MS{l}.kvis(k),MS{l}.ktemp(k));
+    [kbatch21,Pbatch21] = batchelor(MS{l}.epsilon(k,2),MS{l}.chi(k,1), ...
+        MS{l}.kvis(k),MS{l}.ktemp(k));
+    [kbatch22,Pbatch22] = batchelor(MS{l}.epsilon(k,2),MS{l}.chi(k,2), ...
+        MS{l}.kvis(k),MS{l}.ktemp(k));
+
     smTG1=smoothdata(MS{l}.PphiT_k(k,:,1),'movmean',10);
     smTG2=smoothdata(MS{l}.PphiT_k(k,:,2),'movmean',10);
     
@@ -159,17 +211,24 @@ for k=1:length(MS{l}.kvis)
     loglog(ax(1),MS{l}.k,smTG1,'Color',.8*[.5 1 .7],'linewidth',2)
     loglog(ax(1),MS{l}.k,MS{l}.PphiT_k(k,:,2),'--','Color',.7*[1 1 1])
     loglog(ax(1),MS{l}.k,smTG2,'Color',.3*[1 1 1],'linewidth',2)
-    loglog(ax(1),k_noise,tdiffnoise_k,'c','linewidth',1)
-    loglog(ax(1),k_noise,notdiffnoise_k,'c--','linewidth',1)
+    loglog(ax(1),k_noise,tnoise_k,'c','linewidth',1)
+    if ~isempty(indt1)
     scatter(ax(1),MS{l}.k(MS{l}.fc_index(k,1)),smTG1(MS{l}.fc_index(k,1)),500,.8*[.5 1 .7],'filled','d','MarkerEdgeColor','y','linewidth',3)
+    end
+    if ~isempty(indt2)
     scatter(ax(1),MS{l}.k(MS{l}.fc_index(k,2)),smTG2(MS{l}.fc_index(k,2)),500,.3*[1 1 1],'filled','p','MarkerEdgeColor','y','linewidth',3)
-    loglog(ax(1),k_noise,noise_tdiff0,'g','linewidth',1)
+    end
     
-    loglog(ax(1),kbatch,Pbatch,'m')
+    lolo=loglog(ax(1),kbatch11,Pbatch11,'Color',[1 0 1]);
+    loglog(ax(1),kbatch12,Pbatch12,'Color',.75*[1 0 1])
+    loglog(ax(1),kbatch21,Pbatch21,'Color',.5*[1 0 1])
+    loglog(ax(1),kbatch22,Pbatch22,'Color',.3*[1 0 1])
     hold(ax(1),'off')
     set(ax(1),'Xscale','log','Yscale','log')
     set(ax(1),'fontsize',fontsize)
-    legend(ax(1),'t1','t1smooth','t2','t2smooth','Tdiff-noise','noTdiff-noise','t1_{cutoff}','t2_{cutoff}','batchelor','location','southwest')
+    legend(ax(1),'t1','t1smooth','t2','t2smooth','T-noise',...
+                 't1_{cutoff}','t2_{cutoff}','batch11','batch12','batch21','batch22',...
+                 'location','southwest' )
     xlim(ax(1),[6e-1 400])
     ylim(ax(1),[1e-10 1e-1])
     grid(ax(1),'on')
@@ -262,7 +321,7 @@ for k=1:length(MS{l}.kvis)
     legend(ax(a),'w','location','northeast')
     set(ax(a),'Xscale','linear','Yscale','linear')
     set(ax(a),'Xtick',[.4  .6 .8 1])
-    xlim(ax(a),[.4 max(MS{l}.w)])
+    xlim(ax(a),[ .5*nanmean(MS{l}.w) 1.5*nanmean(MS{l}.w)])
     ylim(ax(a),[min(MS{l}.pr) max(MS{l}.pr)])
     set(ax(a),'fontsize',15)
     set(ax(a),'Yticklabel','')
@@ -271,7 +330,8 @@ for k=1:length(MS{l}.kvis)
     
     %plot shear
     a=6;
-    [kpan,Ppan] = panchev(MS{l}.epsilon(k,1),MS{l}.kvis(k));
+    [kpan1,Ppan1] = panchev(MS{l}.epsilon(k,1),MS{l}.kvis(k));
+    [kpan2,Ppan2] = panchev(MS{l}.epsilon(k,2),MS{l}.kvis(k));
     smS1=smoothdata(MS{l}.Pshear_k(k,:,1),'movmean',10);
     smS2=smoothdata(MS{l}.Pshear_k(k,:,2),'movmean',10);
     kcindex1=find(MS{l}.k<MS{l}.kc(k,1),1,'last');
@@ -286,11 +346,12 @@ for k=1:length(MS{l}.kvis)
     scatter(ax(a),MS{l}.k(kcindex1),smS1(kcindex1),500,.8*[.5 1 .7],'filled','d','MarkerEdgeColor','c','linewidth',2)
     scatter(ax(a),MS{l}.k(kcindex2),smS2(kcindex2),500,.3*[1 1 1],'filled','p','MarkerEdgeColor','c','linewidth',2)
     
-    loglog(ax(a),kpan,Ppan,'m')
+    loglog(ax(a),kpan1,Ppan1,'Color',.75*[1 0 1])
+    loglog(ax(a),kpan2,Ppan2,'Color',.4*[1 0 1])
     hold(ax(a),'off')
     set(ax(a),'Xscale','log','Yscale','log')
     set(ax(a),'fontsize',fontsize)
-    legend(ax(a),'s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev','location','southwest')
+    legend(ax(a),'s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southwest')
     xlim(ax(a),[6e-1 400])
     ylim(ax(a),[1e-10 1e-1])
     grid(ax(a),'on')
@@ -304,6 +365,7 @@ for k=1:length(MS{l}.kvis)
     [.41 .7 .14 .27],...
     'String',{datestr(MS{l}.time(k)),...
               sprintf('pressure=%3.1f db',MS{l}.pr(k)),...
+              sprintf('speed=%1.2f m/s',MS{l}.w(k)),...
               sprintf('temperature=%2.2f (C)',MS{l}.t(k)),...
               sprintf('salinity=%2.2f (psu)',MS{l}.s(k)),...
               sprintf('kinematic viscosity =%1.1e m^2 s^{-1}',MS{l}.kvis(k)),...
@@ -332,6 +394,13 @@ for k=1:length(MS{l}.kvis)
         delete(E);
         delete(F);
         delete(G);
+        delete(H);
+        delete(I);
+        delete(J);
+        delete(K);
+        delete(L);
+        delete(M);
+        delete(N);
     end
    
 end

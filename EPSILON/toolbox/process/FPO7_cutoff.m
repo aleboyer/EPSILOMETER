@@ -18,6 +18,9 @@ function fc_index=FPO7_cutoff(f,spec,FPO7noise)
 %  from original MMP processing 
 
 f=f(:); spec=spec(:);
+%ALB add f>0 because sometinme the frequency array have a 0; 
+spec=spec(f>0);
+f=f(f>0);
 % fit coefficients for log10(noise spectrum) vs log10(f)
 %n0=-7.8; n1=-0.0634538; n2=0.3421899; n3=-0.3141283;
 %TODO change the name of the FPO7noise field so they match here
@@ -34,7 +37,10 @@ noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
 % noisy=find(medspec<log10(1.5)+noise);
 
 %MHA
-medspec=medfilt1(spec,5); % 5th order median filter
+%medspec=medfilt1(spec,5); % 5th order median filter
+%ALB
+medspec=smoothdata(spec,'movmean',15);
+
 SN_min=3;
 noisy=find(medspec<SN_min.*10.^(noise));
 if isempty(noisy)

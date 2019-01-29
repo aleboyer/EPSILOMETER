@@ -41,7 +41,7 @@ if ~exist([Meta_Data.L1path 'Turbulence_Profiles.mat'],'file')
     f=(df:df:FS/2)'; % frequency vector for spectra
     MS = struct([]);
     
-    % add pressure from ctd to the epsi profile. This should be ter mporary until
+    % add pressure from ctd to the epsi profile. This should be temporary until
     % the addition of the pressure sensor on Epsi
     for i=1:length(EPSI_Profiles)
         epsitime=linspace(EPSI_Profiles{i}.epsitime(1),...
@@ -77,14 +77,15 @@ Epsilon_class=calc_binned_epsi(MS(indnul));
 Chi_class=calc_binned_chi(MS(indnul));
 
 % plot binned epsilon for all profiles
+close all
 F1=figure(1);F2=figure(2);
 [F1,F2]=plot_binned_epsilon(Epsilon_class,[Meta_Data.mission '-' Meta_Data.deployment],F1,F2);
-print(F1,[L1path Meta_Data.deployment '_binned_epsilon1_t3s.png'],'-dpng2')
-print(F2,[L1path Meta_Data.deployment '_binned_epsilon2_t3s.png'],'-dpng2')
-
+print(F1,[Meta_Data.L1path Meta_Data.deployment '_binned_epsilon1_t3s.png'],'-dpng2')
+print(F2,[Meta_Data.L1path Meta_Data.deployment '_binned_epsilon2_t3s.png'],'-dpng2')
+close all
 [F1,F2]=plot_binned_chi(Chi_class,Meta_Data,[Meta_Data.mission '-' Meta_Data.deployment]);
-print(F1,[L1path Meta_Data.deployment '_binned_chi22_c_t3s.png'],'-dpng2')
-print(F2,[L1path Meta_Data.deployment '_binned_chi21_c_t3s.png'],'-dpng2')
+print(F1,[Meta_Data.L1path Meta_Data.deployment '_binned_chi22_c_t3s.png'],'-dpng2')
+print(F2,[Meta_Data.L1path Meta_Data.deployment '_binned_chi21_c_t3s.png'],'-dpng2')
 
 
 MSempty=cellfun(@isempty,MS);
@@ -123,7 +124,7 @@ ylabel('Depth (m)','fontsize',20)
 fig=gcf;
 fig.PaperPosition = [0 0 15 10];
 fig.PaperOrientation='Portrait';
-print(sprintf('%sEpsiMap1.png',L1path),'-dpng2')
+print(sprintf('%sEpsiMap1.png',Meta_Data.L1path),'-dpng2')
 
 % epsilon 2
 figure;
@@ -142,7 +143,7 @@ ylabel('Depth (m)','fontsize',20)
 fig=gcf;
 fig.PaperPosition = [0 0 15 10];
 fig.PaperOrientation='Portrait';
-print(sprintf('%sEpsiMap2.png',L1path),'-dpng2')
+print(sprintf('%sEpsiMap2.png',Meta_Data.L1path),'-dpng2')
 
 % chi 1 
 figure;
@@ -161,7 +162,7 @@ ylabel('Depth (m)','fontsize',20)
 fig=gcf;
 fig.PaperPosition = [0 0 15 10];
 fig.PaperOrientation='Portrait';
-print(sprintf('%sEpsichi1.png',L1path),'-dpng2')
+print(sprintf('%sEpsichi1.png',Meta_Data.L1path),'-dpng2')
 
 % epsilon 1 
 figure;
@@ -180,7 +181,7 @@ ylabel('Depth (m)','fontsize',20)
 fig=gcf;
 fig.PaperPosition = [0 0 15 10];
 fig.PaperOrientation='Portrait';
-print(sprintf('%sEpsichi2.png',L1path),'-dpng2')
+print(sprintf('%sEpsichi2.png',Meta_Data.L1path),'-dpng2')
 
 
 

@@ -3,20 +3,37 @@ function SD=mod_epsi_sd_buildtime(Meta_Data,a)
 % a is the product of San's code for exemple see read_10_files_SODA_WW_d2.m)
 % Meta_data is the the meta_data of the deployement
 % 
-
+% I am building a time axis in matlab time stamps
+% we are using the EPSI timstamps (2st item in the EPSI block header)
+% These time stamps resolution is sec. So I need to reconstruct the time
+% axis. 
+% Since the resolution is ~ 1 sec i often have twice the same stamps but
+% not always
+% 
+% Issues arrive when we drop data block.
+% I take the timestamp and go backward in time to build an array of 160
+% timestamps
+% 
+% 
 
 SD.madre=a.madre;
 % epsi time
 
-name_channels=strsplit(Meta_Data.PROCESS.channels,',');
-nbchannels=str2double(Meta_Data.PROCESS.nb_channels);
-
+%get name channel
+name_channels=Meta_Data.PROCESS.channels;
+%get number of channel
+nbchannels=Meta_Data.PROCESS.nb_channels;
+% get start date
 starttime=Meta_Data.starttime;
+% get convert the MADRE timestamps in matlab stamps
 timeheader=a.madre.TimeStamp/86400+datenum(1970,1,1);
-timeheader=starttime+(timeheader-timeheader(1));
+% time stamps on MADRE starts on january first 2017.
+timeheader=starttime+(timeheader-datenum('01-01-2017 00:00:00'));
 
+%look for time difference between 0.5 second blocks 
 dtimeheader=diff(timeheader);
-SD.epsi.epsitime=zeros(1,160*numel(timeheader));
+
+SD.epsi.epsitime=nan(1,160*numel(timeheader));
 last_t=0;
 count=0;
 flag_timebug=0;
@@ -61,7 +78,6 @@ end
 
 
 ind_OK=find(SD.epsi.epsitime>=SD.epsi.epsitime(1) & SD.epsi.epsitime<max(SD.epsi.epsitime));
-epsitime=SD.epsi.epsitime;
 SD.epsi.epsitime=SD.epsi.epsitime(ind_OK);
 %epsitime=epsitime-epsitime(1);
 for n=1:nbchannels
@@ -69,31 +85,22 @@ for n=1:nbchannels
 end
 SD.epsi.flagSDSTR=SD.epsi.epsitime*0;
 
+% commented to make GRANITE epsifish5sep09dep02
+% can not really figure out if it will/wont work with the other
+% deplyoments.
+%SD.epsi.epsitime=linspace(SD.epsi.epsitime(1),SD.epsi.epsitime(end),length(SD.epsi.epsitime));
 
 % aux1 time
-
-% because aux1 block has fixed length we may reapted sample from previous
-% blocks. or zeros depending on the firmware version
-% get the unique samples
-[Aux1Stamp,IA]=unique(a.aux1.Aux1Stamp);
 % find the aux samples that matches the epsinbsample
-[stamp1,iepsi1,iaux1] = intersect(a.epsi.EPSInbsample,Aux1Stamp);
-indStamp=IA(iaux1);
-% Currently the sample are not monotonicaly increasing. 
-% TODO figure out why 
-[~,IA]=sort(stamp1);
-indStamp=indStamp(IA);
+[~,iepsi1,iaux1] = intersect(a.epsi.EPSInbsample(ind_OK),a.aux1.Aux1Stamp);
 
-mask=IA*0+1;
-mask(epsitime(iepsi1(IA))<datenum('01-01-1970'))=nan;
-
-if isfield(Meta_Data,'SBECal')
-    SD.aux1.T=SBE_temp_v2(Meta_Data.SBEcal,a.aux1.T_raw(indStamp)).*mask;
-    SD.aux1.P=SBE_Pres_v2(Meta_Data.SBEcal,a.aux1.P_raw(indStamp),a.aux1.PT_raw(indStamp)).*mask;
-    SD.aux1.C=SBE_cond_v2(Meta_Data.SBEcal,a.aux1.C_raw(indStamp),SD.aux1.T,SD.aux1.P).*mask;
+if isfield(Meta_Data,'SBEcal')
+    SD.aux1.T=a.aux1.T(iaux1);
+    SD.aux1.P=a.aux1.P(iaux1);
+    SD.aux1.C=a.aux1.C(iaux1);
     SD.aux1.S=sw_salt(SD.aux1.C*10./sw_c3515,SD.aux1.T,SD.aux1.P);
     SD.aux1.sig=sw_pden(SD.aux1.S,SD.aux1.T,SD.aux1.P,0);
-    SD.aux1.aux1time=epsitime(iepsi1(IA));
+    SD.aux1.aux1time=SD.epsi.epsitime(iepsi1);
 end
 
 

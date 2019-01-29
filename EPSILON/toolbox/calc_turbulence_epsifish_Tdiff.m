@@ -50,7 +50,7 @@ function [MS]=calc_turbulence_epsifish_Tdiff(Profile,tscan,f,fmax,Meta_Data)
 %  Created by Arnaud Le Boyer on 7/28/18.
 
 %% get channels
-channels=strsplit(Meta_Data.PROCESS.channels,',');
+channels=Meta_Data.PROCESS.channels;
 nb_channels=length(channels);
 %% Gravity  ... of the situation :)
 G       = 9.81;
@@ -103,9 +103,9 @@ for c=1:length(All_channels)
     ind=find(cellfun(@(x) strcmp(x,wh_channels),channels));
     switch wh_channels
         case {'t1','t2','s1','s2'}
-            data(ind,:,:) = cell2mat(cellfun(@(x) Profile.(wh_channels)(x),MS.indscan,'un',0)).';
+            data(ind,:,:) = cell2mat(cellfun(@(x) filloutliers(Profile.(wh_channels)(x),'center','movmedian',5),MS.indscan,'un',0)).';
         case {'a1','a2','a3'}
-            data(ind,:,:) = cell2mat(cellfun(@(x,y) Profile.(wh_channels)(x),MS.indscan,'un',0)).';
+            data(ind,:,:) = cell2mat(cellfun(@(x) filloutliers(Profile.(wh_channels)(x),'center','movmedian',5),MS.indscan,'un',0)).';
     end
 end
 
@@ -133,7 +133,7 @@ Co12=Co12(:,:,:,indf1);
 h_freq=get_filters_MADRE(Meta_Data,f1);
 
 %%  get Sv for shear
-Sv        = [str2double(Meta_Data.epsi.s1.Sv),str2double(Meta_Data.epsi.s2.Sv)]; % TODO get Sv directly from the database
+Sv = [Meta_Data.epsi.s1.Sv,Meta_Data.epsi.s2.Sv]; % TODO get Sv directly from the database
 % Sensitivity of probe, nominal
 dTdV(1)=Meta_Data.epsi.t1.dTdV; %1/0.025 V/deg 
 dTdV(2)=Meta_Data.epsi.t2.dTdV; %1/0.025 V/deg 
@@ -222,7 +222,12 @@ MS.kmax=MS.fmax./MS.w; % Lowest estimate below pump spike in 1024-pt record
 
 
 % get FPO7 channel average noise to compute chi
-FPO7noise=load([Meta_Data.CALIpath 'FPO7_noise.mat'],'n0','n1','n2','n3');
+switch Meta_Data.MAP.temperature
+    case 'Tdiff'
+        FPO7noise=load([Meta_Data.CALIpath 'FPO7_noise.mat'],'n0','n1','n2','n3');
+    otherwise
+        FPO7noise=load([Meta_Data.CALIpath 'FPO7_notdiffnoise.mat'],'n0','n1','n2','n3');
+end
 
 % calc epsilon by integrating to k with 90% variance of Panchev spec
 % unless spectrum is noisy at lower k.
@@ -275,45 +280,56 @@ for j=1:nbscan
         MS.chi(j,2)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,1:MS.fc_index(j,2),2));
     end
     
-    n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
-    logf=log10(f1);
-    noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
-    shearnoise=load([Meta_Data.CALIpath 'shear_noise.mat'],'n0s','n1s','n2s','n3s');
-    n0s=shearnoise.n0s; n1s=shearnoise.n1s; n2s=shearnoise.n2s; n3s=shearnoise.n3s;
-    snoise=n0s+n1s.*logf+n2s.*logf.^2+n3s.*logf.^3;
-
-    figure(10)
-    ax(1)=subplot(211);
-    loglog(f1,squeeze(P11_temp(1,j,:)),'r')
-    hold(ax(1),'on')
-    loglog(f1(1:MS.fc_index(j,1)),squeeze(P11_temp(1,j,1:MS.fc_index(j,1))),'c')
-    loglog(f1,squeeze(P11_temp(2,j,:)),'b')
-    loglog(f1,10.^noise,'k')
-    ylim([1e-15 1e-5])
-    xlim(f1([1 end]))
-    hold(ax(1),'off')
-    ylabel('t_{1,2} (V^2/Hz)','fontsize',20)
-    set(ax(1),'fontsize',15)
-    legend('t1 raw','t1 signal','t2','MADRE noise')
-    set(ax(1),'Xscale','log','Yscale','log')
-
-    ax(2)=subplot(212);
-    ind_s1=find(k(j,:)<MS.kc(j,1));
-    loglog(f1,squeeze(P11_shear(1,j,:)),'r')
-    hold(ax(2),'on')
-    loglog(f1(1:ind_s1),squeeze(P11_shear(1,j,1:ind_s1)),'c')
-    loglog(f1,squeeze(P11_shear(2,j,:)),'b')
-    loglog(f1,10.^snoise,'k')
-    ylim([1e-15 1e-3])
-    xlim(f1([1 end]))
-    hold(ax(2),'off')
-    set(gca,'Xscale','log','Yscale','log')
-    ylabel('s_{1,2} (V^2/Hz)','fontsize',20)
-    set(ax(2),'fontsize',15)
-    legend('s1 raw','s1 signal','s2','MADRE noise')
-    pause(.1)
-%     cla(ax(1))
-%     cla(ax(2))
+    if dsp==1
+        n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
+        logf=log10(f1);
+        noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
+        shearnoise=load([Meta_Data.CALIpath 'shear_noise.mat'],'n0s','n1s','n2s','n3s');
+        n0s=shearnoise.n0s; n1s=shearnoise.n1s; n2s=shearnoise.n2s; n3s=shearnoise.n3s;
+        snoise=n0s+n1s.*logf+n2s.*logf.^2+n3s.*logf.^3;
+        
+        figure(10)
+        ax(1)=subplot(211);
+        loglog(f1,squeeze(P11_temp(1,j,:)),'r')
+        hold(ax(1),'on')
+        loglog(f1,squeeze(P11_temp(2,j,:)),'b')
+        if ~isempty(indt1)
+            loglog(f1(1:MS.fc_index(j,1)),squeeze(P11_temp(1,j,1:MS.fc_index(j,1))),'c')
+        else
+            loglog(f1(1:MS.fc_index(j,2)),squeeze(P11_temp(2,j,1:MS.fc_index(j,2))),'c')
+        end
+        loglog(f1,10.^noise,'k')
+        ylim([1e-15 1e-5])
+        xlim(f1([1 end]))
+        hold(ax(1),'off')
+        ylabel('t_{1,2} (V^2/Hz)','fontsize',20)
+        set(ax(1),'fontsize',15)
+        legend('t1 raw','t2','t1 signal','MADRE noise','location','southwest')
+        set(ax(1),'Xscale','log','Yscale','log')
+        
+        ax(2)=subplot(212);
+        loglog(f1,squeeze(P11_shear(1,j,:)),'r')
+        hold(ax(2),'on')
+        loglog(f1,squeeze(P11_shear(2,j,:)),'b')
+        if ~isempty(inds1)
+            ind_s1=find(k(j,:)<MS.kc(j,1));
+            loglog(f1(ind_s1),squeeze(P11_shear(1,j,ind_s1)),'c')
+        else
+            ind_s2=find(k(j,:)<MS.kc(j,1));
+            loglog(f1(ind_s2),squeeze(P11_shear(2,j,ind_s2)),'c')
+        end
+        loglog(f1,10.^snoise,'k')
+        ylim([1e-15 1e-1])
+        xlim(f1([1 end]))
+        hold(ax(2),'off')
+        set(gca,'Xscale','log','Yscale','log')
+        ylabel('s_{1,2} (V^2/Hz)','fontsize',20)
+        set(ax(2),'fontsize',15)
+        legend('s1 raw','s2','s1 signal','MADRE noise','location','southwest')
+        pause(.1)
+        %     cla(ax(1))
+        %     cla(ax(2))
+    end
 end
 
 

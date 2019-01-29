@@ -1,7 +1,7 @@
 function Meta_Epsi=get_shear_calibration(Meta_Epsi)
 
-path2file1=[Meta_Epsi.shearcal_path '/Calibration_' Meta_Epsi.s1.SN '.txt'];
-path2file2=[Meta_Epsi.shearcal_path '/Calibration_' Meta_Epsi.s2.SN '.txt'];
+path2file1=fullfile(Meta_Epsi.shearcal_path,Meta_Epsi.s1.SN,['Calibration_' Meta_Epsi.s1.SN '.txt']);
+path2file2=fullfile(Meta_Epsi.shearcal_path,Meta_Epsi.s2.SN,['Calibration_' Meta_Epsi.s2.SN '.txt']);
 
 fid1=fopen(path2file1,'r');
 Cal1=textscan(fid1,'%s %f %f','Delimiter',',','headerline',1);
