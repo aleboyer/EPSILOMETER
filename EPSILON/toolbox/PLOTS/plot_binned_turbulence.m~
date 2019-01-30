@@ -1,6 +1,5 @@
 function plot_binned_turbulence(Meta_Data,MS)
 
-% if MS is not an input
 if nargin==1
     load(fullfile(Meta_Data.L1path,'Turbulence_Profiles.mat'),'MS')
 end
@@ -17,6 +16,9 @@ F1.PaperPosition = [0 0 30 20];F2.PaperPosition = [0 0 30 20];
 print(F1,fullfile(Meta_Data.L1path,[Meta_Data.deployment '_binned_epsilon1_t3s.png']),'-dpng2')
 print(F2,fullfile(Meta_Data.L1path,[Meta_Data.deployment '_binned_epsilon2_t3s.png']),'-dpng2')
 
+[F1,F2]=plot_binned_chi(Chi_class,Meta_Data,[Meta_Data.mission '-' Meta_Data.deployment]);
+print(F1,fullfile(Meta_Data.L1path,[Meta_Data.deployment '_binned_chi22_c_t3s.png']),'-dpng2')
+print(F2,fullfile(Meta_Data.L1path,[Meta_Data.deployment '_binned_chi21_c_t3s.png']),'-dpng2')
 
 %% Chi plot
 switch Meta_Data.MAP.temperature

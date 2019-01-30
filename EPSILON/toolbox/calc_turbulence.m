@@ -75,37 +75,32 @@ switch Meta_Data.vehicle
         Profile = compute_speed_upcast(Profile);
         Profile.w=-Profile.w/1e7;
 end
-
-
-
-%Profile.w=Profile.w/1000;
-
-%TODO probably check nan at previous step
 All_channels=fields(Profile);
-% for c=1:length(All_channels)
-%     wh_channels=All_channels{c};
-%     Profile.(wh_channels)=fillmissing(double(Profile.(wh_channels)),'linear');
-%     Profile.(wh_channels)=filloutliers(double(Profile.(wh_channels)),'linear');
-% end
-% 
+
 %% define the index in the profile for each scan
 total_indscan = arrayfun(@(x) (1+floor(Lscan/2)*(x-1):1+floor(Lscan/2)*(x-1)+Lscan-1),1:nbscan,'un',0);
 total_w       = cellfun(@(x) nanmean(Profile.w(x)),total_indscan); 
 
+% make sure that we are using fast enough scans
 ind_downcast = find((total_w)>.20);
 nbscan=length(ind_downcast);
 
+% start creating the MS structure
+% get index of the EPSI time series defing each scans
 MS.indscan   = total_indscan(ind_downcast);
+% get nb of scans in the profile
 MS.nbscan    = nbscan;
 MS.fmax      = fmax; % arbitrary cut off frequency usually extract from coherence spectra shear/accel 
 MS.nbchannel = nb_channels;
 
+% compute mean values of T,S,P,time of each scans 
 MS.w       = cellfun(@(x) nanmean(Profile.w(x)),total_indscan(ind_downcast)); 
 MS.t       = cellfun(@(x) nanmean(Profile.T(x)),total_indscan(ind_downcast)); % needed to compute Kvis 
 MS.s       = cellfun(@(x) nanmean(Profile.S(x)),total_indscan(ind_downcast)); % needed to compute Kvis 
 MS.pr      = cellfun(@(x) nanmean(Profile.P(x)),total_indscan(ind_downcast)); % needed to compute Kvis 
 MS.time    = cellfun(@(x) nanmean(Profile.epsitime(x)),total_indscan(ind_downcast)); % needed to compute Kvis 
 
+% split time serie to make data matrice
 data=zeros(nb_channels,nbscan,Lscan);
 for c=1:length(All_channels)
     wh_channels=All_channels{c};
@@ -129,30 +124,31 @@ MS.ktemp=kt(MS.s,MS.t,MS.pr).';
 %TODO comment on the Co12 sturcutre and think about reducing the size of
 %the Coherence spectra (doublon)
 
+% get 1 sided spectra
 indf1=find(f1>=0);
 indf1=indf1(1:end-1);
 f1=f1(indf1);
 Lf1=length(indf1);
+Co12=Co12(:,:,:,indf1);
 
+% multiply by 2 because we use 1 sided spectra
 P11= 2*P11(:,:,indf1);
 P11_temp=0.*P11(1:2,:,:);
 P11_shear=0.*P11(1:2,:,:);
-Co12=Co12(:,:,:,indf1);
 %% get MADRE filters
 h_freq=get_filters_MADRE(Meta_Data,f1);
 
 %%  get Sv for shear
-Sv = [Meta_Data.epsi.s1.Sv,Meta_Data.epsi.s2.Sv]; % TODO get Sv directly from the database
+Sv = [Meta_Data.epsi.s1.Sv,Meta_Data.epsi.s2.Sv];% 
 % Sensitivity of probe, nominal
-dTdV(1)=Meta_Data.epsi.t1.dTdV; %1/0.025 V/deg 
-dTdV(2)=Meta_Data.epsi.t2.dTdV; %1/0.025 V/deg 
+dTdV(1)=Meta_Data.epsi.t1.dTdV; % define in mod_epsi_temperature_spectra
+dTdV(2)=Meta_Data.epsi.t2.dTdV; % define in mod_epsi_temperature_spectra 
 %% compute fpo7 filters (they are speed dependent)
 Emp_Corr_fac=1;
 TFtemp=cell2mat(cellfun(@(x) h_freq.FPO7(x),num2cell(MS.w),'un',0).');
 
-
-
-nb_channel=1;
+% apply transfer function and calibraiton coeficient to convert Volt^2 into
+% physical spectra
 for c=1:length(All_channels)
     wh_channels=All_channels{c};
     ind=find(cellfun(@(x) strcmp(x,wh_channels),channels));
@@ -161,7 +157,6 @@ for c=1:length(All_channels)
             % correct transfert functions for accel spectra
             P11(ind,:,:)=squeeze(P11(ind,:,:))./...
                 (ones(nbscan,1)*h_freq.electAccel);
-            nb_channel=nb_channel+1;
         case{'s1'}
             TF1 =@(x) (Sv(1).*x/(2*G)).^2 .* h_freq.shear .* haf_oakey(f1,x);     
             TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w),'un',0).');
@@ -180,10 +175,11 @@ for c=1:length(All_channels)
                 ind_dTdV=2;
                 P11_temp(2,:,:) = squeeze(P11(ind,:,:)); % keep Volt spectrum for FPO7_cutoff 
             end
-            P11(ind,:,:) = Emp_Corr_fac * squeeze(P11(ind,:,:)).*dTdV(ind_dTdV).^2./TFtemp; % Temperature gradient frequency spectra should be ?C^2/s^-2 Hz^-1 ???? 
+            P11(ind,:,:) = Emp_Corr_fac * squeeze(P11(ind,:,:)).*dTdV(ind_dTdV).^2./TFtemp; % Temperature frequency C^2 Hz^-1 
     end
 end
 
+% get index of the channels (usefull when the number of channels is not 8)
 indt1=find(cellfun(@(x) strcmp(x,'t1'),channels));
 indt2=find(cellfun(@(x) strcmp(x,'t2'),channels));
 inds1=find(cellfun(@(x) strcmp(x,'s1'),channels));
@@ -193,6 +189,7 @@ inds2=find(cellfun(@(x) strcmp(x,'s2'),channels));
 k=cell2mat(cellfun(@(x) f1/x, num2cell(MS.w),'un',0).');
 dk=cell2mat(cellfun(@(x) df/x, num2cell(MS.w),'un',0));
 
+% create a common vertical wavenumber axis. 
 dk_all=nanmin(nanmean(diff(k,1,2),2));
 k_all=nanmin(k(:)):dk_all:nanmax(k(:));
 Lk_all=length(k_all);
@@ -200,10 +197,14 @@ Lk_all=length(k_all);
 % temperature, vel and accell spec as function of k
 P11k  = P11.* shiftdim(repmat(ones(nb_channels,1)*MS.w,[1,1,Lf1]),3);   
 
+% Very usefull to debug but some fileds are not necessary.
+% TODO: see how to reduce the number of field on the MS structure probably
+% start with this one
 MS.f   = f1;
 MS.k   = k_all;
 MS.Pf  = P11;
 MS.Co12 = Co12;
+
 % Set kmax for integration to highest bin below pump spike,
 % which is between 49 and 52 Hz in a 1024-pt spectrum
 MS.kmax=MS.fmax./MS.w; % Lowest estimate below pump spike in 1024-pt record
@@ -223,6 +224,7 @@ end
 MS.PphiT_k=zeros(nbscan,Lk_all,2).*nan;
 MS.Pshear_k=zeros(nbscan,Lk_all,2).*nan;
 
+% % movie stuff
 if dsp==1
     % % movie stuff
     v = VideoWriter(sprintf('%s_rawcast%i%s',Meta_Data.deployment,i,'.avi'));
@@ -232,7 +234,7 @@ if dsp==1
     n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
     logf=log10(f1);
     noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
-    shearnoise=load([Meta_Data.CALIpath 'shear_noise.mat'],'n0s','n1s','n2s','n3s');
+    shearnoise=load(fullfile(Meta_Data.CALIpath,'shear_noise.mat'),'n0s','n1s','n2s','n3s');
     n0s=shearnoise.n0s; n1s=shearnoise.n1s; n2s=shearnoise.n2s; n3s=shearnoise.n3s;
     snoise=n0s+n1s.*logf+n2s.*logf.^2+n3s.*logf.^3;
     close all
@@ -247,8 +249,11 @@ if dsp==1
     tmin=-3e-4;tmax=3e-4;
 end
 
+% compute shear and temperature gradient. Get chi and epsilon values
+% TODO: we do not need kall. 
 for j=1:nbscan
     fprintf('scan %i over %i \n',j,nbscan)
+    % compute gradient
     if ~isempty(indt1)
         MS.PphiT_k(j,:,1)  = (2*pi*k_all).^2 .* interp1(k(j,:),squeeze(P11k(indt1,j,:)),k_all);        % T1_k spec  as function of k
     end
@@ -261,57 +266,57 @@ for j=1:nbscan
     if ~isempty(inds2)
         MS.Pshear_k(j,:,2) = (2*pi*k_all).^2 .* interp1(k(j,:),squeeze(P11k(inds2,j,:)),k_all);        % shear spec  as function of k
     end
-    % compute epsilon in eps1_mmp
-    if ~isempty(inds1)
+    % compute epsilon 1 in eps1_mmp
+    if ~isempty(inds1) % if spectrum is all nan
         if all(isnan(squeeze(P11k(inds1,j,:))))
             MS.Ppan(j,:,1)=nan.*k_all;
             MS.epsilon(j,1)=nan;
             MS.kc(j,1)=nan;
         else
-%            [MS.epsilon(j,1),MS.kc(j,1)]=eps1_mmp(k_all,MS.Pshear_k(j,:,1),MS.kvis(j),dk(j),MS.kmax(j)); 
             [MS.epsilon(j,1),MS.kc(j,1)]=eps1_mmp(k_all,MS.Pshear_k(j,:,1),MS.kvis(j),dk_all,MS.kmax(j)); 
             [kpan,Ppan] = panchev(MS.epsilon(j,1),MS.kvis(j));
             MS.Ppan(j,:,1)=interp1(kpan,Ppan,k_all);
         end
     end
-    if ~isempty(inds2)
+    % compute epsilon 2 in eps1_mmp
+    if ~isempty(inds2) % if spectrum is all nan
         if all(isnan(squeeze(P11k(inds2,j,:))))
             MS.Ppan(j,:,1)=nan.*k_all;
             MS.epsilon(j,2)=nan;
             MS.kc(j,2)=nan;
         else
-            %[MS.epsilon(j,2),MS.kc(j,2)]=eps1_mmp(k_all,MS.Pshear_k(j,:,2),MS.kvis(j),dk(j),MS.kmax(j));
             [MS.epsilon(j,2),MS.kc(j,2)]=eps1_mmp(k_all,MS.Pshear_k(j,:,2),MS.kvis(j),dk_all,MS.kmax(j));
             [kpan,Ppan] = panchev(MS.epsilon(j,2),MS.kvis(j));
             MS.Ppan(j,:,2)=interp1(kpan,Ppan,k_all);
         end
     end
-
+    
+    % compute chi 1. get frequency cutoff in  FPO7_cutoff
      if ~isempty(indt1)
-        if all(isnan(squeeze(P11_temp(1,j,:)))) 
+        if all(isnan(squeeze(P11_temp(1,j,:))))  % if spectrum is all nan 
             MS.chi(j,1)=nan;
             MS.fc_index(j,1)=nan;
         else
             MS.fc_index(j,1)=FPO7_cutoff(f1,squeeze(P11_temp(1,j,:)).',FPO7noise);
             MS.kcfpo7(j,1)=k_all(find(k_all<=k(j,MS.fc_index(j,1)),1,'last'));
             krange=find(k_all<=k(j,MS.fc_index(j,1)));
-%            MS.chi(j,1)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,krange,1));
             MS.chi(j,1)=6*MS.ktemp(j)*dk_all.*nansum(MS.PphiT_k(j,krange,1));
         end
     end
+    % compute chi 2. get frequency cutoff in  FPO7_cutoff
     if ~isempty(indt2)
-        if all(isnan(squeeze(P11_temp(2,j,:))))
+        if all(isnan(squeeze(P11_temp(2,j,:))))  % if spectrum is all nan
             MS.chi(j,2)=nan;
             MS.fc_index(j,2)=nan;
         else
             MS.fc_index(j,2)=FPO7_cutoff(f1,squeeze(P11_temp(2,j,:)).',FPO7noise);
             MS.kcfpo7(j,2)=k_all(find(k_all<=k(j,MS.fc_index(j,2)),1,'last'));
             krange=find(k_all<=k(j,MS.fc_index(j,2)));
-%            MS.chi(j,2)=6*MS.ktemp(j)*dk(j).*nansum(MS.PphiT_k(j,krange,2));
             MS.chi(j,2)=6*MS.ktemp(j)*dk_all.*nansum(MS.PphiT_k(j,krange,2));
         end
     end
     
+    % movie stuff
     if (dsp==1 && all(~isnan([MS.chi(j,1) MS.chi(j,2) MS.epsilon(j,1) MS.epsilon(j,2)])) )
         
         

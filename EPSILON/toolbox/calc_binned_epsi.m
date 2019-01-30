@@ -45,14 +45,18 @@ function Epsilon_class=calc_binned_epsi(MS,epsi_bin)
     w=cat(2,S_MS.w);
     kvis=real(cat(1,S_MS.kvis));
     
-%     index1=arrayfun(@(x) find(epsilon(:,1)>=x-.5*x & epsilon(:,1)<x+.5*x & (w>.65) & (w<.7)),epsi_bin,'un',0);
-%     index2=arrayfun(@(x) find(epsilon(:,2)>=x-.5*x & epsilon(:,2)<x+.5*x& (w>.65) & (w<.7)),epsi_bin,'un',0);
     index1=arrayfun(@(x) find(epsilon(:,1)>=x-.5*x & epsilon(:,1)<x+.5*x & w.'>.3 & w.'<.7),epsi_bin,'un',0);
     index2=arrayfun(@(x) find(epsilon(:,2)>=x-.5*x & epsilon(:,2)<x+.5*x & w.'>.3 & w.'<.7),epsi_bin,'un',0);
     %% if thehre is only 1 epsilon value in the bin, empty the bin.
     index1=cellfun(@(x) iif(length(x)<=1,[],length(x)>1,x),index1,'un',0);
     index2=cellfun(@(x) iif(length(x)<=1,[],length(x)>1,x),index2,'un',0);
     
+    %% define Epsilon class
+    % epislon values
+    % get and average the spectra per epsilon values, 
+    % get the number of spectra per epsilon values,
+    % get the median kinematic viscosity per epsilon values
+    % compute the panchev spectra for epsilon values
     Epsilon_class=struct();
     Epsilon_class.k=k;
     Epsilon_class.bin=epsi_bin;

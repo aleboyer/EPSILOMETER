@@ -71,11 +71,10 @@ for i=1:length(EPSI_Profiles)
     fprintf('Profile %i over %i\n',i,length(EPSI_Profiles));
     EPSI_Profiles{i}.P=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.P,EPSI_Profiles{i}.epsitime);
     EPSI_Profiles{i}.P=filloutliers(EPSI_Profiles{i}.P,'center','movmedian',1000);
-    
     EPSI_Profiles{i}.T=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.T,EPSI_Profiles{i}.epsitime);
     EPSI_Profiles{i}.S=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.S,EPSI_Profiles{i}.epsitime);
+
     MS{i}=calc_turbulence(EPSI_Profiles{i},tscan,f,Fcut_epsilon,Meta_Data,dsp,i);
-    %         Quality_check_profile(EPSI_Profiles{i},MS(i),Meta_Data,Fcut_epsilon,flag_vehicle,i)
 end
 save(fullfile(Meta_Data.L1path,'Turbulence_Profiles.mat'),'MS','-v7.3')
 

@@ -87,6 +87,9 @@ if ~isempty(EPSI)
     else
         EPSI.header.system_time = EPSI.header.system_time/86400/100+EPSI.header.offset_time;
     end
+    EPSI.header.localtimestamp.length=13;
+else
+    EPSI.header.localtimestamp.length=0;
 end
 
 
@@ -101,10 +104,13 @@ str = fread(fid,'*char')';
 %%
 %clc;
 % tic
+% get MADRE position beginning of datablock
 ind_madre = strfind(str,'$MADRE');
+% get aux1 position beginning of SBE block if present
 ind_aux1 = strfind(str,'$AUX1');
 toc
 
+% hard coded value to define MADRE block Header
 madre.offset = 0;
 madre.name_length = 6;
 madre.epsi_stamp_offset = -1+madre.name_length;
@@ -121,6 +127,7 @@ madre.aux_chksum_length = 8;
 madre.map_chksum_length = 8;
 madre.fsync_err_length = 8;
 
+% define offset if aux1 is present
 if (isempty(ind_aux1))
     aux1.offset = nan();
 else
@@ -137,33 +144,30 @@ aux1.name_length = 5;
 aux1.stamp_offset = (0:8)*33+aux1.name_length+aux1.offset;
 aux1.sbe_offset = (0:8)*33+9+aux1.name_length+aux1.offset;
 
-aux1.stamp_length = 8;
-aux1.sbe_length = 22;
-
+% e.g 00000F2E,052C2409E6F3080D7A4DAF
+aux1.stamp_length = 8; % length of epsi sample number linked to SBE sample.
+aux1.sbe_length = 22;  % length of SBE sample.
 
 if isnan(aux1.offset)
     epsi.offset = madre.offset+madre.name_length+madre.epsi_stamp_length+1+madre.epsi_time_length+1+madre.alt_time_length*2+1+madre.aux_chksum_length+1+madre.fsync_err_length+1+madre.map_chksum_length+2-1;
 else
     epsi.offset = aux1.offset+aux1.name_length+(aux1.stamp_length+1+aux1.sbe_length+2)*9;
 end
-epsi.name_length = 5;
-epsi.nblocks = 160;
-epsi.nchannels = Meta_Data.PROCESS.nb_channels;
-epsi.sample_freq = 320;
+epsi.name_length = 5; % length of epsi block header ($EPSI).
+epsi.nblocks = 160;   % number of sample in 1 epsi block.
+epsi.nchannels = Meta_Data.PROCESS.nb_channels; % number of channels defined by user.
+epsi.sample_freq = 320; % hardcoded sampling rate can do better when we will use usecond resolution for the timer. 
 epsi.sample_period = 1/epsi.sample_freq;
-epsi.bytes_per_channel = 3;
-epsi.total_length = epsi.nblocks*epsi.nchannels*epsi.bytes_per_channel;
+epsi.bytes_per_channel = 3; % length of an ADC sample = length of one channel sample. In bytes MSBF (TO DO check MSBF) 
+epsi.total_length = epsi.nblocks*epsi.nchannels*epsi.bytes_per_channel; % length of an EPSI block
 
-% indbeg=find(diff(ind_madre)~=median(diff(ind_madre)),1,'last');
 % find the non corrupted (right length)
-indblock=ind_madre(diff(ind_madre)==median(diff(ind_madre)));
-
-% if isempty(indbeg)
-%     indbeg=1;
-% end
-% NBblock=numel(ind_madre)-indbeg+1;
+%!!!!!!!! VERY IMPORTANT to remember !!!!! 
+%indblock=ind_madre(diff(ind_madre)==median(diff(ind_madre))); %TO DO figure that exact math for the block length
+indblock=ind_madre(diff(ind_madre)==epsi.offset+epsi.name_length+epsi.total_length+EPSI.header.localtimestamp.length+1); %TO DO is the +1 legit or WHAT!!!!
 NBblock=numel(indblock);
 
+% initialize arrays and structures.
 if(isfield(EPSI,'header'))
     system.time = char(zeros(NBblock,11));
 end
@@ -201,8 +205,7 @@ for cha=1:Meta_Data.PROCESS.nb_channels
 end
 EPSI.epsi.EPSInbsample=NaN(NBblock,epsi.nblocks);
 
-%%
-% tic
+% we are checking if the very last block is good too.
 check_endstr=mod(ind_madre(end)+epsi.offset+epsi.name_length+epsi.total_length ...
                                 - numel(str),epsi.total_length);
 if check_endstr==0
@@ -210,15 +213,18 @@ if check_endstr==0
 else
     nb_block=NBblock-1;
 end
+% still initializing
 aux1.stamp = char(zeros(nb_block*9,aux1.stamp_length));
 aux1.sbe = char(zeros(nb_block*9,aux1.sbe_length));
 epsi.raw = int32(zeros(nb_block,epsi.total_length));
 
-%for i=indbeg:nb_block
+% now lets begin  reading and splitting!!!!
 for i=1:numel(indblock)
+    % grab local time if STREAMING SITUATION;
     if(isfield(EPSI,'header'))
         system.time(i,1:10) = str(ind_madre(i)-(10:-1:1));
     end
+    % read items in the EPSI block Header
     madre.epsi_stamp(i,:) = str(indblock(i)+(1:madre.epsi_stamp_length)+madre.epsi_stamp_offset);
     madre.epsi_time(i,:) = str(indblock(i)+(1:madre.epsi_time_length)+madre.epsi_time_offset);
     madre.aux1_chksum(i,:) = str(indblock(i)+(1:madre.aux_chksum_length)+madre.aux_chksum_offset);
@@ -227,19 +233,24 @@ for i=1:numel(indblock)
         madre.altimeter((i-1)*2+j,:) = str(indblock(i)+(1:madre.alt_time_length)+madre.alt_time_offset(j));
     end
     madre.fsync_err(i,:) = str(indblock(i)+(1:madre.fsync_err_length)+madre.fsync_err_offset);
+    % read AUX1 (SBE49) block 
     if ~isnan(aux1.offset)
         for j=1:9
             aux1.stamp((i-1)*9+j,:) = str(indblock(i)+(1:aux1.stamp_length)+aux1.stamp_offset(j));
             aux1.sbe((i-1)*9+j,:) = str(indblock(i)+(1:aux1.sbe_length)+aux1.sbe_offset(j));
         end
     end
-    %epsi.raw(i,:) = int32(str(ind_madre(i)+epsi.offset+epsi.name_length+(1:epsi.total_length)));
+    % get the EPSI block
     epsi.raw(i,:) = int32(str(indblock(i)+epsi.offset+epsi.name_length+(1:epsi.total_length)));
-    
-    
 end
+% done with split file
 toc
-epsi.raw1 = epsi.raw(:,1:3:end)*256^2+epsi.raw(:,2:3:end)*256+epsi.raw(:,3:3:end);
+
+%convert 3 bytes ADC samples into 24 bits counts. 
+epsi.raw1 = epsi.raw(:,1:epsi.bytes_per_channel:end)*256^2+ ...
+            epsi.raw(:,2:epsi.bytes_per_channel:end)*256+ ...
+            epsi.raw(:,3:epsi.bytes_per_channel:end);
+
 if(isfield(EPSI,'header'))
     switch Meta_Data.PROCESS.recording_mod
         case 'STREAMING'
@@ -251,6 +262,8 @@ if(isfield(EPSI,'header'))
             EPSI.madre.time=0;
     end
 end
+
+% converting Hex into decimal. Starts with the header.
 EPSI.madre.EpsiStamp = hex2dec(madre.epsi_stamp);
 EPSI.madre.TimeStamp = hex2dec(madre.epsi_time);
 EPSI.madre.altimeter = reshape(hex2dec(madre.altimeter),2,[])';
@@ -261,6 +274,7 @@ EPSI.madre.Checksum_map = hex2dec(madre.epsi_chksum);
 % issues with the SD write and some bytes are not hex. if issues we scan
 % the whole sbe time series to find the bad bytes and then use the average 
 % increment from with the previous samples;
+% TO DO get rid of the nameam Tdiff over 10s.
 if ~isnan(aux1.offset)
     try 
         EPSI.aux1.T_raw = hex2dec(aux1.sbe(:,1:6));
@@ -301,7 +315,7 @@ if ~isnan(aux1.offset)
     
 end
 
-% ALB: remove check on isfield
+% ALB: TODO remove check on isfield
 if(isfield(Meta_Data,'SBEcal'))
     EPSI.header=Meta_Data.SBEcal;
     EPSI = epsi_ascii_get_tempurature(EPSI);
@@ -318,6 +332,7 @@ if ~isnan(aux1.offset)
     end
 end
 
+% parsing the EPSI block data
 for cha=1:Meta_Data.PROCESS.nb_channels
     wh_channel=Meta_Data.PROCESS.channels{cha};
     EPSI.epsi.([wh_channel '_count']) = epsi.raw1(:,cha:epsi.nchannels:end);
@@ -335,6 +350,9 @@ if(isfield(EPSI,'header'))
         case 'SD'
     end
 end
+
+% coeficient for Unipolar or bipolar ADC configuration and alos to convert
+% accelerometer Voltage into Accelereation units (in g).
 full_range = 2.5;
 bit_counts = 24;
 gain = 1;
@@ -363,6 +381,7 @@ for cha=1:Meta_Data.PROCESS.nb_channels
 end
 
 
+% grab all the epsi field names.
 epsi_fields = fieldnames(EPSI.epsi);
 
 
