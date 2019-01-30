@@ -1,26 +1,31 @@
 # EPSILOMETER
 
 Pre-requisit:
-download anaconda3 for python
-in a terminal "conda install pyserial"
 
-0/ create a MISSION environment: in bash_mission, the user should define the environment variable names like: 
--MISSION name
--Vehicle name
--deployment name (a deployment is thought to be the time between start and stop recording). 
-- RAWPATH: a path where the data are stored
+- Matlab 2018.
+- usb port.
+- 422 to usb dongle.
 
-1/ Connect MADRE and your laptop with an FTDI serial device. 
-The python reader will an issue if you have more than one FTDI device.
-It is possible to set the name of the device in read_MADRE2.1.py. 
-TODO: give the user a choice if more than 1 device is available
 
-2/ in a terminal, go where the library is
+- streaming: TODO
 
-3/ if MADRE is running do python store_DEV_benchSPROUL_d3.py
+- Turbulence processing
 
-4/ you can convert the data in RAW path directly by typing python read_DEV_benchSPROUL_d3.py
-epsi data and CTD data will store in both matlab and python format in the epsi and ctd folders (above RAWPATH) 
-
-5/ if you are acquiring the data you can visulaize them in real time with python plot_DEV_benchSPROUL_d3_realtime.py
-
+    pre-requisit:
+      Download the repository: The location of the repository will define as process_dir (processing directory). 
+      Use the EPSI log (in log folder) during deployment.To process the data, you the probe, MADRE and MAP Serial numbers. Write down MADRE ON and MADRE OFF time in UTC. Do not save the Log in the you repository. Save it in your data/deployement folder.
+      In your deployment folder copy process_deployment_Example.m (in Matlab_lib)
+      Define your environment (Data path, processing path, Serial Numbers ...) in process_deployment_Example.m.
+      They you can run it. It will: 
+            read the binary files.
+            split the total time series into Profile time series.
+            compute the dT/d (Celsius/Volt) coefficient for the temperature channels.
+            For each Profile: 
+                  Split the time serie in scans of X seconds (X is define by the user).
+                  compute the spectra and coherence of each channels.
+                  compute the temperature gradient and shear.
+                  compute epsilon and chi.
+            
+      
+      
+      
