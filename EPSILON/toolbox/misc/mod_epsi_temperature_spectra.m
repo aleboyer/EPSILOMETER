@@ -1,4 +1,4 @@
-function mod_epsi_temperature_spectra(Meta_Data,EPSI_Profile,CTD_Profile,titre,np,dsp,tscan,ctd_df)
+function Meta_Data=mod_epsi_temperature_spectra(Meta_Data,EPSI_Profile,CTD_Profile,titre,np,dsp,tscan,ctd_df)
 
 
 % input
@@ -78,7 +78,7 @@ end
 
 % split and median fall rate per segments. Used for the physical answer of
 % the FPO7 probe (h_freq.FPO7).
-w=cellfun(@(x) median(CTD_Profile.w(x)),ctd_indscan);
+w=cellfun(@(x) abs(median(CTD_Profile.w(x))),ctd_indscan);
 
 
 % 1 side of the ctd spectra

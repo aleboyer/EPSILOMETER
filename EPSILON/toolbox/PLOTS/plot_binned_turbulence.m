@@ -37,8 +37,8 @@ noise=(2*pi*f./w_th).^2.*10.^(FPO7noise.n0+FPO7noise.n1.*logf+ ...
            FPO7noise.n3.*logf.^3).*dTdV(1).^2./h_freq.FPO7(w_th).*w_th;
 
 %i=1:10;j=2;
+figure(3)
 i=1:12;j=12;
-close all;
 l1=loglog(Chi_class.k,squeeze(Chi_class.Pbatch21(i,j,:)),'Color',.8*[1 1 1],'linewidth',2);
 hold on;
 l2=loglog(Chi_class.k,squeeze(Chi_class.mPphiT21(i,j,:)),'linewidth',2);
@@ -50,8 +50,8 @@ set(gca,'fontsize',20)
 legend([l1(1) l2(1) l3],{'batchelor','data','noise'},'location','best')
 print(fullfile(Meta_Data.L1path,[Meta_Data.deployment '_binned_chi_increpsi_t3s.png']),'-dpng2')
 
+figure(4)
 i=9;j=1:12;
-close all;
 loglog(Chi_class.k,squeeze(Chi_class.Pbatch21(i,j,:)),'Color',.8*[1 1 1],'linewidth',2)
 hold on;
 loglog(Chi_class.k,squeeze(Chi_class.mPphiT21(i,j,:)),'linewidth',2);

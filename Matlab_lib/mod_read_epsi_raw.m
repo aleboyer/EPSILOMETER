@@ -87,9 +87,17 @@ if ~isempty(EPSI)
     else
         EPSI.header.system_time = EPSI.header.system_time/86400/100+EPSI.header.offset_time;
     end
-    EPSI.header.localtimestamp.length=13;
-else
-    EPSI.header.localtimestamp.length=0;
+    if isfield(Meta_Data.SBEcal)
+        EPSI.header=Meta_Data.SBEcal;
+    end
+
+end
+%TODO get rid of ths offset  
+switch Meta_Data.PROCESS.recording_mod
+    case 'STREAMING'
+    offset1=13;
+    case 'SD'
+    offset1=2;
 end
 
 
@@ -128,7 +136,7 @@ madre.map_chksum_length = 8;
 madre.fsync_err_length = 8;
 
 % define offset if aux1 is present
-if (isempty(ind_aux1))
+if isempty(ind_aux1)
     aux1.offset = nan();
 else
     aux1.offset = madre.offset+ ...
@@ -164,7 +172,7 @@ epsi.total_length = epsi.nblocks*epsi.nchannels*epsi.bytes_per_channel; % length
 % find the non corrupted (right length)
 %!!!!!!!! VERY IMPORTANT to remember !!!!! 
 %indblock=ind_madre(diff(ind_madre)==median(diff(ind_madre))); %TO DO figure that exact math for the block length
-indblock=ind_madre(diff(ind_madre)==epsi.offset+epsi.name_length+epsi.total_length+EPSI.header.localtimestamp.length+1); %TO DO is the +1 legit or WHAT!!!!
+indblock=ind_madre(diff(ind_madre)==epsi.offset+epsi.name_length+epsi.total_length+offset1+1); %TO DO is the +1 legit or WHAT!!!!
 NBblock=numel(indblock);
 
 % initialize arrays and structures.
@@ -192,13 +200,14 @@ EPSI.madre = struct(...
 if(isfield(EPSI,'header'))
     EPSI.madre.time = NaN(NBblock,1);
 end
-EPSI.aux1 = struct(...
-    'Aux1Stamp',NaN(NBblock*9,1),...
-    'T_raw',NaN(NBblock*9,1),...
-    'C_raw',NaN(NBblock*9,1),...
-    'P_raw',NaN(NBblock*9,1),...
-    'PT_raw',NaN(NBblock*9,1));
-
+if ~isnan(aux1.offset)
+    EPSI.aux1 = struct(...
+        'Aux1Stamp',NaN(NBblock*9,1),...
+        'T_raw',NaN(NBblock*9,1),...
+        'C_raw',NaN(NBblock*9,1),...
+        'P_raw',NaN(NBblock*9,1),...
+        'PT_raw',NaN(NBblock*9,1));
+end
 for cha=1:Meta_Data.PROCESS.nb_channels
     wh_channel=Meta_Data.PROCESS.channels{cha};
     EPSI.epsi.(wh_channel) = NaN(NBblock,epsi.nblocks);
@@ -317,7 +326,6 @@ end
 
 % ALB: TODO remove check on isfield
 if(isfield(Meta_Data,'SBEcal'))
-    EPSI.header=Meta_Data.SBEcal;
     EPSI = epsi_ascii_get_tempurature(EPSI);
     EPSI = epsi_ascii_get_pressure(EPSI);
     EPSI = epsi_ascii_get_conductivity(EPSI);

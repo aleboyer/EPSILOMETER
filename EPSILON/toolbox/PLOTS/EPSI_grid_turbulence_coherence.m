@@ -1,4 +1,4 @@
-function EPSI_grid_turbulence(Meta_Data,MS)
+function EPSI_grid_turbulence_coherence(Meta_Data,MS)
 
 if nargin==1
 %     if exist(fullfile(Meta_Data.L1path,'Turbulence_grid.mat'),'file')
@@ -42,7 +42,7 @@ dmeta=diff(meta);
 eta2=eta(dmeta>0,:);
 
 
-save(fullfile(Meta_Data.L1path,'Turbulence_grid.mat'), ...
+save(fullfile(Meta_Data.L1path,'Turbulence_coherence_grid.mat'), ...
     'Map_epsilon1','Map_epsilon2', ...
     'Map_chi1','Map_chi2', ...
     'Map_time','zaxis', ...
@@ -57,7 +57,7 @@ pcolor(Map_time,zaxis,log10(real(Map_epsilon1.')));shading flat;axis ij
 hold on
 plot(Map_time,eta2,'k')
 colorbar
-caxis([-10,-5])
+caxis([-11,-5])
 set(gca,'XTickLabelRotation',45)
 datetick
 cax=colorbar;

@@ -36,13 +36,13 @@ switch Meta_Data.PROCESS.recording_mod
         a.aux1.sig=sw_pden(a.aux1.S,a.aux1.T,a.aux1.P,0);
         a.aux1.aux1time=a.aux1.time;
         a.epsi.epsitime=a.epsi.time;
-        save([Meta_Data.RAWpath 'STR' Meta_Data.deployment '.mat'],'a','-v7.3')
+        save(fullfile(Meta_Data.RAWpath,['STR' Meta_Data.deployment '.mat']),'a','-v7.3')
     case 'SD'
         % the computation of S sig is done in sd buildtime
         %TODO this somewhere else maybe a function common to
         % SD and streaming since there are no good reason to have them separate. 
         SD=mod_epsi_sd_buildtime(Meta_Data,a);
-        save([Meta_Data.SDRAWpath 'SD' Meta_Data.deployment '.mat'],'a','-v7.3')
+        save(fullfile(Meta_Data.SDRAWpath,['SD' Meta_Data.deployment '.mat']),'a','-v7.3')
         a=SD;
 end
 

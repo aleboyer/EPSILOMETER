@@ -64,8 +64,8 @@ function Epsilon_class=calc_binned_epsi(MS,epsi_bin)
     Epsilon_class.nbin2=cellfun(@length,index2);
     Epsilon_class.Pshear1=cellfun(@(x) squeeze(Psheark(1,x,:)),index1,'un',0);
     Epsilon_class.Pshear2=cellfun(@(x) squeeze(Psheark(2,x,:)),index2,'un',0);
-    Epsilon_class.mPshear1=cell2mat(cellfun(@(x) nanmedian(x,1),Epsilon_class.Pshear1,'un',0).');
-    Epsilon_class.mPshear2=cell2mat(cellfun(@(x) nanmedian(x,1),Epsilon_class.Pshear2,'un',0).');
+    Epsilon_class.mPshear1=cell2mat(cellfun(@(x) nanmean(x,1),Epsilon_class.Pshear1,'un',0).');
+    Epsilon_class.mPshear2=cell2mat(cellfun(@(x) nanmean(x,1),Epsilon_class.Pshear2,'un',0).');
     Epsilon_class.kvis=cellfun(@(x) median(kvis(x).'),index1,'un',0);
     Epsilon_class.kvis=cellfun(@(x) iif(isnan(x),nanmedian([Epsilon_class.kvis{:}].'),~isnan(x),x), ...
                    Epsilon_class.kvis,'un',0);

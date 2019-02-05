@@ -50,7 +50,9 @@ shtotal_fit_shear10=[6.9006e-04, -4.2461e-03, -7.0832e-04, 1.5275, 1.8564];
 % a polynomial integrated with the same grid
 krange=find(k>=1 & k<15); 
 P_interpolated=interp1(k(krange),Psheark(krange),KI);
-shear10=sum(P_interpolated)*0.2;
+% ALB change to nansum since coherence correction can introduces nans
+% shear10=nansum(P_interpolated)*0.2;
+shear10=nansum(P_interpolated)*0.2;
 %
 % estimate epsilon using poly fits to log10(shear10)
 x=log10(shear10);
@@ -68,7 +70,7 @@ if kc2>kmax
 	kc2=kmax; % limit set by noise spectrum
 end
 krange=find(k>=1 & k<=kc2);
-eps2=7.5*kvis*sum(Psheark(krange))*dk/.9;
+eps2=7.5*kvis*nansum(Psheark(krange))*dk/.9;
 
 % third estimate
 kc=0.0816*( eps2 / kvis^3 )^(1/4);
@@ -76,7 +78,7 @@ if kc > kmax
 	kc=kmax;
 end
 krange=find(k>=1 & k<=kc);
-eps3 = 7.5*kvis*sum(Psheark(krange))*dk; 
+eps3 = 7.5*kvis*nansum(Psheark(krange))*dk; 
 
 % if eps3<1e-10 || length(krange) < 4
 % 	epsilon=1e-10;

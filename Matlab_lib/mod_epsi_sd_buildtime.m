@@ -34,6 +34,7 @@ timeheader=starttime+(timeheader-datenum('01-01-2017 00:00:00'));
 dtimeheader=diff(timeheader);
 
 SD.epsi.epsitime=nan(1,160*numel(timeheader));
+
 last_t=0;
 count=0;
 flag_timebug=0;
@@ -79,6 +80,7 @@ end
 
 ind_OK=find(SD.epsi.epsitime>=SD.epsi.epsitime(1) & SD.epsi.epsitime<max(SD.epsi.epsitime));
 SD.epsi.epsitime=SD.epsi.epsitime(ind_OK);
+SD.epsi.EPSInbsample=a.epsi.EPSInbsample(ind_OK);
 %epsitime=epsitime-epsitime(1);
 for n=1:nbchannels
     eval(sprintf('SD.epsi.%s=SD.epsi.%s(ind_OK);',name_channels{n},name_channels{n}));
@@ -90,11 +92,11 @@ SD.epsi.flagSDSTR=SD.epsi.epsitime*0;
 % deplyoments.
 %SD.epsi.epsitime=linspace(SD.epsi.epsitime(1),SD.epsi.epsitime(end),length(SD.epsi.epsitime));
 
-% aux1 time
-% find the aux samples that matches the epsinbsample
-[~,iepsi1,iaux1] = intersect(a.epsi.EPSInbsample(ind_OK),a.aux1.Aux1Stamp);
-
 if isfield(Meta_Data,'SBEcal')
+    % aux1 time
+    % find the aux samples that matches the epsinbsample
+    [~,iepsi1,iaux1] = intersect(a.epsi.EPSInbsample(ind_OK),a.aux1.Aux1Stamp);
+
     SD.aux1.T=a.aux1.T(iaux1);
     SD.aux1.P=a.aux1.P(iaux1);
     SD.aux1.C=a.aux1.C(iaux1);

@@ -1,4 +1,4 @@
-function EPSI_batchprocess(Meta_Data,dsp)
+function MS=EPSI_batchprocess(Meta_Data,dsp)
 
 %  input: Meta_Data
 %  created with Meta_Data=create_Meta_Data. Meta_Data contain the

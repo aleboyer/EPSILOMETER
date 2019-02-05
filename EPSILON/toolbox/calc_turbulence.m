@@ -107,9 +107,9 @@ for c=1:length(All_channels)
     ind=find(cellfun(@(x) strcmp(x,wh_channels),channels));
     switch wh_channels
         case {'t1','t2','s1','s2'}
-            data(ind,:,:) = cell2mat(cellfun(@(x) filloutliers(Profile.(wh_channels)(x),'center','movmedian',5),MS.indscan,'un',0)).';
+            data(ind,:,:) = cell2mat(cellfun(@(x) filloutliers(Profile.(wh_channels)(x),'center','movmedian',f(end)),MS.indscan,'un',0)).';
         case {'a1','a2','a3'}
-            data(ind,:,:) = cell2mat(cellfun(@(x) filloutliers(Profile.(wh_channels)(x),'center','movmedian',5),MS.indscan,'un',0)).';
+            data(ind,:,:) = cell2mat(cellfun(@(x) filloutliers(Profile.(wh_channels)(x),'center','movmedian',f(end)),MS.indscan,'un',0)).';
     end
 end
 
@@ -301,6 +301,7 @@ for j=1:nbscan
             MS.kcfpo7(j,1)=k_all(find(k_all<=k(j,MS.fc_index(j,1)),1,'last'));
             krange=find(k_all<=k(j,MS.fc_index(j,1)));
             MS.chi(j,1)=6*MS.ktemp(j)*dk_all.*nansum(MS.PphiT_k(j,krange,1));
+            MS.flag(j,1)=MS.fc_index(j,1)<round(Lf1*.95);
         end
     end
     % compute chi 2. get frequency cutoff in  FPO7_cutoff
@@ -313,8 +314,10 @@ for j=1:nbscan
             MS.kcfpo7(j,2)=k_all(find(k_all<=k(j,MS.fc_index(j,2)),1,'last'));
             krange=find(k_all<=k(j,MS.fc_index(j,2)));
             MS.chi(j,2)=6*MS.ktemp(j)*dk_all.*nansum(MS.PphiT_k(j,krange,2));
+            MS.flag(j,2)=MS.fc_index(j,2)<round(Lf1*.95);
         end
     end
+
     
     % movie stuff
     if (dsp==1 && all(~isnan([MS.chi(j,1) MS.chi(j,2) MS.epsilon(j,1) MS.epsilon(j,2)])) )

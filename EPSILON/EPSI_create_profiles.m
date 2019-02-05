@@ -66,7 +66,7 @@ switch answer1
         [EpsiProfile.up,EpsiProfile.down,EpsiProfile.dataup,EpsiProfile.datadown] =...
             EPSI_getcastepsi(EPSI,CTD.ctdtime,CTDProfile.up,CTDProfile.down);
         
-        filepath=fullfile(Meta_Data.Meta_Data.L1path,['Profiles_' Meta_Data.deployment '.mat']);
+        filepath=fullfile(Meta_Data.L1path,['Profiles_' Meta_Data.deployment '.mat']);
         fprintf('Saving data in %s \n',filepath)
         save(filepath,'CTDProfile','EpsiProfile','-v7.3');
 end
