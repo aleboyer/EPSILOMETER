@@ -125,7 +125,7 @@ end
 
 
 % A and B are the intermediary spectra. Only for plotting.
-A=squeeze(nanmean(P11_epsi(1,:,:),2)).*dTdV(1).^2;
+A=squeeze(nanmean(P11_epsi(2,:,:),2)).*dTdV(1).^2;
 B=squeeze(nanmean(P11_epsi(1,:,:),2)).*dTdV(1).^2./h_freq.electFPO7.'.^2;
 
 % Sensitivity of probe, nominal. Save dTdV in Meta Data it will be use in
@@ -142,7 +142,7 @@ switch Meta_Data.MAP.temperature
         FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
 end
 n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
-logf=log10(epsi_k);
+logf=log10(1/3:1/3:160);
 noise=10.^(n0+n1.*logf+n2.*logf.^2+n3.*logf.^3).*dTdV(1).^2;
 
 
@@ -150,7 +150,7 @@ noise=10.^(n0+n1.*logf+n2.*logf.^2+n3.*logf.^3).*dTdV(1).^2;
 close all
 hold on
 loglog(ctd_k,P11_Tctd,'r','linewidth',2)
-loglog(epsi_k,noise,'m','linewidth',2)
+loglog(1/3:1/3:160,noise,'m','linewidth',2)
 %loglog(epsi_k,10.^(mmp_noise).*dTdV(1).^2,'m--','linewidth',2)
 loglog(epsi_k,A,'Color',.6* [1 1 1],'linewidth',2)
 loglog(epsi_k,B,'Color',.4* [1 1 1],'linewidth',2)
@@ -166,7 +166,7 @@ xlabel('Hz','fontsize',20)
 ylabel('C^2/Hz','fontsize',20)
 titre=sprintf('%s cast %i - temperature',titre,np);
 title(titre,'fontsize',20)
-legend('SBE49','noise','raw','t1./TF_{elec}','t1','t2','location','southwest')
+legend('CTD','noise','raw','t1./TF_{elec}','t1','t2','location','southwest')
 grid on
 ylim([1e-13 1])
 xlim([1/15 170])

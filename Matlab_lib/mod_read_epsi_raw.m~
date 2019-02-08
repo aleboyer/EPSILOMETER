@@ -629,10 +629,10 @@ ptempa1 = EPSI.header.SBEcal.ptempa1;
 ptempa2 = EPSI.header.ptempa2;
 ptca0 = EPSI.header.SBEcal.ptca0;
 ptca1 = EPSI.header.SBEcal.ptca1;
-ptca2 = EPSI.header.SBEcal.ptca2;
-ptcb0 = EPSI.header.SBEcal.ptcb0;
-ptcb1 = EPSI.header.SBEcal.ptcb1;
-ptcb2 = EPSI.header.SBEcal.ptcb2;
+ptca2 = EPSI.header.ptca2;
+ptcb0 = EPSI.header.ptcb0;
+ptcb1 = EPSI.header.ptcb1;
+ptcb2 = EPSI.header.ptcb2;
 
 
 y = EPSI.aux1.PT_raw/13107;
