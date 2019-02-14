@@ -1,10 +1,12 @@
-function Meta_Data=mod_epsi_temperature_spectra(Meta_Data,EPSI_Profile,CTD_Profile,titre,np,dsp,tscan,ctd_df)
+function Meta_Data=mod_epsi_temperature_spectra(Meta_Data,EPSI_Profile,CTD_Profile,title1,np,dsp,tscan,ctd_df)
+%function Meta_Data=mod_epsi_temperature_spectra(Meta_Data,EPSI_Profile,CTD_Profile,title1,np,dsp,tscan,ctd_df)
 
-
+% ALB Feb 2019.
+%
 % input
 % Meta_Data: All environment informations
 % EPSI and CTD data form 1 profile defined by EPSI_create_profiles 
-% titre = title of the plot
+% title = title of the plot
 % np = Profile number. TODO: Could be directly implied when calling EPSI
 % and CTD data
 % tscan = length in seconds of the segment used to compute the spectra
@@ -164,8 +166,8 @@ end
 set(gca,'XScale','log','YScale','log')
 xlabel('Hz','fontsize',20)
 ylabel('C^2/Hz','fontsize',20)
-titre=sprintf('%s cast %i - temperature',titre,np);
-title(titre,'fontsize',20)
+title1=sprintf('%s cast %i - temperature',title1,np);
+title(title1,'fontsize',20)
 legend('CTD','noise','raw','t1./TF_{elec}','t1','t2','location','southwest')
 grid on
 ylim([1e-13 1])
@@ -192,7 +194,7 @@ if dsp==1
         legend('t1 raw','noise',' mmp noise','t1','SBE')
         xlabel('Hz','fontsize',20)
         ylabel('C^2/Hz','fontsize',20)
-        title(titre,'fontsize',20)
+        title(title1,'fontsize',20)
         set(gca,'fontsize',20)
         ylim([1e-13 1])
         xlim([1/15 170])
