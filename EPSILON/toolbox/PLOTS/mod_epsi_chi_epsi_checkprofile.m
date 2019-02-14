@@ -1,4 +1,8 @@
 function mod_epsi_chi_epsi_checkprofile(MS,Meta_Data,l)
+%function mod_epsi_chi_epsi_checkprofile(MS,Meta_Data,l)
+% Feb 2019 ALB. Pass in structure MS and Meta_Data.  This will generate a
+% standard movie for cast l.
+
 close all
 % l is the profile number
 % l=5;

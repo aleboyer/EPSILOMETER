@@ -1,5 +1,6 @@
 function EPSI_create_profiles(Meta_Data,crit_speed,crit_filt)
-
+%function EPSI_create_profiles(Meta_Data,crit_speed,crit_filt)
+% July 2018 ALB
 %  split times series into profiles
 %
 %  input:
@@ -54,6 +55,10 @@ end
 for i=1:length(CTDProfile.down)
        plot(CTDProfile.datadown{i}.ctdtime,CTDProfile.datadown{i}.P,'g')
 end
+
+%MHA: plot ocean style
+axis ij
+
 print('-dpng2',[Meta_Data.CTDpath 'Profiles_Pr.png'])
 
 

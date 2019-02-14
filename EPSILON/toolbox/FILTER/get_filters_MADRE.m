@@ -1,11 +1,13 @@
 function H=get_filters_MADRE(Meta_Data,f)
+%function H=get_filters_MADRE(Meta_Data,f)
 %% Define the electronic filter, ADC filters.
 %  The electronics filter Helec = charge amp filter (Hca) + Gain (Hg)
 %  The ADC filter is a simple sinc^4 and the gain of the ADC is 2. Other options are available. 
 %
 %  TODO: enter argument to be able to change the ADC filter without hard
 %  coding
-%
+% Feb 2019 ALB
+
 switch Meta_Data.epsi.s1.ADCfilter
     case 'sinc4'
         Hs1filter=(sinc(f/(2*f(end)))).^4;
