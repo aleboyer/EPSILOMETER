@@ -51,9 +51,9 @@ for dt=1:numel(dnum)
     indnan=~isnan(sgth(:,dt));
     eta(:,dt)=interp1(sgth(indnan,dt),z(indnan),level_sig);
 end
-dvals=floor(nanmean(eta,2)./2);
-dmeta=diff(dvals);
-eta2m=eta(dmeta>0,:);
+meta=floor(nanmean(eta,2)./2);
+dmeta=diff(meta);
+eta2=eta(dmeta>0,:);
 
 if isfield('Meta_Data','lat')
     lat=dnum*0+lat;
@@ -90,15 +90,15 @@ chi22=interp1(z,chi2,zaxis12);
 flag12=interp1(z,flag,zaxis12);
 
 
-epsi_chi1 = interp1(zaxis12,chi12.* N2 ./gamma ./ Tz.^2,z);
-epsi_chi2 = interp1(zaxis12,chi22.* N2 ./gamma ./ Tz.^2,z);
-epsi_chi1(epsi_chi1<0)=nan;
-epsi_chi2(epsi_chi2<0)=nan;
+eps_chi1 = interp1(zaxis12,chi12.* N2 ./gamma ./ Tz.^2,z);
+eps_chi2 = interp1(zaxis12,chi22.* N2 ./gamma ./ Tz.^2,z);
+eps_chi1(eps_chi1<0)=nan;
+eps_chi2(eps_chi2<0)=nan;
 
 N2=interp1(zaxis12,N2.*flag12,z);
 N2(N2<=0)=nan;
 N2=fillmissing(N2,'linear');
-n2=N2.*flag;
+N2=N2.*flag;
 
 
 
@@ -107,7 +107,7 @@ save(fullfile(Meta_Data.L1path,'Turbulence_grid.mat'), ...
     'epsilon1','epsilon2', ...
     'chi1','chi2', ...
     'dnum','z', ...
-    'sgth','t','s','eta2m','flag','Meta_Data','lat','lon','H','epsi_chi1','epsi_chi2','n2')
+    'sgth','t','s','eta2','flag','Meta_Data','lat','lon','H')
 
 close all
 
@@ -116,7 +116,7 @@ figure;
 colormap('parula')
 pcolor(dnum,z,log10(real(epsilon1)));shading flat;axis ij
 hold on
-plot(dnum,eta2m,'k')
+plot(dnum,eta2,'k')
 colorbar
 caxis([-10,-5])
 set(gca,'XTickLabelRotation',45)
@@ -137,7 +137,7 @@ figure;
 colormap('parula')
 pcolor(dnum,z,log10(real(epsilon2)));shading flat;axis ij
 hold on
-plot(dnum,eta2m,'k')
+plot(dnum,eta2,'k')
 colorbar
 caxis([-10,-5])
 set(gca,'XTickLabelRotation',45)
@@ -158,7 +158,7 @@ figure;
 colormap('parula')
 pcolor(dnum,z,log10(real(chi1.*flag)));shading flat;axis ij
 hold on
-plot(dnum,eta2m,'k','linewidth',1)
+plot(dnum,eta2,'k','linewidth',1)
 colorbar
 caxis([-11,-5])
 set(gca,'XTickLabelRotation',45)
@@ -179,7 +179,7 @@ figure;
 colormap('parula')
 pcolor(dnum,z,log10(real(chi2.*flag)));shading flat;axis ij
 hold on
-plot(dnum,eta2m,'k','linewidth',2)
+plot(dnum,eta2,'k','linewidth',2)
 colorbar
 caxis([-11,-5])
 set(gca,'XTickLabelRotation',45)
@@ -198,9 +198,9 @@ print(fullfile(Meta_Data.L1path,'Chi2_map.png'),'-dpng2')
 %epsilon from chi1 
 figure;
 colormap('parula')
-pcolor(dnum,z,log10(real(epsi_chi1.*flag)));shading flat;axis ij
+pcolor(dnum,z,log10(real(eps_chi1.*flag)));shading flat;axis ij
 hold on
-plot(dnum,eta2m,'k','linewidth',2)
+plot(dnum,eta2,'k','linewidth',2)
 colorbar
 caxis([-11,-5])
 set(gca,'XTickLabelRotation',45)
@@ -219,9 +219,9 @@ print(fullfile(Meta_Data.L1path,'Epsichi1_map.png'),'-dpng2')
 %epsilon from chi2 
 figure;
 colormap('parula')
-pcolor(dnum,z,log10(real(epsi_chi2.*flag)));shading flat;axis ij
+pcolor(dnum,z,log10(real(eps_chi2.*flag)));shading flat;axis ij
 hold on
-plot(dnum,eta2m,'k','linewidth',2)
+plot(dnum,eta2,'k','linewidth',2)
 colorbar
 caxis([-11,-5])
 set(gca,'XTickLabelRotation',45)
