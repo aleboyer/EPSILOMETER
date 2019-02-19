@@ -17,6 +17,7 @@ Map_chi1=cellfun(@(x) interp1(x.pr,x.chi(:,1),zaxis),MS(~MSempty),'un',0);
 Map_chi2=cellfun(@(x) interp1(x.pr,x.chi(:,2),zaxis),MS(~MSempty),'un',0);
 Map_t=cellfun(@(x) interp1(x.pr,x.t,zaxis),MS(~MSempty),'un',0);
 Map_s=cellfun(@(x) interp1(x.pr,x.s,zaxis),MS(~MSempty),'un',0);
+Map_flag=cellfun(@(x) interp1(x.pr,double(x.flag),zaxis),MS(~MSempty),'un',0);
 
 
 Map_time=cell2mat(cellfun(@(x) mean(x.time),MS(~MSempty),'un',0));
@@ -29,6 +30,7 @@ Map_chi1=cell2mat(Map_chi1.');
 Map_chi2=cell2mat(Map_chi2.');
 Map_t=cell2mat(Map_t.');
 Map_s=cell2mat(Map_s.');
+Map_flag(Map_flag<1)=NaN;
 
 Map_sig=sw_dens(Map_s,Map_t,zaxis).';
 
@@ -46,7 +48,7 @@ save(fullfile(Meta_Data.L1path,'Turbulence_grid.mat'), ...
     'Map_epsilon1','Map_epsilon2', ...
     'Map_chi1','Map_chi2', ...
     'Map_time','zaxis', ...
-    'Map_sig','Map_t','Map_s','eta2')
+    'Map_sig','Map_t','Map_s','eta2','Map_flag')
 
 close all
 
@@ -95,7 +97,7 @@ print(fullfile(Meta_Data.L1path,'EpsiMap2.png'),'-dpng2')
 % chi 1 
 figure;
 colormap('parula')
-pcolor(Map_time,zaxis,log10(real(Map_chi1.')));shading flat;axis ij
+pcolor(Map_time,zaxis,log10(real(Map_chi1.*Map_flag).'));shading flat;axis ij
 hold on
 plot(Map_time,eta2,'k','linewidth',1)
 colorbar
@@ -116,7 +118,7 @@ print(fullfile(Meta_Data.L1path,'Epsichi1.png'),'-dpng2')
 % epsilon 1 
 figure;
 colormap('parula')
-pcolor(Map_time,zaxis,log10(real(Map_chi2.')));shading flat;axis ij
+pcolor(Map_time,zaxis,log10(real(Map_chi2.*Map_flag).'));shading flat;axis ij
 hold on
 plot(Map_time,eta2,'k','linewidth',2)
 colorbar
