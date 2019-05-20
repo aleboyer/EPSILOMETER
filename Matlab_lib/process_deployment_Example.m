@@ -1,16 +1,16 @@
 % point t o EPSI libraries
 process_dir='~/ARNAUD/SCRIPPS/EPSILOMETER/';
-Meta_Data.path_mission='/Volumes/DataDrive/';
+Meta_Data.path_mission='/Volumes/KINGSTON/';
 
-Meta_Data.mission='SODA';
-Meta_Data.vehicle_name='epsi_blue_fctd_ALB';
-Meta_Data.deployment='fctd_deployment_2';
-Meta_Data.vehicle='FISH';   % 'WireWalker' or 'FastCTD'
+Meta_Data.mission='DEV';
+Meta_Data.vehicle_name='madre';
+Meta_Data.deployment='d1';
+Meta_Data.vehicle='WW';   % 'WireWalker' or 'FastCTD'
 Meta_Data.process=process_dir;   % 'WireWalker' or 'FastCTD'
 
-Meta_Data.PROCESS.nb_channels=7;
-Meta_Data.PROCESS.channels={'t1','t2','s1','s2','a1','a2','a3'};
-Meta_Data.PROCESS.recording_mod='STREAMING';
+Meta_Data.PROCESS.nb_channels=8;
+Meta_Data.PROCESS.channels={'t1','t2','s1','s2','c','a1','a2','a3'};
+Meta_Data.PROCESS.recording_mod='SD';
 
 %% add auxillary device field
 Meta_Data.aux1.name = 'SBE49';
@@ -18,13 +18,13 @@ Meta_Data.aux1.SN   = '0058';
 Meta_Data.aux1.cal_file=[Meta_Data.process '/SBE49/' Meta_Data.aux1.SN '.cal'];
 
 %% add channels fields
-Meta_Data.epsi.s1.SN='130'; % serial number;
-Meta_Data.epsi.s2.SN='138'; % serial number;
+Meta_Data.epsi.s1.SN='120'; % serial number;
+Meta_Data.epsi.s2.SN='211'; % serial number;
 Meta_Data.epsi.t1.SN='139'; % serial number;
 Meta_Data.epsi.t2.SN='145'; % serial number;
 
 Meta_Data.MAP.rev='MAP.0';
-Meta_Data.MAP.SN='0008';
+Meta_Data.MAP.SN='0001';
 Meta_Data.MAP.temperature='Tdiff';
 Meta_Data.MAP.shear='CAmp1.0';
 
@@ -38,12 +38,10 @@ Meta_Data=mod_define_meta_data(Meta_Data);
 
 
 % get SBE coef to convert the SBE words into physical values
-Meta_Data.SBEcal=get_CalSBE(Meta_Data.aux1.cal_file);
+%Meta_Data.SBEcal=get_CalSBE(Meta_Data.aux1.cal_file);
 % start time
 starttime=datenum('01-Jan-2020 00:00:00');
 Meta_Data.starttime=starttime;
-Meta_Data.vehicle='FISH';
-Meta_Data.MAP.temperature='Tdiff';
 
 
 if first_time==1

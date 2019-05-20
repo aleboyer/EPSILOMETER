@@ -147,7 +147,7 @@ annotation('textbox',...
 dTdV=[Meta_Data.epsi.t1.dTdV,Meta_Data.epsi.t2.dTdV];
 Sv=[Meta_Data.epsi.s1.Sv,Meta_Data.epsi.s2.Sv];
 Gr=9.81;
-for k=1:length(MS{l}.kvis)
+for k=1:2:length(MS{l}.kvis)
     
     
     % coherence plot
@@ -217,10 +217,12 @@ for k=1:length(MS{l}.kvis)
     loglog(ax(1),MS{l}.k,smTG2,'Color',.3*[1 1 1],'linewidth',2)
     loglog(ax(1),k_noise,tnoise_k,'c','linewidth',1)
     if ~isempty(indt1)
-    scatter(ax(1),MS{l}.k(MS{l}.fc_index(k,1)),smTG1(MS{l}.fc_index(k,1)),500,.8*[.5 1 .7],'filled','d','MarkerEdgeColor','y','linewidth',3)
+        indkc=find(MS{l}.k>MS{l}.kcfpo7(k,1),1,'first');
+    scatter(ax(1),MS{l}.kcfpo7(k,1),smTG1(indkc),500,.8*[.5 1 .7],'filled','d','MarkerEdgeColor','y','linewidth',3)
     end
     if ~isempty(indt2)
-    scatter(ax(1),MS{l}.k(MS{l}.fc_index(k,2)),smTG2(MS{l}.fc_index(k,2)),500,.3*[1 1 1],'filled','p','MarkerEdgeColor','y','linewidth',3)
+        indkc=find(MS{l}.k>MS{l}.kcfpo7(k,1),1,'first');
+    scatter(ax(1),MS{l}.kcfpo7(k,2),smTG2(indkc),500,.3*[1 1 1],'filled','p','MarkerEdgeColor','y','linewidth',3)
     end
     
     lolo=loglog(ax(1),kbatch11,Pbatch11,'Color',[1 0 1]);

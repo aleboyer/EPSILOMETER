@@ -13,6 +13,8 @@ Map_pr=cellfun(@(x) (x.pr),MS(~MSempty),'un',0);
 zaxis=min([Map_pr{:}]):.5:max([Map_pr{:}]);
 Map_epsilon2=cellfun(@(x) interp1(x.pr,x.epsilon(:,2),zaxis),MS(~MSempty),'un',0);
 Map_epsilon1=cellfun(@(x) interp1(x.pr,x.epsilon(:,1),zaxis),MS(~MSempty),'un',0);
+Map_epsilon2_co=cellfun(@(x) interp1(x.pr,x.epsilon_co(:,2),zaxis),MS(~MSempty),'un',0);
+Map_epsilon1_co=cellfun(@(x) interp1(x.pr,x.epsilon_co(:,1),zaxis),MS(~MSempty),'un',0);
 Map_chi1=cellfun(@(x) interp1(x.pr,x.chi(:,1),zaxis),MS(~MSempty),'un',0);
 Map_chi2=cellfun(@(x) interp1(x.pr,x.chi(:,2),zaxis),MS(~MSempty),'un',0);
 Map_t=cellfun(@(x) interp1(x.pr,x.t,zaxis),MS(~MSempty),'un',0);
@@ -25,6 +27,8 @@ Z=numel(zaxis);
 
 Map_epsilon1=cell2mat(Map_epsilon1.');
 Map_epsilon2=cell2mat(Map_epsilon2.');
+Map_epsilon1_co=cell2mat(Map_epsilon1_co.');
+Map_epsilon2_co=cell2mat(Map_epsilon2_co.');
 Map_chi1=cell2mat(Map_chi1.');
 Map_chi2=cell2mat(Map_chi2.');
 Map_t=cell2mat(Map_t.');
@@ -44,6 +48,7 @@ eta2=eta(dmeta>0,:);
 
 save(fullfile(Meta_Data.L1path,'Turbulence_coherence_grid.mat'), ...
     'Map_epsilon1','Map_epsilon2', ...
+    'Map_epsilon1_co','Map_epsilon2_co', ...
     'Map_chi1','Map_chi2', ...
     'Map_time','zaxis', ...
     'Map_sig','Map_t','Map_s','eta2')
@@ -91,6 +96,50 @@ fig=gcf;
 fig.PaperPosition = [0 0 15 10];
 fig.PaperOrientation='Portrait';
 print(fullfile(Meta_Data.L1path,'EpsiMap2.png'),'-dpng2')
+
+
+% epsilon coherence 1 
+figure;
+colormap('parula')
+pcolor(Map_time,zaxis,log10(real(Map_epsilon1_co.')));shading flat;axis ij
+hold on
+plot(Map_time,eta2,'k')
+colorbar
+caxis([-11,-5])
+set(gca,'XTickLabelRotation',45)
+datetick
+cax=colorbar;
+xlabel(['Start date :' datestr(Map_time(1),'mm-dd-yyyy')],'fontsize',15)
+set(gca,'fontsize',15)
+ylabel(cax,'log_{10}(\epsilon_{co})','fontsize',20)
+ylabel('Depth (m)','fontsize',20)
+
+fig=gcf;
+fig.PaperPosition = [0 0 15 10];
+fig.PaperOrientation='Portrait';
+print(fullfile(Meta_Data.L1path,'EpsiMap1_co.png'),'-dpng2')
+
+% epsilon 2
+figure;
+colormap('parula')
+pcolor(Map_time,zaxis,log10(real(Map_epsilon2_co.')));shading flat;axis ij
+hold on
+plot(Map_time,eta2,'k')
+colorbar
+caxis([-10,-5])
+set(gca,'XTickLabelRotation',45)
+datetick
+cax=colorbar;
+xlabel(['Start date :' datestr(Map_time(1),'mm-dd-yyyy')],'fontsize',15)
+set(gca,'fontsize',15)
+ylabel(cax,'log_{10}(\epsilon_{}co})','fontsize',20)
+ylabel('Depth (m)','fontsize',20)
+
+fig=gcf;
+fig.PaperPosition = [0 0 15 10];
+fig.PaperOrientation='Portrait';
+print(fullfile(Meta_Data.L1path,'EpsiMap2_co.png'),'-dpng2')
+
 
 % chi 1 
 figure;

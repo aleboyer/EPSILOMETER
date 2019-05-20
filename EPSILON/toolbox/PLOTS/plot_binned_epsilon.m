@@ -32,7 +32,7 @@ ll=pp;
 
 mink=Epsilon_class.k(find(~isnan(nansum(Epsilon_class.mPshear1,1)),1,'first'));
 maxk=Epsilon_class.k(find(~isnan(nansum(Epsilon_class.mPshear1,1)),1,'last'));
-minP=min(Epsilon_class.mPshear1(:));
+minP=min(Epsilon_class.mPshear1_co(:));
 maxP=max(Epsilon_class.mPshear1(:));
 
 hold on
@@ -88,7 +88,7 @@ ll=pp;
 
 mink=Epsilon_class.k(find(~isnan(nansum(Epsilon_class.mPshear2,1)),1,'first'));
 maxk=Epsilon_class.k(find(~isnan(nansum(Epsilon_class.mPshear2,1)),1,'last'));
-minP=min(Epsilon_class.mPshear2(:));
+minP=min(Epsilon_class.mPshear2_co(:));
 maxP=max(Epsilon_class.mPshear2(:));
 
 hold on

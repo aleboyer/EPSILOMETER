@@ -184,6 +184,9 @@ indt1=find(cellfun(@(x) strcmp(x,'t1'),channels));
 indt2=find(cellfun(@(x) strcmp(x,'t2'),channels));
 inds1=find(cellfun(@(x) strcmp(x,'s1'),channels));
 inds2=find(cellfun(@(x) strcmp(x,'s2'),channels));
+inda1=find(cellfun(@(x) strcmp(x,'a1'),channels));
+inda2=find(cellfun(@(x) strcmp(x,'a2'),channels));
+inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
 
 % convert frequency to wavenumber
 k=cell2mat(cellfun(@(x) f1/x, num2cell(MS.w),'un',0).');
@@ -208,6 +211,51 @@ MS.Co12 = Co12;
 % Set kmax for integration to highest bin below pump spike,
 % which is between 49 and 52 Hz in a 1024-pt spectrum
 MS.kmax=MS.fmax./MS.w; % Lowest estimate below pump spike in 1024-pt record
+
+
+% set coheence correction
+if ~isempty(inds1)
+    s1=squeeze(P11(inds1,:,:));
+    Cos1a3=squeeze(Co12(inds1,inda3-1,:,:));
+    Cos1a2=squeeze(Co12(inds1,inda2-1,:,:));
+    Cos1a1=squeeze(Co12(inds1,inda1-1,:,:));
+    Cos1a3=abs(smoothdata(Cos1a3,'movmean',10));
+    Cos1a2=abs(smoothdata(Cos1a2,'movmean',10));
+    Cos1a1=abs(smoothdata(Cos1a1,'movmean',10));
+    Cos1tot=reshape([Cos1a1;Cos1a2;Cos1a3],[3,MS.nbscan,length(MS.f)]);
+    Cos1tot=squeeze(max(Cos1tot,[],1));
+    %%Cos1tot=sqrt(Cos1a3.^2+Cos1a2.^2+Cos1a1.^2);
+    s1=s1.*(1-Cos1tot);
+    
+    if any(Cos1tot>1)
+        disp('coucou')
+    end
+    Ps1k  = s1.* repmat(MS.w,[Lf1,1]).';   
+
+end
+if ~isempty(inds2)
+    s2=squeeze(P11(inds2,:,:));
+    Cos2a3=squeeze(Co12(inds2,inda3-1,:,:));
+    Cos2a2=squeeze(Co12(inds2,inda2-1,:,:));
+    Cos2a1=squeeze(Co12(inds2,inda1-1,:,:));
+    Cos2a3=abs(smoothdata(Cos2a3,'movmean',10));
+    Cos2a2=abs(smoothdata(Cos2a2,'movmean',10));
+    Cos2a1=abs(smoothdata(Cos2a1,'movmean',10));
+    Cos2tot=reshape([Cos2a1;Cos2a2;Cos2a3],[3,MS.nbscan,length(MS.f)]);
+    Cos2tot=squeeze(max(Cos2tot,[],1));
+%     Cos2tot=sqrt(Cos2a3.^2+Cos2a2.^2+Cos2a1.^2);
+    s2=s2.*(1-Cos2tot);
+    Ps2k  = s2.* repmat(MS.w,[Lf1,1]).';   
+    if any(Cos2tot>1)
+        disp('coucou')
+    end
+end
+
+% Profile.Pf(3,:,:)=s1c;
+% Profile.Pf(4,:,:)=s2c;
+
+
+
 
 
 % get FPO7 channel average noise to compute chi
@@ -262,9 +310,11 @@ for j=1:nbscan
     end
     if ~isempty(inds1)
         MS.Pshear_k(j,:,1) = (2*pi*k_all).^2 .* interp1(k(j,:),squeeze(P11k(inds1,j,:)),k_all);        % shear spec  as function of k
+        MS.Pshearco_k(j,:,1) = (2*pi*k_all).^2 .* interp1(k(j,:),squeeze(Ps1k(j,:)),k_all);        % shear spec  as function of k
     end
     if ~isempty(inds2)
         MS.Pshear_k(j,:,2) = (2*pi*k_all).^2 .* interp1(k(j,:),squeeze(P11k(inds2,j,:)),k_all);        % shear spec  as function of k
+        MS.Pshearco_k(j,:,2) = (2*pi*k_all).^2 .* interp1(k(j,:),squeeze(Ps2k(j,:)),k_all);        % shear spec  as function of k
     end
     % compute epsilon 1 in eps1_mmp
     if ~isempty(inds1) % if spectrum is all nan
@@ -274,6 +324,7 @@ for j=1:nbscan
             MS.kc(j,1)=nan;
         else
             [MS.epsilon(j,1),MS.kc(j,1)]=eps1_mmp(k_all,MS.Pshear_k(j,:,1),MS.kvis(j),dk_all,MS.kmax(j)); 
+            [MS.epsilon_co(j,1),MS.kc_co(j,1)]=eps1_mmp(k_all,MS.Pshearco_k(j,:,1),MS.kvis(j),dk_all,MS.kmax(j)); 
             [kpan,Ppan] = panchev(MS.epsilon(j,1),MS.kvis(j));
             MS.Ppan(j,:,1)=interp1(kpan,Ppan,k_all);
         end
@@ -286,6 +337,7 @@ for j=1:nbscan
             MS.kc(j,2)=nan;
         else
             [MS.epsilon(j,2),MS.kc(j,2)]=eps1_mmp(k_all,MS.Pshear_k(j,:,2),MS.kvis(j),dk_all,MS.kmax(j));
+            [MS.epsilon_co(j,2),MS.kc_co(j,2)]=eps1_mmp(k_all,MS.Pshearco_k(j,:,2),MS.kvis(j),dk_all,MS.kmax(j)); 
             [kpan,Ppan] = panchev(MS.epsilon(j,2),MS.kvis(j));
             MS.Ppan(j,:,2)=interp1(kpan,Ppan,k_all);
         end

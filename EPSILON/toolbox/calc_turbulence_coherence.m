@@ -1,4 +1,4 @@
-function [Profile]=calc_turbulence_coherence(Profile,Meta_Data)
+function [Profile]=calc_turbulence_coherence(Profile)
 
 %  fUse the already computed Profile structure to correct shear spectra using
 %  Coherence with acceleration
@@ -44,8 +44,8 @@ Cotot=sqrt(Cos1a3.^2+Cos1a2.^2+Cos1a1.^2);
 s1c=s1.*(1-Cotot);
 s2c=s2.*(1-Cotot);
 
-s1c(Cotot>.65)=nan;
-s2c(Cotot>.65)=nan;
+% s1c(Cotot>.65)=nan;
+% s2c(Cotot>.65)=nan;
 
 Profile.Pf(3,:,:)=s1c;
 Profile.Pf(4,:,:)=s2c;
@@ -75,21 +75,21 @@ for j=1:Profile.nbscan
     fprintf('scan %i over %i \n',j,Profile.nbscan)
     if ~isempty(inds1)
         indnan=~isnan(squeeze(P11k(inds1,j,:)));
-        Profile.Pshear_k(j,:,1) = (2*pi*k_all).^2 .* interp1(k(j,indnan),squeeze(P11k(inds1,j,indnan)),k_all);        % shear spec  as function of k
+        Profile.Pshear_k_co(j,:,1) = (2*pi*k_all).^2 .* interp1(k(j,indnan),squeeze(P11k(inds1,j,indnan)),k_all);        % shear spec  as function of k
     end
     if ~isempty(inds2)
         indnan=~isnan(squeeze(P11k(inds2,j,:)));
-        Profile.Pshear_k(j,:,2) = (2*pi*k_all).^2 .* interp1(k(j,indnan),squeeze(P11k(inds2,j,indnan)),k_all);        % shear spec  as function of k
+        Profile.Pshear_k_co(j,:,2) = (2*pi*k_all).^2 .* interp1(k(j,indnan),squeeze(P11k(inds2,j,indnan)),k_all);        % shear spec  as function of k
     end
     % compute epsilon 1 in eps1_mmp
     if ~isempty(inds1) % if spectrum is all nan
         if all(isnan(squeeze(P11k(inds1,j,:))))
             Profile.Ppan(j,:,1)=nan.*k_all;
-            Profile.epsilon(j,1)=nan;
-            Profile.kc(j,1)=nan;
+            Profile.epsilon_co(j,1)=nan;
+            Profile.kc_co(j,1)=nan;
         else
-            [Profile.epsilon(j,1),Profile.kc(j,1)]=eps1_mmp(k_all,Profile.Pshear_k(j,:,1),Profile.kvis(j),dk_all,Profile.kmax(j)); 
-            [kpan,Ppan] = panchev(Profile.epsilon(j,1),Profile.kvis(j));
+            [Profile.epsilon_co(j,1),Profile.kc(j,1)]=eps1_mmp(k_all,Profile.Pshear_k(j,:,1),Profile.kvis(j),dk_all,Profile.kmax(j)); 
+            [kpan,Ppan] = panchev(Profile.epsilon_co(j,1),Profile.kvis(j));
             Profile.Ppan(j,:,1)=interp1(kpan,Ppan,k_all);
         end
     end
@@ -97,11 +97,11 @@ for j=1:Profile.nbscan
     if ~isempty(inds2) % if spectrum is all nan
         if all(isnan(squeeze(P11k(inds2,j,:))))
             Profile.Ppan(j,:,1)=nan.*k_all;
-            Profile.epsilon(j,2)=nan;
+            Profile.epsilon_co(j,2)=nan;
             Profile.kc(j,2)=nan;
         else
-            [Profile.epsilon(j,2),Profile.kc(j,2)]=eps1_mmp(k_all,Profile.Pshear_k(j,:,2),Profile.kvis(j),dk_all,Profile.kmax(j));
-            [kpan,Ppan] = panchev(Profile.epsilon(j,2),Profile.kvis(j));
+            [Profile.epsilon_co(j,2),Profile.kc(j,2)]=eps1_mmp(k_all,Profile.Pshear_k(j,:,2),Profile.kvis(j),dk_all,Profile.kmax(j));
+            [kpan,Ppan] = panchev(Profile.epsilon_co(j,2),Profile.kvis(j));
             Profile.Ppan(j,:,2)=interp1(kpan,Ppan,k_all);
         end
     end

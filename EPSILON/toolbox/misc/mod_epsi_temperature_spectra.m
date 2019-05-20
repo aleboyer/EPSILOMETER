@@ -110,24 +110,27 @@ TFtemp=cell2mat(cellfun(@(x) h_freq.FPO7(x),num2cell(w),'un',0).');
 % apply the transfer function to correct the spectra 
 % the ratio of the final ctd spectrum by the EPSI spectra 
 % gives us the dTdV coeficient that allows to convert Volts to Celsius  
+indsub1Hz=find(ctd_k<1); 
 if ~isempty(indt1)
     P11_TFepsi(indt1,:,:)=squeeze(P11_epsi(indt1,:,:))./TFtemp;
     P11_T(indt1,:) = squeeze(nanmean(P11_TFepsi(indt1,:,:),2)); % Temperature gradient frequency spectra should be ?C^2/s^-2 Hz^-1 ????
     tempo_P11=interp1(epsi_k,P11_T(indt1,:),ctd_k);
-    dTdV(1)=sqrt(nanmedian(P11_Tctd./tempo_P11));
+    dTdV(1)=sqrt(nanmedian(P11_Tctd(indsub1Hz)./tempo_P11(indsub1Hz)));
     P11_T(indt1,:)= P11_T(indt1,:).*dTdV(1).^2;
 end
 if ~isempty(indt2)
     P11_TFepsi(indt2,:,:)=squeeze(P11_epsi(indt2,:,:))./TFtemp;
     P11_T(indt2,:) = squeeze(nanmean(P11_TFepsi(indt2,:,:),2)); % Temperature gradient frequency spectra should be ?C^2/s^-2 Hz^-1 ????
     tempo_P11=interp1(epsi_k,P11_T(indt2,:),ctd_k);
-    dTdV(2)=sqrt(nanmedian(P11_Tctd./tempo_P11));
+    dTdV(2)=sqrt(nanmedian(P11_Tctd(indsub1Hz)./tempo_P11(indsub1Hz)));
     P11_T(indt2,:)= P11_T(indt2,:).*dTdV(2).^2;
 end
 
 
 % A and B are the intermediary spectra. Only for plotting.
-A=squeeze(nanmean(P11_epsi(2,:,:),2)).*dTdV(1).^2;
+%A=squeeze(nanmean(P11_epsi(2,:,:),2)).*dTdV(1).^2;
+A=squeeze(nanmean(P11_epsi(1,:,:),2));
+AA=squeeze(nanmean(P11_epsi(1,:,:),2))./TFtemp.';
 B=squeeze(nanmean(P11_epsi(1,:,:),2)).*dTdV(1).^2./h_freq.electFPO7.'.^2;
 
 % Sensitivity of probe, nominal. Save dTdV in Meta Data it will be use in
@@ -151,16 +154,18 @@ noise=10.^(n0+n1.*logf+n2.*logf.^2+n3.*logf.^3).*dTdV(1).^2;
 % plot the spectra
 close all
 hold on
+loglog(epsi_k,P11_T(indt1,:),'c','linewidth',2)
 loglog(ctd_k,P11_Tctd,'r','linewidth',2)
-loglog(1/3:1/3:160,noise,'m','linewidth',2)
+%loglog(1/3:1/3:160,noise,'m','linewidth',2)
 %loglog(epsi_k,10.^(mmp_noise).*dTdV(1).^2,'m--','linewidth',2)
-loglog(epsi_k,A,'Color',.6* [1 1 1],'linewidth',2)
-loglog(epsi_k,B,'Color',.4* [1 1 1],'linewidth',2)
+loglog(epsi_k,A,'Color',.8* [1 1 1],'linewidth',2)
+loglog(epsi_k,AA,'Color',.6* [1 1 1],'linewidth',2)
+%loglog(epsi_k,B,'Color',.4* [1 1 1],'linewidth',2)
 if ~isempty(indt1)
-    loglog(epsi_k,P11_T(indt1,:),'c','linewidth',2)
+%    loglog(epsi_k,P11_T(indt1,:),'c','linewidth',2)
 end
 if ~isempty(indt2)
-    loglog(epsi_k,P11_T(indt2,:),'Color',.1* [1 1 1],'linewidth',2)
+%    loglog(epsi_k,P11_T(indt2,:),'Color',.1* [1 1 1],'linewidth',2)
 end
 
 set(gca,'XScale','log','YScale','log')
@@ -168,12 +173,13 @@ xlabel('Hz','fontsize',20)
 ylabel('C^2/Hz','fontsize',20)
 title1=sprintf('%s cast %i - temperature',title1,np);
 title(title1,'fontsize',20)
-legend('CTD','noise','raw','t1./TF_{elec}','t1','t2','location','southwest')
+%legend('CTD','noise','raw','t1./TF_{elec}','t1','t2','location','southwest')
+legend('t1','CTD','raw(Volt^2/Hz)','corrected (Volt^2/Hz)','location','northeast')
 grid on
 ylim([1e-13 1])
 xlim([1/15 170])
 set(gca,'fontsize',20)
-
+fig=gcf;fig.PaperPosition=[0 0 8 6];
 filename=sprintf('%sTctd_Tepsi_comp_cast%i_t%i.png',Meta_Data.L1path,np,1);
 print('-dpng2',filename)
 if dsp==1

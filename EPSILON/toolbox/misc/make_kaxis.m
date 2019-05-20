@@ -3,7 +3,7 @@ function kaxis=make_kaxis(tscan,df)
 % create the frenquency axis for fft
 % tscan is the length in time units of the segment for the fft
 % df is the sampling frequency in time units^{-1}
-Lscan  = tscan*df;
+Lscan  = floor(tscan*df);
 dk=1/tscan;
 if rem(Lscan,2)==0
     kaxis=-Lscan/2*dk:dk:Lscan/2*dk-dk;

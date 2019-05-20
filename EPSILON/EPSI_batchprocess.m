@@ -37,14 +37,21 @@ if nargin<2
 end
 
 % download EPSI and CTD profile
-load(fullfile(Meta_Data.L1path,['Profiles_' Meta_Data.deployment '.mat']),'CTDProfile','EpsiProfile');
+try
+    load(fullfile(Meta_Data.L1path,['Profiles_' Meta_Data.deployment '.mat']),'CTDProfiles','EpsiProfiles');
+    CTDProfiles
+catch
+    load(fullfile(Meta_Data.L1path,['Profiles_' Meta_Data.deployment '.mat']),'CTDProfile','EpsiProfile');
+    CTDProfiles=CTDProfile;
+    EpsiProfiles=EpsiProfile;
+end
 switch Meta_Data.vehicle
     case 'FISH'
-        CTD_Profiles=CTDProfile.datadown;
-        EPSI_Profiles=EpsiProfile.datadown;
+        CTD_Profiles=CTDProfiles.datadown;
+        EPSI_Profiles=EpsiProfiles.datadown;
     case 'WW'
-        CTD_Profiles=CTDProfile.dataup;
-        EPSI_Profiles=EpsiProfile.dataup;
+        CTD_Profiles=CTDProfiles.dataup;
+        EPSI_Profiles=EpsiProfiles.dataup;
 end
 %% Parameters fixed by data structure
 % length of 1 scan in second
@@ -67,6 +74,7 @@ MS = struct([]);
 % but it will always varies.
 % add pressure from ctd to the epsi profile. This should be ter mporary until
 % the addition of the pressure sensor on Epsi
+count=0;
 for i=1:length(EPSI_Profiles)
     fprintf('Profile %i over %i\n',i,length(EPSI_Profiles));
     EPSI_Profiles{i}.P=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.P,EPSI_Profiles{i}.epsitime);
@@ -74,9 +82,16 @@ for i=1:length(EPSI_Profiles)
     EPSI_Profiles{i}.T=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.T,EPSI_Profiles{i}.epsitime);
     EPSI_Profiles{i}.S=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.S,EPSI_Profiles{i}.epsitime);
 
-    MS{i}=calc_turbulence(EPSI_Profiles{i},tscan,f,Fcut_epsilon,Meta_Data,dsp,i);
+    MS{mod(i-1,10)+1}=calc_turbulence(EPSI_Profiles{i},tscan,f,Fcut_epsilon,Meta_Data,dsp,i);
+    
+    if (mod(i,10)==0)
+        save(fullfile(Meta_Data.L1path,['Turbulence_Profiles' num2str(count) '.mat']),'MS','-v7.3')
+        count=count+10;
+        clear MS
+    end
+    
 end
-save(fullfile(Meta_Data.L1path,'Turbulence_Profiles.mat'),'MS','-v7.3')
+save(fullfile(Meta_Data.L1path,['Turbulence_Profiles' num2str(count) '.mat']),'MS','-v7.3')
 
 
 

@@ -27,56 +27,70 @@ nbchannels=Meta_Data.PROCESS.nb_channels;
 starttime=Meta_Data.starttime;
 % get convert the MADRE timestamps in matlab stamps
 timeheader=a.madre.TimeStamp/86400+datenum(1970,1,1);
-% time stamps on MADRE starts on january first 2017.
-timeheader=starttime+(timeheader-datenum('01-01-2017 00:00:00'));
+timeheader=timeheader-timeheader(1)+starttime;
 
-%look for time difference between 0.5 second blocks 
-dtimeheader=diff(timeheader);
+if isfield(SD.madre,'muTimeStamp')
 
-SD.epsi.epsitime=nan(1,160*numel(timeheader));
-
-last_t=0;
-count=0;
-flag_timebug=0;
-for t=1:numel(dtimeheader)
-    dT=dtimeheader(t);
-    if dT==0
-        count=count+1;
+    timeheader=[timeheader(1)-.5/86400; timeheader+SD.madre.muTimeStamp*30*30*1e-6/86400];
+    SD.epsi.epsitime=nan(1,160*(numel(timeheader)-1));
+    for t=1:numel(timeheader)-1
+        SD.epsi.epsitime((t-1)*160+1:t*160)=linspace(timeheader(t)+1/320/86400,timeheader(t+1),160);
     end
-    if dT>0
-        if t==1
-            SD.epsi.epsitime(1:160)=timeheader(1)-fliplr(linspace(1/325/86400,.5/86400,160));
-        else
-            if flag_timebug==0 % normal case
-                SD.epsi.epsitime((last_t+1)*160+1:(t+1)*160)=linspace(timeheader(last_t+1)+1/325/86400,timeheader(t+1),160+count*160);
-            else   % if the timestamp bug and are decreasing
-                SD.epsi.epsitime((last_t+1)*160+1:(t+1)*160)=linspace(timeheader(t+1)-.5/86400,timeheader(t+1),160+count*160);
-            end
+
+
+    
+else
+    % time stamps on MADRE starts on january first 2017.
+    %timeheader=starttime+(timeheader-datenum('01-01-2017 00:00:00'));
+    %look for time difference between 0.5 second blocks
+    dtimeheader=diff(timeheader);
+    
+    SD.epsi.epsitime=nan(1,160*numel(timeheader));
+    
+    last_t=0;
+    count=0;
+    flag_timebug=0;
+    for t=1:numel(dtimeheader)
+        dT=dtimeheader(t);
+        if dT==0
+            count=count+1;
         end
-        last_t=t;
-        count=0;
-        flag_timebug=0;
+        if dT>0
+            if t==1
+                SD.epsi.epsitime(1:160)=timeheader(1)-fliplr(linspace(1/325/86400,.5/86400,160));
+            else
+                if flag_timebug==0 % normal case
+                    SD.epsi.epsitime((last_t+1)*160+1:(t+1)*160)=linspace(timeheader(last_t+1)+1/325/86400,timeheader(t+1),160+count*160);
+                else   % if the timestamp bug and are decreasing
+                    SD.epsi.epsitime((last_t+1)*160+1:(t+1)*160)=linspace(timeheader(t+1)-.5/86400,timeheader(t+1),160+count*160);
+                end
+            end
+            last_t=t;
+            count=0;
+            flag_timebug=0;
+        end
+        if dT<0
+            SD.epsi.epsitime((last_t+1)*160:(t+1)*160)=nan;
+            last_t=t;
+            count=0;
+            flag_timebug=1;
+            disp(t)
+        end
     end
-    if dT<0
-        SD.epsi.epsitime((last_t+1)*160:(t+1)*160)=nan;
-        last_t=t;
-        count=0;
-        flag_timebug=1;
-        disp(t)
+    
+    if dtimeheader(1)==0
+        SD.epsi.epsitime(1:160)=SD.epsi.epsitime(161) - fliplr(linspace(1/325/86400,.5/86400,160));
     end
-end
-
-if dtimeheader(1)==0
-    SD.epsi.epsitime(1:160)=SD.epsi.epsitime(161) - fliplr(linspace(1/325/86400,.5/86400,160));
-end
-if dtimeheader(end)==0
-    SD.epsi.epsitime(end-(160+count*160)+1:end)=timeheader(end)- fliplr(linspace(1/325/86400,(.5+count*.5)/86400,160+count*160));
+    if dtimeheader(end)==0
+        SD.epsi.epsitime(end-(160+count*160)+1:end)=timeheader(end)- fliplr(linspace(1/325/86400,(.5+count*.5)/86400,160+count*160));
+    end
+    
+    
 end
 
 for n=1:nbchannels
     eval(sprintf('SD.epsi.%s=a.epsi.%s;',name_channels{n},name_channels{n}));
 end
-
 
 ind_OK=find(SD.epsi.epsitime>=SD.epsi.epsitime(1) & SD.epsi.epsitime<max(SD.epsi.epsitime));
 SD.epsi.epsitime=SD.epsi.epsitime(ind_OK);
