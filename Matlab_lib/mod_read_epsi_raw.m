@@ -87,8 +87,8 @@ if ~isempty(EPSI)
     else
         EPSI.header.system_time = EPSI.header.system_time/86400/100+EPSI.header.offset_time;
     end
-end
-if isfield(Meta_Data,'SBEcal')
+else
+% isfield(Meta_Data,'SBEcal')
     EPSI.header=Meta_Data.SBEcal;
 end
 
@@ -700,13 +700,21 @@ end
 
 %  reads and apply calibration to the conductivity data
 function EPSI = epsi_ascii_get_conductivity(EPSI)
-
+try 
 g = EPSI.header.g;
 h = EPSI.header.h;
 i = EPSI.header.i;
 j = EPSI.header.j;
 tcor = EPSI.header.tcor;
 pcor = EPSI.header.pcor;
+catch
+g = EPSI.header.cg;
+h = EPSI.header.ch;
+i = EPSI.header.ci;
+j = EPSI.header.cj;
+tcor = EPSI.header.ctcor;
+pcor = EPSI.header.cpcor;
+end
 
 f = EPSI.aux1.C_raw/256/1000;
 

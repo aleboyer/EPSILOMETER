@@ -37,12 +37,15 @@ else
 end
 
 % get time resolution
-dt=median(diff(tdata)*86400); % sampling period
+dt=nanmedian(diff(tdata)*86400); % sampling period
 
 % inverse pressure and remove outliers above the std deviation of a sliding window of 20 points
 pdata=filloutliers(data.P,'center','movmedian',20);
+pdata=fillmissing(pdata,'linear');
 if min(pdata)>8
     warning('there is an offset on the RBR pressure. We substract 8 m to get the profile.');
+    pdata=pdata-min(pdata);
+    data.P=pdata;
 end
 % buid a filter
 disp('smooth the pressure to define up and down cast')
@@ -102,54 +105,54 @@ dataup=dataup(indPup);
 down=down(indPdown);
 up=up(indPup);
 
-% plot pressure and highlight up /down casts in red/green
-close all
-plot(tdata,pdata)
-hold on
-for i=1:length(up)
-    if isfield(data,'ctdtime')
-        plot(dataup{i}.ctdtime,dataup{i}.P,'r')
-    else
-        plot(dataup{i}.time,dataup{i}.P,'r')
-    end
-end
-for i=1:length(down)
-    if isfield(data,'ctdtime')
-       plot(datadown{i}.ctdtime,datadown{i}.P,'g')
-    else
-       plot(datadown{i}.time,datadown{i}.P,'g')
-    end
-end
+% % plot pressure and highlight up /down casts in red/green
+% close all
+% plot(tdata,pdata)
+% hold on
+% for i=1:length(up)
+%     if isfield(data,'ctdtime')
+%         plot(dataup{i}.ctdtime,dataup{i}.P,'r')
+%     else
+%         plot(dataup{i}.time,dataup{i}.P,'r')
+%     end
+% end
+% for i=1:length(down)
+%     if isfield(data,'ctdtime')
+%        plot(datadown{i}.ctdtime,datadown{i}.P,'g')
+%     else
+%        plot(datadown{i}.time,datadown{i}.P,'g')
+%     end
+% end
+% 
+% %MHA: plot ocean style
+% axis ij
+% 
+% print('-dpng2',[Meta_Data.CTDpath 'Profiles_Pr.png'])
 
-%MHA: plot ocean style
-axis ij
 
-print('-dpng2',[Meta_Data.CTDpath 'Profiles_Pr.png'])
-
-
-% do we wnat to save or change the speed and filter criteria
-answer1=input('save? (yes,no)','s');
-
-%save
-switch answer1
-    case 'yes'
-        
-        CTDProfiles.up=up;
-        CTDProfiles.down=down;
-        CTDProfiles.dataup=dataup;
-        CTDProfiles.datadown=datadown;
-        if isfield(data,'info')
-            CTDProfiles.info=info;
-        end
-        filepath=fullfile(Meta_Data.L1path,['Profiles_' Meta_Data.deployment '.mat']);
-        fprintf('Saving data in %s \n',filepath)
-        save(filepath,'CTDProfiles','-v7.3');
-        
-        Meta_Data.nbprofileup=numel(CTDProfiles.up);
-        Meta_Data.nbprofiledown=numel(CTDProfiles.down);
-        Meta_Data.maxdepth=max(cellfun(@(x) max(x.P),CTDProfiles.dataup));
-        save(fullfile(Meta_Data.L1path,'Meta_Data.mat'),'Meta_Data')
-end
+% % do we wnat to save or change the speed and filter criteria
+% answer1=input('save? (yes,no)','s');
+% 
+% %save
+% switch answer1
+%     case 'yes'
+%         
+%         CTDProfiles.up=up;
+%         CTDProfiles.down=down;
+%         CTDProfiles.dataup=dataup;
+%         CTDProfiles.datadown=datadown;
+%         if isfield(data,'info')
+%             CTDProfiles.info=info;
+%         end
+%         filepath=fullfile(Meta_Data.L1path,['Profiles_' Meta_Data.deployment '.mat']);
+%         fprintf('Saving data in %s \n',filepath)
+%         save(filepath,'CTDProfiles','-v7.3');
+%         
+%         Meta_Data.nbprofileup=numel(CTDProfiles.up);
+%         Meta_Data.nbprofiledown=numel(CTDProfiles.down);
+%         Meta_Data.maxdepth=max(cellfun(@(x) max(x.P),CTDProfiles.dataup));
+%         save(fullfile(Meta_Data.L1path,'Meta_Data.mat'),'Meta_Data')
+% end
 
 
 

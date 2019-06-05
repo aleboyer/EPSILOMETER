@@ -46,6 +46,11 @@ EPSI=load(fullfile(Meta_Data.Epsipath,['epsi_' Meta_Data.deployment '.mat']));
 
 
 % plot pressure and highlight up /down casts in red/green
+if min(CTD.P)>8
+    warning('there is an offset on the RBR pressure. We substract 8 m to get the profile.');
+    CTD.P=CTD.P-min(CTD.P);
+end
+
 close all
 plot(CTD.ctdtime,CTD.P)
 hold on
@@ -63,7 +68,7 @@ print('-dpng2',[Meta_Data.CTDpath 'Profiles_Pr.png'])
 
 
 % do we wnat to save or change the speed and filter criteria
-answer1=input('save? (yes,no)','s');
+answer1=input('save profiles? (yes,no)','s');
 
 %save
 switch answer1
