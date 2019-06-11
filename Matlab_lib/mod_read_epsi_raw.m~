@@ -413,6 +413,10 @@ if is_aux1
     EPSI = epsi_ascii_get_temperature(EPSI);
     EPSI = epsi_ascii_get_pressure(EPSI);
     EPSI = epsi_ascii_get_conductivity(EPSI);
+end
+
+
+if is_aux1
     % remove bad records for aux1
     ind = EPSI.aux1.Aux1Stamp == 0 & EPSI.aux1.T_raw == 0 & EPSI.aux1.C_raw == 0 & EPSI.aux1.P_raw == 0;
     aux1_fields = fieldnames(EPSI.aux1);
@@ -420,7 +424,6 @@ if is_aux1
         EPSI.aux1.(aux1_fields{i})(ind) = NaN;
     end
 end
-
 
 % parsing the EPSI block data
 for cha=1:Meta_Data.PROCESS.nb_channels
