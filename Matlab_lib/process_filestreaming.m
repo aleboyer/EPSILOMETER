@@ -369,7 +369,7 @@ while ~strcmp(action,'q')
         hold(ax(5),'on')
 
         %leg=zeros(1,EPSI.nchannels);
-        leg=[];la;ls=[];lt=[];
+        leg=[];la=[];ls=[];lt=[];
         for cha=1:EPSI.nchannels
             wh_channel=namechannels{cha};
             switch wh_channel
