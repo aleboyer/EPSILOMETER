@@ -154,7 +154,11 @@ noise=10.^(n0+n1.*logf+n2.*logf.^2+n3.*logf.^3).*dTdV(1).^2;
 % plot the spectra
 close all
 hold on
-loglog(epsi_k,P11_T(indt1,:),'c','linewidth',2)
+if ~isempty(indt1)
+    loglog(epsi_k,P11_T(indt1,:),'c','linewidth',2)
+else
+    loglog(epsi_k,P11_T(indt2,:),'c','linewidth',2)
+end
 loglog(ctd_k,P11_Tctd,'r','linewidth',2)
 %loglog(1/3:1/3:160,noise,'m','linewidth',2)
 %loglog(epsi_k,10.^(mmp_noise).*dTdV(1).^2,'m--','linewidth',2)

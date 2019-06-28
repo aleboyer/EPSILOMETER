@@ -30,4 +30,4 @@ epsiup=cellfun( @(x) find(data.epsitime>=CTDtime(x(1)) & data.epsitime<=CTDtime(
 dataup=cellfun(@(x) structfun(@(y) y(x),data,'un',0),epsiup,'un',0);
 datadown=cellfun(@(x) structfun(@(y) y(x),data,'un',0),epsidown,'un',0);
 
-end
+ end

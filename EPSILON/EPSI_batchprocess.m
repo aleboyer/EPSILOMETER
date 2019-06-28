@@ -78,6 +78,7 @@ count=0;
 rem_nan=@(x) (fillmissing(x,'linear'));
 for i=1:length(EPSI_Profiles)
     fprintf('Profile %i over %i\n',i,length(EPSI_Profiles));
+
     EPSI_Profiles{i}.P=interp1(rem_nan(CTD_Profiles{i}.ctdtime),CTD_Profiles{i}.P,EPSI_Profiles{i}.epsitime);
     EPSI_Profiles{i}.P=filloutliers(EPSI_Profiles{i}.P,'center','movmedian',1000);
     EPSI_Profiles{i}.T=interp1(rem_nan(CTD_Profiles{i}.ctdtime),CTD_Profiles{i}.T,EPSI_Profiles{i}.epsitime);
@@ -92,7 +93,9 @@ for i=1:length(EPSI_Profiles)
     end
     
 end
-save(fullfile(Meta_Data.L1path,['Turbulence_Profiles' num2str(count) '.mat']),'MS','-v7.3')
+if exist('MS','var')
+    save(fullfile(Meta_Data.L1path,['Turbulence_Profiles' num2str(count) '.mat']),'MS','-v7.3')
+end
 
 
 

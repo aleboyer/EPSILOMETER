@@ -236,7 +236,7 @@ for k=1:2:length(MS{l}.kvis)
                  't1_{cutoff}','t2_{cutoff}','batch11','batch12','batch21','batch22',...
                  'location','southwest' )
     xlim(ax(1),[6e-1 400])
-    ylim(ax(1),[1e-10 1e-1])
+    ylim(ax(1),[1e-10 1e3])
     grid(ax(1),'on')
     xlabel(ax(1),'k (cpm)','fontsize',fontsize)
     ylabel(ax(1),'\phi^2_{TG} (C^2 m^{-2} / cpm)','fontsize',fontsize)
@@ -336,18 +336,26 @@ for k=1:2:length(MS{l}.kvis)
     
     %plot shear
     a=6;
-    [kpan1,Ppan1] = panchev(MS{l}.epsilon(k,1),MS{l}.kvis(k));
-    [kpan2,Ppan2] = panchev(MS{l}.epsilon(k,2),MS{l}.kvis(k));
+    [kpan1,Ppan1] = panchev(MS{l}.epsilon_co(k,1),MS{l}.kvis(k));
+    [kpan2,Ppan2] = panchev(MS{l}.epsilon_co(k,2),MS{l}.kvis(k));
     smS1=smoothdata(MS{l}.Pshear_k(k,:,1),'movmean',10);
     smS2=smoothdata(MS{l}.Pshear_k(k,:,2),'movmean',10);
+
+    smS1co=smoothdata(MS{l}.Pshearco_k(k,:,1),'movmean',10);
+    smS2co=smoothdata(MS{l}.Pshearco_k(k,:,2),'movmean',10);
+
+    smS1eof=smoothdata(MS{l}.Psheareof_k(k,:),'movmean',10);
     kcindex1=find(MS{l}.k<MS{l}.kc(k,1),1,'last');
     kcindex2=find(MS{l}.k<MS{l}.kc(k,2),1,'last');
     
-    loglog(ax(a),MS{l}.k,MS{l}.Pshear_k(k,:,1),'--','Color',.8*[.5 1 .5])
+    loglog(ax(a),MS{l}.k,smS1,'--','Color',.8*[.5 1 .7],'linewidth',2)
+%     loglog(ax(a),MS{l}.k,MS{l}.Pshear_k(k,:,1),'--','Color',.8*[.5 1 .5])
     hold(ax(a),'on')
-    loglog(ax(a),MS{l}.k,smS1,'Color',.8*[.5 1 .7],'linewidth',2)
-    loglog(ax(a),MS{l}.k,MS{l}.Pshear_k(k,:,2),'--','Color',.7*[1 1 1])
-    loglog(ax(a),MS{l}.k,smS2,'Color',.3*[1 1 1],'linewidth',2)
+    loglog(ax(a),MS{l}.k,smS1co,'Color',.8*[.5 1 .7],'linewidth',2)
+    loglog(ax(a),MS{l}.k,smS1eof,'m')
+%     loglog(ax(a),MS{l}.k,MS{l}.Pshear_k(k,:,2),'--','Color',.7*[1 1 1])
+    loglog(ax(a),MS{l}.k,smS2,'--','Color',.3*[1 1 1],'linewidth',2)
+    loglog(ax(a),MS{l}.k,smS2co,'Color',.3*[1 1 1],'linewidth',2)
     loglog(ax(a),k_noise,snoise_k,'c','linewidth',1)
     scatter(ax(a),MS{l}.k(kcindex1),smS1(kcindex1),500,.8*[.5 1 .7],'filled','d','MarkerEdgeColor','c','linewidth',2)
     scatter(ax(a),MS{l}.k(kcindex2),smS2(kcindex2),500,.3*[1 1 1],'filled','p','MarkerEdgeColor','c','linewidth',2)
@@ -357,7 +365,8 @@ for k=1:2:length(MS{l}.kvis)
     hold(ax(a),'off')
     set(ax(a),'Xscale','log','Yscale','log')
     set(ax(a),'fontsize',fontsize)
-    legend(ax(a),'s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southwest')
+%     legend(ax(a),'s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southwest')
+    legend(ax(a),'s1smooth','s1co','s2smooth','s2co','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southwest')
     xlim(ax(a),[6e-1 400])
     ylim(ax(a),[1e-10 1e-1])
     grid(ax(a),'on')

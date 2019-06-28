@@ -29,8 +29,8 @@ if exist(fullfile(Meta_Data.CTDpath,['ctd_' Meta_Data.deployment '.mat']),'file'
     CTD=load(fullfile(Meta_Data.CTDpath,['ctd_' Meta_Data.deployment '.mat']),['ctd_' Meta_Data.deployment]);
     CTD=CTD.(['ctd_' Meta_Data.deployment]);
     % remove nans from the raw CTD data
-    indOK=~isnan(CTD.aux1time);
-    CTD=structfun(@(x) x(indOK),CTD,'un',0);
+%     indOK=~isnan(CTD.aux1time);
+%     CTD=structfun(@(x) x(indOK),CTD,'un',0);
     CTD.ctdtime=CTD.aux1time;
     
     % define casts using CTD data

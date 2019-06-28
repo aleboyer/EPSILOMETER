@@ -1,4 +1,4 @@
-function [MS]=calc_turbulence(Profile,tscan,f,fmax,Meta_Data,dsp,i)
+function [MS]=calc_turbulence_eof(Profile,tscan,f,fmax,Meta_Data,dsp,i)
 
 %  MS structure for Micro Structure. Inside MS you ll find
 %  temperature spectra in degC Hz^-1
@@ -217,20 +217,51 @@ MS.kmax=MS.fmax./MS.w; % Lowest estimate below pump spike in 1024-pt record
 % set coheence correction
 if ~isempty(inds1)
     s1=squeeze(P11(inds1,:,:));
-    Cos1tot=squeeze(Co12(inds1,[inda1-1 inda2-1 inda3-1],:,:));
-    Cos1tot=abs(smoothdata(Cos1tot,1,'movmean',20));
+    Cos1a3=squeeze(Co12(inds1,inda3-1,:,:));
+    Cos1a2=squeeze(Co12(inds1,inda2-1,:,:));
+    Cos1a1=squeeze(Co12(inds1,inda1-1,:,:));
+    Cos1a3=abs(smoothdata(Cos1a3,'movmean',20));
+    Cos1a2=abs(smoothdata(Cos1a2,'movmean',20));
+    Cos1a1=abs(smoothdata(Cos1a1,'movmean',20));
+    Cos1tot=reshape([Cos1a1;Cos1a2;Cos1a3],[3,MS.nbscan,length(MS.f)]);
     Cos1tot=squeeze(max(Cos1tot,[],1));
+    %%Cos1tot=sqrt(Cos1a3.^2+Cos1a2.^2+Cos1a1.^2);
     s1=s1.*(1-Cos1tot);
     
     if any(Cos1tot>1)
         disp('coucou')
     end
     Ps1k  = s1.* repmat(MS.w,[Lf1,1]).';   
+    for j=1:nbscan
+        % try to remove common mode between accel and shear using eof  
+        Co13=squeeze(Cos1tot(j,:));
+        s1=fillmissing(squeeze(P11k(inds1,j,:)),'linear');
+        maxs1=max(log10(s1));
+        ns1=log10(s1)./maxs1;
+        ms1=nanmean(ns1);
+        W=[Co13.' ns1-ms1].';
+        H=W*W.';
+        [E,L] = eig(H);
+        % Get PC by projecting eigenvectors on original data
+        PC = E'*W;
+        [~,IA]=sort(diag(L)./trace(L));
+%          m1=E(IA(2),:).'*PC(IA(2),:);
+% project data on 2nd mode
+        m2=E(IA(1),:).'*PC(IA(1),:);
+        Ps1keof(j,:)  = 10.^((m2(2,:)+ms1).*maxs1); % m2()    
+
+    end
+
 end
 if ~isempty(inds2)
     s2=squeeze(P11(inds2,:,:));
-    Cos2tot=squeeze(Co12(inds1,[inda1-1 inda2-1 inda3-1],:,:));
-    Cos2tot=abs(smoothdata(Cos2tot,1,'movmean',20));
+    Cos2a3=squeeze(Co12(inds2,inda3-1,:,:));
+    Cos2a2=squeeze(Co12(inds2,inda2-1,:,:));
+    Cos2a1=squeeze(Co12(inds2,inda1-1,:,:));
+    Cos2a3=abs(smoothdata(Cos2a3,'movmean',20));
+    Cos2a2=abs(smoothdata(Cos2a2,'movmean',20));
+    Cos2a1=abs(smoothdata(Cos2a1,'movmean',20));
+    Cos2tot=reshape([Cos2a1;Cos2a2;Cos2a3],[3,MS.nbscan,length(MS.f)]);
     Cos2tot=squeeze(max(Cos2tot,[],1));
 %     Cos2tot=sqrt(Cos2a3.^2+Cos2a2.^2+Cos2a1.^2);
     s2=s2.*(1-Cos2tot);
@@ -238,6 +269,27 @@ if ~isempty(inds2)
     if any(Cos2tot>1)
         disp('coucou')
     end
+    
+    for j=1:nbscan
+        % try to remove common mode between accel and shear using eof  
+        Co23=squeeze(Cos2tot(j,:));
+        s2=fillmissing(squeeze(P11k(inds2,j,:)),'linear');
+        maxs2=max(log10(s2));
+        ns2=log10(s2)./maxs2;
+        ms2=nanmean(ns2);
+        W=[Co23.' ns2-ms2].';
+        H=W*W.';
+        [E,L] = eig(H);
+        % Get PC by projecting eigenvectors on original data
+        PC = E'*W;
+        [~,IA]=sort(diag(L)./trace(L));
+%          m1=E(IA(2),:).'*PC(IA(2),:);
+% project data on 2nd mode
+        m2=E(IA(1),:).'*PC(IA(1),:);
+        Ps2keof(j,:)  = 10.^((m2(2,:)+ms1).*maxs1); % m2()    
+
+    end
+
 end
 
 % Profile.Pf(3,:,:)=s1c;
@@ -300,21 +352,23 @@ for j=1:nbscan
     if ~isempty(inds1)
         MS.Pshear_k(j,:,1) = (2*pi*k_all).^2 .* interp1(k(j,:),squeeze(P11k(inds1,j,:)),k_all);        % shear spec  as function of k
         MS.Pshearco_k(j,:,1) = (2*pi*k_all).^2 .* interp1(k(j,:),squeeze(Ps1k(j,:)),k_all);        % shear spec  as function of k
+        MS.Psheareof_k(j,:,1) = (2*pi*k_all).^2 .* interp1(k(j,:),squeeze(abs(Ps1keof(j,:))),k_all);        % shear spec  as function of k
     end
     if ~isempty(inds2)
         MS.Pshear_k(j,:,2) = (2*pi*k_all).^2 .* interp1(k(j,:),squeeze(P11k(inds2,j,:)),k_all);        % shear spec  as function of k
         MS.Pshearco_k(j,:,2) = (2*pi*k_all).^2 .* interp1(k(j,:),squeeze(Ps2k(j,:)),k_all);        % shear spec  as function of k
+        MS.Psheareof_k(j,:,2) = (2*pi*k_all).^2 .* interp1(k(j,:),squeeze(abs(Ps2keof(j,:))),k_all);        % shear spec  as function of k
     end
     % compute epsilon 1 in eps1_mmp
     if ~isempty(inds1) % if spectrum is all nan
         if all(isnan(squeeze(P11k(inds1,j,:))))
             MS.Ppan(j,:,1)=nan.*k_all;
             MS.epsilon(j,1)=nan;
-            MS.epsilon_co(j,1)=nan;
             MS.kc(j,1)=nan;
         else
             [MS.epsilon(j,1),MS.kc(j,1)]=eps1_mmp(k_all,MS.Pshear_k(j,:,1),MS.kvis(j),dk_all,MS.kmax(j)); 
             [MS.epsilon_co(j,1),MS.kc_co(j,1)]=eps1_mmp(k_all,MS.Pshearco_k(j,:,1),MS.kvis(j),dk_all,MS.kmax(j)); 
+            [MS.epsilon_eof(j,1),MS.kc_eof(j,1)]=eps1_mmp(k_all,MS.Psheareof_k(j,:,1),MS.kvis(j),dk_all,MS.kmax(j)); 
             [kpan,Ppan] = panchev(MS.epsilon(j,1),MS.kvis(j));
             MS.Ppan(j,:,1)=interp1(kpan,Ppan,k_all);
         end
@@ -324,11 +378,11 @@ for j=1:nbscan
         if all(isnan(squeeze(P11k(inds2,j,:))))
             MS.Ppan(j,:,1)=nan.*k_all;
             MS.epsilon(j,2)=nan;
-            MS.epsilon_co(j,2)=nan;
             MS.kc(j,2)=nan;
         else
             [MS.epsilon(j,2),MS.kc(j,2)]=eps1_mmp(k_all,MS.Pshear_k(j,:,2),MS.kvis(j),dk_all,MS.kmax(j));
             [MS.epsilon_co(j,2),MS.kc_co(j,2)]=eps1_mmp(k_all,MS.Pshearco_k(j,:,2),MS.kvis(j),dk_all,MS.kmax(j)); 
+            [MS.epsilon_eof(j,2),MS.kc_eof(j,2)]=eps1_mmp(k_all,MS.Psheareof_k(j,:,2),MS.kvis(j),dk_all,MS.kmax(j)); 
             [kpan,Ppan] = panchev(MS.epsilon(j,2),MS.kvis(j));
             MS.Ppan(j,:,2)=interp1(kpan,Ppan,k_all);
         end
@@ -441,12 +495,8 @@ for j=1:nbscan
     end
     % movie stuff
 end
-if length(MS.chi)~=length(MS.epsilon)
-    disp(souci)
-end
 if dsp==1
     close(v)
 end
-
 
 

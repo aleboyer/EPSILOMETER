@@ -357,17 +357,29 @@ if(isfield(EPSI,'header'))
 end
 
 % converting Hex into decimal. Starts with the header.
-EPSI.madre.EpsiStamp = hex2dec(madre.epsi_stamp);
-EPSI.madre.TimeStamp = hex2dec(madre.epsi_time);
-EPSI.madre.altimeter = reshape(hex2dec(madre.altimeter),2,[])';
-EPSI.madre.fsync_err = hex2dec(madre.fsync_err);
-EPSI.madre.Checksum_aux1 = hex2dec(madre.aux1_chksum);
-EPSI.madre.Checksum_map = hex2dec(madre.epsi_chksum);
-switch firmware_version
-    case 'microsecond' % ALB: I added the musecond timestamp in third position. So the header is longer
-        EPSI.madre.muTimeStamp = hex2dec(madre.epsi_mutime);
+try
+    EPSI.madre.EpsiStamp = hex2dec(madre.epsi_stamp);
+    EPSI.madre.TimeStamp = hex2dec(madre.epsi_time);
+    EPSI.madre.altimeter = reshape(hex2dec(madre.altimeter),2,[])';
+    EPSI.madre.fsync_err = hex2dec(madre.fsync_err);
+    EPSI.madre.Checksum_aux1 = hex2dec(madre.aux1_chksum);
+    EPSI.madre.Checksum_map = hex2dec(madre.epsi_chksum);
+    switch firmware_version
+        case 'microsecond' % ALB: I added the musecond timestamp in third position. So the header is longer
+            EPSI.madre.muTimeStamp = hex2dec(madre.epsi_mutime);
+    end
+catch
+%     EPSI.madre.EpsiStamp = hex2dec(madre.epsi_stamp);
+%     EPSI.madre.TimeStamp = hex2dec(madre.epsi_time);
+%     EPSI.madre.altimeter = reshape(hex2dec(madre.altimeter),2,[])';
+%     EPSI.madre.fsync_err = hex2dec(madre.fsync_err);
+%     EPSI.madre.Checksum_aux1 = hex2dec(madre.aux1_chksum);
+%     EPSI.madre.Checksum_map = hex2dec(madre.epsi_chksum);
+%     switch firmware_version
+%         case 'microsecond' % ALB: I added the musecond timestamp in third position. So the header is longer
+%             EPSI.madre.muTimeStamp = hex2dec(madre.epsi_mutime);
+%     end
 end
-
 % issues with the SD write and some bytes are not hex. if issues we scan
 % the whole sbe time series to find the bad bytes and then use the average 
 % increment from with the previous samples;
@@ -378,30 +390,67 @@ if is_aux1
         EPSI.aux1.C_raw = hex2dec(aux1.sbe(:,(1:6)+6));
         EPSI.aux1.P_raw = hex2dec(aux1.sbe(:,(1:6)+12));
         EPSI.aux1.PT_raw = hex2dec(aux1.sbe(:,(1:4)+18));
+        EPSI.aux1.Aux1Stamp =hex2dec(aux1.stamp);
     catch 
         disp('bug in SBE hex bytes')
-        for kk=1:size(aux1.stamp,1)
-            if mod(kk,5000)==0
-                fprintf('%u over %u \n',kk,size(aux1.stamp,1));
-            end
-            try
-                EPSI.aux1.T_raw(kk) = hex2dec(aux1.sbe(kk,1:6));
-                EPSI.aux1.C_raw(kk) = hex2dec(aux1.sbe(kk,(1:6)+6));
-                EPSI.aux1.P_raw(kk) = hex2dec(aux1.sbe(kk,(1:6)+12));
-                EPSI.aux1.PT_raw(kk) = hex2dec(aux1.sbe(kk,(1:4)+18));
-            catch
-                EPSI.aux1.T_raw(kk) = EPSI.aux1.T_raw(kk-1)+ ...
-                                nanmean(diff(EPSI.aux1.T_raw(kk-10:kk-1)));
-                EPSI.aux1.C_raw(kk) = EPSI.aux1.C_raw(kk-1)+ ...
-                                nanmean(diff(EPSI.aux1.C_raw(kk-10:kk-1)));
-                EPSI.aux1.P_raw(kk) = EPSI.aux1.P_raw(kk-1)+ ...
-                                nanmean(diff(EPSI.aux1.C_raw(kk-10:kk-1)));
-                EPSI.aux1.PT_raw(kk) =EPSI.aux1.PT_raw(kk-1)+ ...
-                                nanmean(diff(EPSI.aux1.PT_raw(kk-10:kk-1)));
-            end
-        end
+        % ALB:San's trick to get the errors and replace the bad char by '0'
+        ind_sbe = ( aux1.sbe >='0' & ...
+                aux1.sbe <='9')| ...
+              ( aux1.sbe >='a' & ...
+                aux1.sbe <='f')| ...
+              ( aux1.sbe >='A' & ...
+                aux1.sbe <='F');
+            
+        ind_stamp = ( aux1.stamp >='0' & ...
+                aux1.stamp <='9')| ...
+              ( aux1.stamp >='a' & ...
+                aux1.stamp <='f')| ...
+              ( aux1.stamp >='A' & ...
+                aux1.stamp <='F');
+            % replace bad char with '0'
+            aux1.stamp(~ind_stamp)='0';
+            aux1.sbe(~ind_sbe)='0';
+            EPSI.aux1.T_raw = hex2dec(aux1.sbe(:,1:6));
+            EPSI.aux1.C_raw = hex2dec(aux1.sbe(:,(1:6)+6));
+            EPSI.aux1.P_raw = hex2dec(aux1.sbe(:,(1:6)+12));
+            EPSI.aux1.PT_raw = hex2dec(aux1.sbe(:,(1:4)+18));
+            EPSI.aux1.Aux1Stamp =hex2dec(aux1.stamp);
+            
+%         for kk=1:size(aux1.stamp,1)
+%             if mod(kk,5000)==0
+%                 fprintf('%u over %u \n',kk,size(aux1.stamp,1));
+%             end
+%             try
+%                 EPSI.aux1.T_raw(kk) = hex2dec(aux1.sbe(kk,1:6));
+%                 EPSI.aux1.C_raw(kk) = hex2dec(aux1.sbe(kk,(1:6)+6));
+%                 EPSI.aux1.P_raw(kk) = hex2dec(aux1.sbe(kk,(1:6)+12));
+%                 EPSI.aux1.PT_raw(kk) = hex2dec(aux1.sbe(kk,(1:4)+18));
+%                 EPSI.aux1.Aux1Stamp =hex2dec(aux1.stamp);
+%             catch
+% %                 try
+% %                     EPSI.aux1.T_raw(kk) = EPSI.aux1.T_raw(kk-1)+ ...
+% %                         nanmean(diff(EPSI.aux1.T_raw(kk-10:kk-1)));
+% %                     EPSI.aux1.C_raw(kk) = EPSI.aux1.C_raw(kk-1)+ ...
+% %                         nanmean(diff(EPSI.aux1.C_raw(kk-10:kk-1)));
+% %                     EPSI.aux1.P_raw(kk) = EPSI.aux1.P_raw(kk-1)+ ...
+% %                         nanmean(diff(EPSI.aux1.C_raw(kk-10:kk-1)));
+% %                     EPSI.aux1.PT_raw(kk) =EPSI.aux1.PT_raw(kk-1)+ ...
+% %                         nanmean(diff(EPSI.aux1.PT_raw(kk-10:kk-1)));
+% %                     EPSI.aux1.Aux1Stamp(kk)=aux1.stamp(kk-1)+...
+% %                         nanmean(diff(aux1.stamp(kk-10:kk-1)));
+% %                 catch
+% %                     EPSI.aux1.T_raw(kk) = 0;
+% %                     EPSI.aux1.C_raw(kk) = 0;
+% %                     EPSI.aux1.P_raw(kk) = 0;
+% %                     EPSI.aux1.PT_raw(kk) =0;
+% %                     EPSI.aux1.Aux1Stamp(kk)=0;
+% %                 end
+%                 
+%             end
+%         end
     end
-    [EPSI.aux1.Aux1Stamp,ia0,~] =unique(hex2dec(aux1.stamp),'stable');
+    [EPSI.aux1.Aux1Stamp,ia0,~] =unique(EPSI.aux1.Aux1Stamp,'stable');
+    
     %ALB reorder the stamps and samples because until now we kept the zeros
     % in the aux block
     [EPSI.aux1.Aux1Stamp,ia1]=sort(EPSI.aux1.Aux1Stamp);

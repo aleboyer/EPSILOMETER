@@ -1,8 +1,12 @@
 %function process_filestreaming(datapath,toolpath)
 
+% to start the visualization press s
+% to stop the the 
+% 
 close all
 
-%% open the file
+%% open the file 
+% TODO adapt the script to continously get the latest file
 datapath='/Volumes/DataDrive/SODA/epsi_blue_fctd_ALB/fctd_deployment_1/raw/';
 toolpath='/Users/aleboyer/ARNAUD/SCRIPPS/EPSILOMETER/EPSILON/toolbox';
 % open files
@@ -61,10 +65,14 @@ EPSI.nbsamples=160;% number of epsi blocks is 160 ~ 0.5 seconds
 EPSI.nbblock_diag=10;% 10*.5sec blocks = 5 seconds
 EPSI.name_length=5; % 5 bytes EPSI
 EPSI.finishblock=2; % 2 bytes \r\n
+% namechannels={'t1','t2', ...
+%     's1','s2', ...
+%     'c', ...
+%     'a1','a2','a3'};
+%If only 7 channels
 namechannels={'t1','t2', ...
     's1','s2', ...
     'a1','a2','a3'};
-%    'c', ...
 countconversion={'Unipolar','Unipolar', ...
     'Unipolar','Unipolar', ...
     'Unipolar', ...
@@ -247,6 +255,7 @@ while ~strcmp(action,'q')
     str1 = fscanf(fid,'%c',EPSI.timestr_length);
     
     if length(str)==EPSI.nbblock_diag*EPSI.blocksize-1
+        
         
         ind_madre = strfind(str,'$MADRE');
         ind_aux1 = strfind(str,'$AUX1');

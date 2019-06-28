@@ -26,7 +26,7 @@ function Chi_class=calc_binned_chi(MS,epsi_bin)
         
     %% create common k(cpm) axis
     ktot=sort(unique([S_MS.k]));
-    maxk = max([S_MS.k]);
+    maxk = min([max([S_MS.k]),300]);
     mink = min([S_MS.k]);
     dk   = ktot(2);
     k    = mink:dk:maxk;
@@ -36,7 +36,7 @@ function Chi_class=calc_binned_chi(MS,epsi_bin)
     PphiT_k=[PphiT_k{:}];
     
     chi=cat(1,S_MS.chi);
-    epsilon=cat(1,S_MS.epsilon);
+    epsilon=cat(1,S_MS.epsilon_co);
     kvis=real(cat(1,S_MS.kvis));
     ktemp=real(cat(1,S_MS.ktemp));
 
@@ -141,28 +141,28 @@ function Chi_class=calc_binned_chi(MS,epsi_bin)
             if ~isnan(kbatch)
                 Chi_class.Pbatch11(i,j,:)=interp1(kbatch,Pbatch,k);
             else
-                Chi_class.Pbatch11(i,j,:)=nan;
+                Chi_class.Pbatch11(i,j,:)=k.*nan;
             end
             [kbatch,Pbatch] = batchelor(y,x, ...
                                Chi_class.kvis12{i,j},Chi_class.ktemp12{i,j});
             if ~isnan(kbatch)
                 Chi_class.Pbatch12(i,j,:)=interp1(kbatch,Pbatch,k);
             else
-                Chi_class.Pbatch12(i,j,:)=nan;
+                Chi_class.Pbatch12(i,j,:)=k.*nan;
             end
             [kbatch,Pbatch] = batchelor(y,x, ...
                                Chi_class.kvis21{i,j},Chi_class.ktemp21{i,j});
             if ~isnan(kbatch)
                 Chi_class.Pbatch21(i,j,:)=interp1(kbatch,Pbatch,k);
             else
-                Chi_class.Pbatch21(i,j,:)=nan;
+                Chi_class.Pbatch21(i,j,:)=k.*nan;
             end
             [kbatch,Pbatch] = batchelor(y,x, ...
                                Chi_class.kvis22{i,j},Chi_class.ktemp22{i,j});
             if ~isnan(kbatch)
                 Chi_class.Pbatch22(i,j,:)=interp1(kbatch,Pbatch,k);
             else
-                Chi_class.Pbatch22(i,j,:)=nan;
+                Chi_class.Pbatch22(i,j,:)=k.*nan;
             end
         end
     end
