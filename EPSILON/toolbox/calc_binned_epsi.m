@@ -33,7 +33,7 @@ function Epsilon_class=calc_binned_epsi(MS,epsi_bin)
         mink=sort([S_MS.k]);
         mink=mink(find(mink>0,1,'first'));
     end
-    dk   = mink;
+    dk   = max(mink,.1);
     
     k    = mink:dk:maxk;
     

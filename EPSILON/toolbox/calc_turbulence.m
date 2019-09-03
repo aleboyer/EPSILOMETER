@@ -82,8 +82,7 @@ total_indscan = arrayfun(@(x) (1+floor(Lscan/2)*(x-1):1+floor(Lscan/2)*(x-1)+Lsc
 total_w       = cellfun(@(x) nanmean(Profile.w(x)),total_indscan); 
 
 % make sure that we are using fast enough scans
-% ind_downcast = find((total_w)>.20);
-ind_downcast = find((total_w)>.10);
+ind_downcast = find((total_w)>.20);
 nbscan=length(ind_downcast);
 
 % start creating the MS structure
@@ -131,11 +130,66 @@ indf1=indf1(1:end-1);
 f1=f1(indf1);
 Lf1=length(indf1);
 Co12=Co12(:,:,:,indf1);
+P11= P11(:,:,indf1);
 
-% multiply by 2 because we use 1 sided spectra
-P11= 2*P11(:,:,indf1);
+%% do  coherence calculation here, get  a correction factor to  applya bit lower down
+
+% get index of the channels (usefull when the number of channels is not 8)
+indt1=find(cellfun(@(x) strcmp(x,'t1'),channels));
+indt2=find(cellfun(@(x) strcmp(x,'t2'),channels));
+inds1=find(cellfun(@(x) strcmp(x,'s1'),channels));
+inds2=find(cellfun(@(x) strcmp(x,'s2'),channels));
+inda1=find(cellfun(@(x) strcmp(x,'a1'),channels));
+inda2=find(cellfun(@(x) strcmp(x,'a2'),channels));
+inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
+
+nsmooth=15; %how many points to smooth over for  covariance
+
+% set coheence correction
+    a1f=smoothdata(squeeze(P11(inda1,:,:)),'movmean',nsmooth);
+    a2f=smoothdata(squeeze(P11(inda2,:,:)),'movmean',nsmooth);
+    a3f=smoothdata(squeeze(P11(inda3,:,:)),'movmean',nsmooth);
+
+if ~isempty(inds1)
+    s1=squeeze(P11(inds1,:,:));
+    s1f=smoothdata(s1,'movmean',nsmooth);
+    Cos1a3=squeeze(Co12(inds1,inda3-1,:,:));
+    Cos1a2=squeeze(Co12(inds1,inda2-1,:,:));
+    Cos1a1=squeeze(Co12(inds1,inda1-1,:,:));
+    Cos1a3=abs(smoothdata(Cos1a3,'movmean',10)).^2./s1f./a3f;
+    Cos1a2=abs(smoothdata(Cos1a2,'movmean',10)).^2./s1f./a2f;
+    Cos1a1=abs(smoothdata(Cos1a1,'movmean',10)).^2./s1f./a1f;
+    Cos1tot=max(cat(3,Cos1a1,Cos1a2,Cos1a3),[],3);
+    %%Cos1tot=sqrt(Cos1a3.^2+Cos1a2.^2+Cos1a1.^2);
+    ib=find(Cos1tot>1);  Cos1tot(ib)=1;  %TEMPTEMPTEMP fix
+%    s1=s1.*(1-Cos1tot);
+    
+    if any(Cos1tot>1)
+        disp('coucou')
+    end
+    
+    
+
+end
+if ~isempty(inds2)
+    s2=squeeze(P11(inds2,:,:));
+    s2f=smoothdata(s2,'movmean',nsmooth);
+    Cos2a3=squeeze(Co12(inds2,inda3-1,:,:));
+    Cos2a2=squeeze(Co12(inds2,inda2-1,:,:));
+    Cos2a1=squeeze(Co12(inds2,inda1-1,:,:));
+    Cos2a3=abs(smoothdata(Cos2a3,'movmean',10)).^2./s2f./a3f;
+    Cos2a2=abs(smoothdata(Cos2a2,'movmean',10)).^2./s2f./a2f;
+    Cos2a1=abs(smoothdata(Cos2a1,'movmean',10)).^2./s2f./a1f;
+    Cos2tot=max(cat(3,Cos2a1,Cos2a2,Cos2a3),[],3);
+    %%Cos1tot=sqrt(Cos1a3.^2+Cos1a2.^2+Cos1a1.^2);
+    ib=find(Cos2tot>1);  Cos2tot(ib)=1;  %TEMPTEMPTEMP fix
+end
+
+%% multiply by 2 because we use 1 sided spectra
+P11= 2*P11;
 P11_temp=0.*P11(1:2,:,:);
 P11_shear=0.*P11(1:2,:,:);
+
 %% get MADRE filters
 h_freq=get_filters_MADRE(Meta_Data,f1);
 
@@ -144,6 +198,7 @@ Sv = [Meta_Data.epsi.s1.Sv,Meta_Data.epsi.s2.Sv];%
 % Sensitivity of probe, nominal
 dTdV(1)=Meta_Data.epsi.t1.dTdV; % define in mod_epsi_temperature_spectra
 dTdV(2)=Meta_Data.epsi.t2.dTdV; % define in mod_epsi_temperature_spectra 
+
 %% compute fpo7 filters (they are speed dependent)
 Emp_Corr_fac=1;
 TFtemp=cell2mat(cellfun(@(x) h_freq.FPO7(x),num2cell(MS.w),'un',0).');
@@ -180,15 +235,15 @@ for c=1:length(All_channels)
     end
 end
 
-% get index of the channels (usefull when the number of channels is not 8)
-indt1=find(cellfun(@(x) strcmp(x,'t1'),channels));
-indt2=find(cellfun(@(x) strcmp(x,'t2'),channels));
-inds1=find(cellfun(@(x) strcmp(x,'s1'),channels));
-inds2=find(cellfun(@(x) strcmp(x,'s2'),channels));
-inda1=find(cellfun(@(x) strcmp(x,'a1'),channels));
-inda2=find(cellfun(@(x) strcmp(x,'a2'),channels));
-inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
 
+%% now apply coherence correction
+s1=squeeze(P11(inds1,:,:)); s1=s1.*(1-Cos1tot);
+s2=squeeze(P11(inds2,:,:)); s2=s2.*(1-Cos2tot);
+Ps1k=s1;
+Ps2k=s2;
+
+
+%%
 % convert frequency to wavenumber
 k=cell2mat(cellfun(@(x) f1/x, num2cell(MS.w),'un',0).');
 dk=cell2mat(cellfun(@(x) df/x, num2cell(MS.w),'un',0));
@@ -214,31 +269,7 @@ MS.Co12 = Co12;
 MS.kmax=MS.fmax./MS.w; % Lowest estimate below pump spike in 1024-pt record
 
 
-% set coheence correction
-if ~isempty(inds1)
-    s1=squeeze(P11(inds1,:,:));
-    Cos1tot=squeeze(Co12(inds1,[inda1-1 inda2-1 inda3-1],:,:));
-    Cos1tot=abs(smoothdata(Cos1tot,1,'movmean',20));
-    Cos1tot=squeeze(max(Cos1tot,[],1));
-    s1=s1.*(1-Cos1tot);
-    
-    if any(Cos1tot>1)
-        disp('coucou')
-    end
-    Ps1k  = s1.* repmat(MS.w,[Lf1,1]).';   
-end
-if ~isempty(inds2)
-    s2=squeeze(P11(inds2,:,:));
-    Cos2tot=squeeze(Co12(inds1,[inda1-1 inda2-1 inda3-1],:,:));
-    Cos2tot=abs(smoothdata(Cos2tot,1,'movmean',20));
-    Cos2tot=squeeze(max(Cos2tot,[],1));
-%     Cos2tot=sqrt(Cos2a3.^2+Cos2a2.^2+Cos2a1.^2);
-    s2=s2.*(1-Cos2tot);
-    Ps2k  = s2.* repmat(MS.w,[Lf1,1]).';   
-    if any(Cos2tot>1)
-        disp('coucou')
-    end
-end
+
 
 % Profile.Pf(3,:,:)=s1c;
 % Profile.Pf(4,:,:)=s2c;
@@ -288,6 +319,7 @@ end
 
 % compute shear and temperature gradient. Get chi and epsilon values
 % TODO: we do not need kall. 
+
 for j=1:nbscan
     fprintf('scan %i over %i \n',j,nbscan)
     % compute gradient
@@ -310,7 +342,6 @@ for j=1:nbscan
         if all(isnan(squeeze(P11k(inds1,j,:))))
             MS.Ppan(j,:,1)=nan.*k_all;
             MS.epsilon(j,1)=nan;
-            MS.epsilon_co(j,1)=nan;
             MS.kc(j,1)=nan;
         else
             [MS.epsilon(j,1),MS.kc(j,1)]=eps1_mmp(k_all,MS.Pshear_k(j,:,1),MS.kvis(j),dk_all,MS.kmax(j)); 
@@ -324,7 +355,6 @@ for j=1:nbscan
         if all(isnan(squeeze(P11k(inds2,j,:))))
             MS.Ppan(j,:,1)=nan.*k_all;
             MS.epsilon(j,2)=nan;
-            MS.epsilon_co(j,2)=nan;
             MS.kc(j,2)=nan;
         else
             [MS.epsilon(j,2),MS.kc(j,2)]=eps1_mmp(k_all,MS.Pshear_k(j,:,2),MS.kvis(j),dk_all,MS.kmax(j));
@@ -440,9 +470,6 @@ for j=1:nbscan
         cla(ax(4))
     end
     % movie stuff
-end
-if length(MS.chi)~=length(MS.epsilon)
-    disp(souci)
 end
 if dsp==1
     close(v)

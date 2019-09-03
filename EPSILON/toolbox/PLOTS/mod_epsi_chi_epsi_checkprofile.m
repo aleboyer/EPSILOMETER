@@ -253,7 +253,7 @@ for k=1:2:length(MS{l}.kvis)
     legend(ax(a),'t1','t2','location','northeast')
     set(ax(a),'Xscale','log','Yscale','linear')
     set(ax(a),'Xtick',[1e-12 1e-10 1e-8 1e-6 1e-4])
-    xlim(ax(a),[1e-12 max(MS{l}.chi(:))])
+    xlim(ax(a),[1e-12 max(max(MS{l}.chi(:)),1e-10)])
     ylim(ax(a),[min(MS{l}.pr) max(MS{l}.pr)])
     set(ax(a),'fontsize',15)
     ylabel(ax(a),'Depth (m)','fontsize',fontsize)
@@ -344,7 +344,7 @@ for k=1:2:length(MS{l}.kvis)
     smS1co=smoothdata(MS{l}.Pshearco_k(k,:,1),'movmean',10);
     smS2co=smoothdata(MS{l}.Pshearco_k(k,:,2),'movmean',10);
 
-    smS1eof=smoothdata(MS{l}.Psheareof_k(k,:),'movmean',10);
+%     smS1eof=smoothdata(MS{l}.Psheareof_k(k,:),'movmean',10);
     kcindex1=find(MS{l}.k<MS{l}.kc(k,1),1,'last');
     kcindex2=find(MS{l}.k<MS{l}.kc(k,2),1,'last');
     
@@ -352,7 +352,7 @@ for k=1:2:length(MS{l}.kvis)
 %     loglog(ax(a),MS{l}.k,MS{l}.Pshear_k(k,:,1),'--','Color',.8*[.5 1 .5])
     hold(ax(a),'on')
     loglog(ax(a),MS{l}.k,smS1co,'Color',.8*[.5 1 .7],'linewidth',2)
-    loglog(ax(a),MS{l}.k,smS1eof,'m')
+%     loglog(ax(a),MS{l}.k,smS1eof,'m')
 %     loglog(ax(a),MS{l}.k,MS{l}.Pshear_k(k,:,2),'--','Color',.7*[1 1 1])
     loglog(ax(a),MS{l}.k,smS2,'--','Color',.3*[1 1 1],'linewidth',2)
     loglog(ax(a),MS{l}.k,smS2co,'Color',.3*[1 1 1],'linewidth',2)

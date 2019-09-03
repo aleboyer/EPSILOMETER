@@ -19,7 +19,7 @@ function [up,down,dataup,datadown] = mod_getcastctd(Meta_Data,min_depth,crit_dep
 if nargin<3
     crit_depth=10;
 end
-load(fullfile(Meta_Data.CTDpath,Meta_Data.name_ctd),Meta_Data.name_ctd);
+load(fullfile(Meta_Data.CTDpath,[Meta_Data.name_ctd '.mat']),Meta_Data.name_ctd);
 eval(sprintf('data=%s;',Meta_Data.name_ctd));
 
 % rename variable to make it easy, only for epsiWW

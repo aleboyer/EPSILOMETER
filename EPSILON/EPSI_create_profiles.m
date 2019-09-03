@@ -31,7 +31,9 @@ if exist(fullfile(Meta_Data.CTDpath,['ctd_' Meta_Data.deployment '.mat']),'file'
     % remove nans from the raw CTD data
 %     indOK=~isnan(CTD.aux1time);
 %     CTD=structfun(@(x) x(indOK),CTD,'un',0);
+if ~strcmp(Meta_Data.vehicle,'WW')
     CTD.ctdtime=CTD.aux1time;
+end
     
     % define casts using CTD data
     [CTDProfiles.up,CTDProfiles.down,CTDProfiles.dataup,CTDProfiles.datadown] = ...

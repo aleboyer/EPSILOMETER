@@ -4,13 +4,14 @@
 % to stop the the 
 % 
 close all
+clear EPSI
 
 %% open the file 
 % TODO adapt the script to continously get the latest file
-datapath='/Volumes/DataDrive/SODA/epsi_blue_fctd_ALB/fctd_deployment_1/raw/';
+datapath='/Volumes/DataDrive4T/MISOBOB2019/FCTD_Epsi/d1/raw/';%FCTD_EPSI_19_07_10_213154.epsi
 toolpath='/Users/aleboyer/ARNAUD/SCRIPPS/EPSILOMETER/EPSILON/toolbox';
 % open files
-id=12;
+id=1;
 listfiles=dir(fullfile(datapath,'FCTD_EPSI*.epsi'));
 sprintf('read %s',listfiles(id).name)
 
@@ -65,14 +66,14 @@ EPSI.nbsamples=160;% number of epsi blocks is 160 ~ 0.5 seconds
 EPSI.nbblock_diag=10;% 10*.5sec blocks = 5 seconds
 EPSI.name_length=5; % 5 bytes EPSI
 EPSI.finishblock=2; % 2 bytes \r\n
-% namechannels={'t1','t2', ...
-%     's1','s2', ...
-%     'c', ...
-%     'a1','a2','a3'};
-%If only 7 channels
 namechannels={'t1','t2', ...
     's1','s2', ...
+    'c', ...
     'a1','a2','a3'};
+%If only 7 channels
+% namechannels={'t1','t2', ...
+%     's1','s2', ...
+%     'a1','a2','a3'};
 countconversion={'Unipolar','Unipolar', ...
     'Unipolar','Unipolar', ...
     'Unipolar', ...
@@ -187,7 +188,7 @@ frewind(fid);
 % we will plot time series and spectra with 5 seconds length.
 begin=0;
 while begin==0
-    str = fscanf(fid,'%c');
+    str = fscanf(fid,'%c',20*4221); % read the length of 10 block of the maximal block size. IN streaming mode from the FCTD epsi is 4221 bytes
     ind_madre1 = strfind(str,'$MADRE');
     if numel(ind_madre1)>=EPSI.nbblock_diag+1
         ind_aux1 = strfind(str,'$AUX1');
@@ -225,7 +226,7 @@ while begin==0
             EPSI.blocksize=unique(diff(ind_madre1)-1);
         end
     end
-    fseek(fid,ind_madre1(end-100)-1,-1);
+    fseek(fid,ind_madre1(end-10)-1,-1);
     begin=1;
 end
 
@@ -246,8 +247,8 @@ if is_aux1
     EPSI.aux1.P_raw=NaN(EPSI.nbblock_diag*EPSI.aux1.nbsample,1);
     EPSI.aux1.PT_raw=NaN(EPSI.nbblock_diag*EPSI.aux1.nbsample,1);
 end
-
-action=input('Actions? start read(s),quit(q)','s');
+action='';
+% action=input('Actions? start read(s),quit(q)','s');
 while ~strcmp(action,'q')
     % read 10 blocks
     str   = fscanf(fid,'%c',EPSI.nbblock_diag*EPSI.blocksize-1);
@@ -258,8 +259,8 @@ while ~strcmp(action,'q')
         
         
         ind_madre = strfind(str,'$MADRE');
-        ind_aux1 = strfind(str,'$AUX1');
-        ind_epsi = strfind(str,'$EPSI');
+        ind_aux1  = strfind(str,'$AUX1');
+        ind_epsi  = strfind(str,'$EPSI');
         
         %convert 3 bytes ADC samples into 24 bits counts.
         epsi.raw = int32(zeros(EPSI.nbblock_diag,EPSI.epsiblock_length));
@@ -398,7 +399,7 @@ while ~strcmp(action,'q')
         end
         if isfield(EPSI.epsi,'c')
             cha=find(cellfun(@(x) strcmp(x,'c'),namechannels));
-            plot(ax(4),timeaxis(1:end-1),diff(EPSI.epsi.c),'Color',cmap(cha,:))
+            leg(cha)=plot(ax(4),timeaxis(1:end-1),diff(EPSI.epsi.c),'Color',cmap(cha,:));
         else
             plot(ax(4),timeaxis,nan.*EPSI.epsi.(namechannels{1}))
         end
@@ -494,13 +495,13 @@ while ~strcmp(action,'q')
         end
 
     else
-        fseek(fid,ind_madre1(end-100)-1,-1);
+        fseek(fid,ind_madre1(end-10)-1,-1);
     end
     if is_aux1
         fprintf('Pressure %3.2f \n',EPSI.aux1.P(end))
     end
-    inputemu('key_normal','\ENTER')
-    action=input('','s');
+%     inputemu('key_normal','\ENTER')
+%     action=input('','s');
 
     
 end

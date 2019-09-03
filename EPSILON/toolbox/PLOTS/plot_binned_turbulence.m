@@ -56,7 +56,7 @@ xlabel('k [cpm]')
 ylabel('$(\phi^T_k)^2$  [ $(^{\circ}C . m^{-1})^2$ / cpm]','interpreter','latex')
 set(gca,'fontsize',20)
 legend([l1(1) l2(1) l3],{'batchelor','data','noise'},'location','best')
-print(fullfile(Meta_Data.L1path,[Meta_Data.deployment '_binned_chi_increpsi_t3s.png']),'-dpng2')
+print(fullfile(Meta_Data.L1path,[Meta_Data.deployment '_j12_binned_chi_increpsi_t3s.png']),'-dpng2')
 
 figure(8)
 i=9;j=1:12;
