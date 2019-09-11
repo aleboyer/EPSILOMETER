@@ -19,12 +19,14 @@ epsi_df=320;
 
 % define parameters to compute the spectra.
 epsi_Lscan  = tscan*epsi_df;  
-ctd_Lscan   = tscan*ctd_df;
 epsi_T      = length(EPSI_Profile.epsitime);
 ctd_T       = length(CTD_Profile.ctdtime);
 
 % make sure all the fields in the CTD structure are columns.
 CTD_Profile=structfun(@(x) x(:),CTD_Profile,'un',0);
+Length_profile=86400*(EPSI_Profile.epsitime(end)-EPSI_Profile.epsitime(1));
+ctd_df   = ctd_T./Length_profile;
+ctd_Lscan  = tscan*ctd_df;  
 
 
 fprintf('epsi time series %3.2f seconds.\n',epsi_T/epsi_df)

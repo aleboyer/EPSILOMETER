@@ -146,19 +146,26 @@ inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
 nsmooth=15; %how many points to smooth over for  covariance
 
 % set coheence correction
-    a1f=smoothdata(squeeze(P11(inda1,:,:)),'movmean',nsmooth);
-    a2f=smoothdata(squeeze(P11(inda2,:,:)),'movmean',nsmooth);
-    a3f=smoothdata(squeeze(P11(inda3,:,:)),'movmean',nsmooth);
+    if ~isempty(inda1);a1f=smoothdata(squeeze(P11(inda1,:,:)),'movmean',nsmooth);
+    else;a1f=0.*squeeze(P11(1,:,:));end
+    if ~isempty(inda2);a2f=smoothdata(squeeze(P11(inda2,:,:)),'movmean',nsmooth);
+    else;a2f=0.*squeeze(P11(1,:,:));end
+    if ~isempty(inda3);a3f=smoothdata(squeeze(P11(inda3,:,:)),'movmean',nsmooth);
+    else;a3f=0.*squeeze(P11(1,:,:));end
 
 if ~isempty(inds1)
     s1=squeeze(P11(inds1,:,:));
     s1f=smoothdata(s1,'movmean',nsmooth);
-    Cos1a3=squeeze(Co12(inds1,inda3-1,:,:));
-    Cos1a2=squeeze(Co12(inds1,inda2-1,:,:));
-    Cos1a1=squeeze(Co12(inds1,inda1-1,:,:));
-    Cos1a3=abs(smoothdata(Cos1a3,'movmean',10)).^2./s1f./a3f;
-    Cos1a2=abs(smoothdata(Cos1a2,'movmean',10)).^2./s1f./a2f;
-    Cos1a1=abs(smoothdata(Cos1a1,'movmean',10)).^2./s1f./a1f;
+    if ~isempty(inda3);Cos1a3=squeeze(Co12(inds1,inda3-1,:,:));
+    else;Cos1a3=0.*s1f;end
+    if ~isempty(inda2);Cos1a2=squeeze(Co12(inds1,inda2-1,:,:));
+    else;Cos1a2=0.*s1f;end
+    if ~isempty(inda1);Cos1a1=squeeze(Co12(inds1,inda1-1,:,:));
+    else;Cos1a1=0.*s1f;end
+        
+    Cos1a3=abs(smoothdata(Cos1a3,'movmean',nsmooth)).^2./s1f./a3f;
+    Cos1a2=abs(smoothdata(Cos1a2,'movmean',nsmooth)).^2./s1f./a2f;
+    Cos1a1=abs(smoothdata(Cos1a1,'movmean',nsmooth)).^2./s1f./a1f;
     Cos1tot=max(cat(3,Cos1a1,Cos1a2,Cos1a3),[],3);
     %%Cos1tot=sqrt(Cos1a3.^2+Cos1a2.^2+Cos1a1.^2);
     ib=find(Cos1tot>1);  Cos1tot(ib)=1;  %TEMPTEMPTEMP fix
@@ -174,12 +181,15 @@ end
 if ~isempty(inds2)
     s2=squeeze(P11(inds2,:,:));
     s2f=smoothdata(s2,'movmean',nsmooth);
-    Cos2a3=squeeze(Co12(inds2,inda3-1,:,:));
-    Cos2a2=squeeze(Co12(inds2,inda2-1,:,:));
-    Cos2a1=squeeze(Co12(inds2,inda1-1,:,:));
-    Cos2a3=abs(smoothdata(Cos2a3,'movmean',10)).^2./s2f./a3f;
-    Cos2a2=abs(smoothdata(Cos2a2,'movmean',10)).^2./s2f./a2f;
-    Cos2a1=abs(smoothdata(Cos2a1,'movmean',10)).^2./s2f./a1f;
+    if ~isempty(inda3);Cos2a3=squeeze(Co12(inds2,inda3-1,:,:));
+    else;Cos2a3=0.*s1f;end
+    if ~isempty(inda2);    Cos2a2=squeeze(Co12(inds2,inda2-1,:,:));
+    else;Cos2a2=0.*s1f;end
+    if ~isempty(inda1); Cos2a1=squeeze(Co12(inds2,inda1-1,:,:));
+    else;Cos2a1=0.*s1f;end
+    Cos2a3=abs(smoothdata(Cos2a3,'movmean',nsmooth)).^2./s2f./a3f;
+    Cos2a2=abs(smoothdata(Cos2a2,'movmean',nsmooth)).^2./s2f./a2f;
+    Cos2a1=abs(smoothdata(Cos2a1,'movmean',nsmooth)).^2./s2f./a1f;
     Cos2tot=max(cat(3,Cos2a1,Cos2a2,Cos2a3),[],3);
     %%Cos1tot=sqrt(Cos1a3.^2+Cos1a2.^2+Cos1a1.^2);
     ib=find(Cos2tot>1);  Cos2tot(ib)=1;  %TEMPTEMPTEMP fix

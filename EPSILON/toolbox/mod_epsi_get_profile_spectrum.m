@@ -37,7 +37,7 @@ function [k,P1,P11,Co12]=mod_epsi_get_profile_spectrum(data,k)
             tempo=shiftdim(repmat(squeeze(P1(j,:,:)),[1,1,nb_sensor-1]),2);
             P12(j,:,:,:)=conj(tempo).*P1(ind_nbsensor~=j,:,:)./Lscan^2/dk*wc2;
             tempo=shiftdim(repmat(squeeze(P11(j,:,:)),[1,1,nb_sensor-1]),2);
-%            Co12(j,:,:,:)=(squeeze(P12(j,:,:,:))).^2./(tempo.*P11(ind_nbsensor~=j,:,:));
+%             Co12(j,:,:,:)=(squeeze(P12(j,:,:,:))).^2./(tempo.*P11(ind_nbsensor~=j,:,:));
             Co12(j,:,:,:)=(squeeze(P12(j,:,:,:)));
         end
     end

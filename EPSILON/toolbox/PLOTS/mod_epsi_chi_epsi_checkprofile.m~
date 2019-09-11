@@ -35,7 +35,7 @@ else;a3f=0.*squeeze(MS{l}.Pf(1,:,:));end
     
 
 if ~isempty(inds1)
-    s1=.5*squeeze(MS{l}.Pf(inds1,:,:));
+    s1=squeeze(MS{l}.Pf(inds1,:,:)./2);
     s1f=smoothdata(s1,'movmean',nsmooth);
     if ~isempty(inda3);Cos1a3=squeeze(MS{l}.Co12(inds1,inda3-1,:,:));
     else;Cos1a3=0.*squeeze(MS{l}.Pf(1,:,:));end

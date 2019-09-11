@@ -60,7 +60,7 @@ shtotal_fit_shear10=[6.9006e-04, -4.2461e-03, -7.0832e-04, 1.5275, 1.8564];
 % a polynomial integrated with the same grid
 krange=find(k>=1 & k<15); 
 P_interpolated=interp1(k(krange),Psheark(krange),KI);
-% ALB change to nansum since coherence correction can introduces nans
+% ALB change to nansum since coherence correction can introduces nansclear 
 % shear10=nansum(P_interpolated)*0.2;
 shear10=nansum(P_interpolated)*0.2;
 %
