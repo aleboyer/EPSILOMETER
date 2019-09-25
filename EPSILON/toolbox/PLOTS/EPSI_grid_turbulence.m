@@ -39,6 +39,7 @@ chi1=cellfun(@(x) interp1(x.pr,x.chi(:,1),z),MS(~MSempty),'un',0);
 chi2=cellfun(@(x) interp1(x.pr,x.chi(:,2),z),MS(~MSempty),'un',0);
 t=cellfun(@(x) interp1(x.pr,x.t,z),MS(~MSempty),'un',0);
 s=cellfun(@(x) interp1(x.pr,x.s,z),MS(~MSempty),'un',0);
+w=cellfun(@(x) interp1(x.pr,x.w,z),MS(~MSempty),'un',0);
 flag1=cellfun(@(x) interp1(x.pr,double(x.flag(:,1)),z),MS(~MSempty),'un',0);
 flag2=cellfun(@(x) interp1(x.pr,double(x.flag(:,2)),z),MS(~MSempty),'un',0);
 dnum=cell2mat(cellfun(@(x) mean(x.time),MS(~MSempty),'un',0));
@@ -59,6 +60,7 @@ flag1=cell2mat(flag1);
 flag2=cell2mat(flag2);
 t=cell2mat(t);
 s=cell2mat(s);
+w=cell2mat(w);
 
 flag1(flag1<1)=NaN;
 flag2(flag2<1)=NaN;
@@ -145,12 +147,12 @@ save(fullfile(Meta_Data.L1path,'Turbulence_grid.mat'), ...
     'epsilon1_fit','epsilon2_fit', ...
     'chi1','chi2', ...
     'dnum','z', ...
-    'sgth','t','s','eta2m','flag1','flag2','Meta_Data','lat','lon','H','epsi_chi1','epsi_chi2','n2')
+    'sgth','t','s','w','eta2m','flag1','flag2','Meta_Data','lat','lon','H','epsi_chi1','epsi_chi2','n2')
 
 close all
 
 % epsilon 1 
-fontsize=25;
+fontsize=20;
 figure;
 colormap('parula')
 pcolor(dnum,z,log10(real(epsilon1)));shading flat;axis ij
@@ -330,7 +332,7 @@ pcolor(dnum,z,log10(real(chi1)));shading flat;axis ij
 hold on
 plot(dnum,eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
 colorbar
-caxis([-11,-5])
+caxis([-8,-2])
 set(gca,'XTickLabelRotation',25)
 datetick
 cax=colorbar;
@@ -342,7 +344,7 @@ ylabel('Depth (m)','fontsize',fontsize)
 fig=gcf;
 fig.PaperPosition = [0 0 12 8];
 fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'Chi1_map1.png'),'-dpng2')
+print(fullfile(Meta_Data.L1path,'Chi1_map.png'),'-dpng2')
 
 %chi2 
 figure;
@@ -351,7 +353,7 @@ pcolor(dnum,z,log10(real(chi2.*flag2)));shading flat;axis ij
 hold on
 plot(dnum,eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
 colorbar
-caxis([-11,-5])
+caxis([-8,-2])
 set(gca,'XTickLabelRotation',45)
 datetick
 cax=colorbar;
@@ -407,5 +409,63 @@ fig=gcf;
 fig.PaperPosition = [0 0 15 10];
 fig.PaperOrientation='Portrait';
 print(fullfile(Meta_Data.L1path,'Epsichi2_map.png'),'-dpng2')
+
+
+% t 
+fontsize=20;
+figure;
+colormap('parula')
+pcolor(dnum,z,t);shading flat;axis ij
+hold on
+plot(dnum,eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
+colorbar
+caxis([0,10])
+set(gca,'XTickLabelRotation',25)
+datetick
+cax=colorbar;
+xlabel(['Start date :' datestr(dnum(1),'mm-dd-yyyy')],'fontsize',fontsize)
+set(gca,'fontsize',fontsize)
+ylabel(cax,'Celsius','fontsize',fontsize)
+ylabel('Depth (m)','fontsize',fontsize)
+print(fullfile(Meta_Data.L1path,'t_map.png'),'-dpng2')
+
+
+% s
+fontsize=20;
+figure;
+colormap('parula')
+pcolor(dnum,z,s);shading flat;axis ij
+hold on
+plot(dnum,eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
+colorbar
+% caxis()
+set(gca,'XTickLabelRotation',25)
+datetick
+cax=colorbar;
+xlabel(['Start date :' datestr(dnum(1),'mm-dd-yyyy')],'fontsize',fontsize)
+set(gca,'fontsize',fontsize)
+ylabel(cax,'psu','fontsize',fontsize)
+ylabel('Depth (m)','fontsize',fontsize)
+print(fullfile(Meta_Data.L1path,'s_map.png'),'-dpng2')
+
+
+% w
+fontsize=20;
+figure;
+colormap('parula')
+pcolor(dnum,z,w);shading flat;axis ij
+hold on
+plot(dnum,eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
+colorbar
+caxis([0.4,.7])
+set(gca,'XTickLabelRotation',25)
+datetick
+cax=colorbar;
+xlabel(['Start date :' datestr(dnum(1),'mm-dd-yyyy')],'fontsize',fontsize)
+set(gca,'fontsize',fontsize)
+ylabel(cax,'m s^{-1}','fontsize',fontsize)
+ylabel('Depth (m)','fontsize',fontsize)
+print(fullfile(Meta_Data.L1path,'w_map.png'),'-dpng2')
+
 
 

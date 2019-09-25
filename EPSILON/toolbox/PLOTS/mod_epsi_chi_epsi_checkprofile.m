@@ -21,22 +21,32 @@ inda1=find(cellfun(@(x) strcmp(x,'a1'),channels));
 inda2=find(cellfun(@(x) strcmp(x,'a2'),channels));
 inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
 
-nsmooth=10; %how many points to smooth over for  covariance
+nsmooth=15; %how many points to smooth over for  covariance
+% set coheence correction
+h_freq=get_filters_MADRE(Meta_Data,MS{l}.f);
 
 % acceleration and coherence with shear
-if ~isempty(inda1);a1f=smoothdata(.5*squeeze(MS{l}.Pf(inda1,:,:)),'movmean',nsmooth);
+if ~isempty(inda1);a1f=smoothdata(squeeze(MS{l}.Pf(inda1,:,:)).*h_freq.electAccel,'movmean',nsmooth);
 else;a1f=0.*squeeze(MS{l}.Pf(1,:,:));end
-if ~isempty(inda2);a2f=smoothdata(.5*squeeze(MS{l}.Pf(inda2,:,:)),'movmean',nsmooth);
+if ~isempty(inda2);a2f=smoothdata(squeeze(MS{l}.Pf(inda2,:,:)).*h_freq.electAccel,'movmean',nsmooth);
 else;a2f=0.*squeeze(MS{l}.Pf(1,:,:));end
-if ~isempty(inda3);a3f=smoothdata(.5*squeeze(MS{l}.Pf(inda3,:,:)),'movmean',nsmooth);
+if ~isempty(inda3);a3f=smoothdata(squeeze(MS{l}.Pf(inda3,:,:)).*h_freq.electAccel,'movmean',nsmooth);
 else;a3f=0.*squeeze(MS{l}.Pf(1,:,:));end
 
-% set coheence correction
-    
+%  get Sv for shear
+Sv = [Meta_Data.epsi.s1.Sv,Meta_Data.epsi.s2.Sv];% 
+G=9.81
+TF1 =@(x) (Sv(2).*x/(2*G)).^2 .* h_freq.shear .* haf_oakey(MS{l}.f,x);
+TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS{l}.w),'un',0).');
 
 if ~isempty(inds1)
-    s1=.5*squeeze(MS{l}.Pf(inds1,:,:));
+    s1=squeeze(MS{l}.Pf(inds1,:,:)).*TFshear;
     s1f=smoothdata(s1,'movmean',nsmooth);
+%     s1_0=squeeze(MS{l}.Pf_0(inds1,:,:));
+%     a3_0=squeeze(MS{l}.Pf_0(inda3,:,:));
+%     s1f_0=smoothdata(s1_0,'movmean',nsmooth);
+%     a3f_0=smoothdata(a3_0,'movmean',nsmooth);
+
     if ~isempty(inda3);Cos1a3=squeeze(MS{l}.Co12(inds1,inda3-1,:,:));
     else;Cos1a3=0.*squeeze(MS{l}.Pf(1,:,:));end
     if ~isempty(inda2);Cos1a2=squeeze(MS{l}.Co12(inds1,inda2-1,:,:));
@@ -44,9 +54,10 @@ if ~isempty(inds1)
     if ~isempty(inda1);Cos1a1=squeeze(MS{l}.Co12(inds1,inda1-1,:,:));
     else;Cos1a1=0.*squeeze(MS{l}.Pf(1,:,:));end
     
-    Cos1a3=abs(smoothdata(Cos1a3,'movmean',10)).^2./s1f./a3f;
-    Cos1a2=abs(smoothdata(Cos1a2,'movmean',10)).^2./s1f./a2f;
-    Cos1a1=abs(smoothdata(Cos1a1,'movmean',10)).^2./s1f./a1f;
+%     Cos1a3_0=abs(smoothdata(Cos1a3,'movmean',nsmooth)).^2./s1f_0./a3f_0;
+    Cos1a3=2.*abs(smoothdata(Cos1a3,'movmean',nsmooth)).^2./(.5*s1f)./(.5*a3f);
+    Cos1a2=2.*abs(smoothdata(Cos1a2,'movmean',nsmooth)).^2./(.5*s1f)./(.5*a2f);
+    Cos1a1=2.*abs(smoothdata(Cos1a1,'movmean',nsmooth)).^2./(.5*s1f)./(.5*a1f);
 %     Cos1tot=max(cat(3,Cos1a1,Cos1a2,Cos1a3),[],3);
 end
 
@@ -143,6 +154,7 @@ for k=1:2:length(MS{l}.kvis)
     hold(ax(a),'on')
     I=semilogx(ax(a),MS{l}.f,Cos1a2(k,:),'r');
     J=semilogx(ax(a),MS{l}.f,Cos1a3(k,:),'k');
+%     O=semilogx(ax(a),MS{l}.f,Cos1a3_0(k,:),'g');
     grid(ax(a),'on')
     legend(ax(a),'a1','a2','a3','location','northwest')
     ax(a).YAxisLocation='right';
@@ -177,7 +189,7 @@ for k=1:2:length(MS{l}.kvis)
     
     % noise stuff
     k_noise=MS{l}.f./MS{l}.w(k);
-    noise_t=tnoise.*dTdV(1).^2./h_freq.FPO7(MS{l}.w(k));
+    noise_t=tnoise.*dTdV(2).^2./h_freq.FPO7(MS{l}.w(k));
     tnoise_k= (2*pi*k_noise).^2 .* noise_t.*MS{l}.w(k);        % T1_k spec  as function of k
     
 
@@ -208,7 +220,7 @@ for k=1:2:length(MS{l}.kvis)
     scatter(ax(1),MS{l}.kcfpo7(k,1),smTG1(indkc),500,.8*[.5 1 .7],'filled','d','MarkerEdgeColor','y','linewidth',3)
     end
     if ~isempty(indt2)
-        indkc=find(MS{l}.k>MS{l}.kcfpo7(k,1),1,'first');
+        indkc=find(MS{l}.k>MS{l}.kcfpo7(k,2),1,'first');
     scatter(ax(1),MS{l}.kcfpo7(k,2),smTG2(indkc),500,.3*[1 1 1],'filled','p','MarkerEdgeColor','y','linewidth',3)
     end
     
@@ -403,6 +415,9 @@ for k=1:2:length(MS{l}.kvis)
         delete(L);
         delete(M);
         delete(N);
+%         delete(O);
+    else
+        disp('save plot')
     end
    
 end

@@ -131,6 +131,7 @@ f1=f1(indf1);
 Lf1=length(indf1);
 Co12=Co12(:,:,:,indf1);
 P11= P11(:,:,indf1);
+P11_0=P11;  %  save  the pre-transfer function version, temporarily, jam
 
 %% do  coherence calculation here, get  a correction factor to  applya bit lower down
 
@@ -174,9 +175,6 @@ if ~isempty(inds1)
     if any(Cos1tot>1)
         disp('coucou')
     end
-    
-    
-
 end
 if ~isempty(inds2)
     s2=squeeze(P11(inds2,:,:));
@@ -273,6 +271,7 @@ MS.f   = f1;
 MS.k   = k_all;
 MS.Pf  = P11;
 MS.Co12 = Co12;
+MS.Pf_0=P11_0;  % save the pre-transfer-function version temporarily, jam
 
 % Set kmax for integration to highest bin below pump spike,
 % which is between 49 and 52 Hz in a 1024-pt spectrum

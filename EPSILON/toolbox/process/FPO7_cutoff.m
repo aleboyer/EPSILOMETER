@@ -41,13 +41,14 @@ noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
 %ALB
 medspec=smoothdata(spec,'movmean',15);
 indsup110=find(f>110);
-% adjust_spec=nanmean(medspec(indsup110)./10.^(noise(indsup110)));
-adjust_spec=1;
+% adjusting the electrical noise to the data. 
+adjust_spec=nanmean(medspec(indsup110)./10.^(noise(indsup110)));
+% adjust_spec=1;
 if adjust_spec>10
     warning('temp noise way higher than bench')
 end
 SN_min=3;
-noisy=find(medspec./adjust_spec<SN_min.*10.^(noise));
+noisy=find(medspec<SN_min.*(adjust_spec.*10.^(noise)));
 if isempty(noisy)
 	fc_index=length(f);
 else
