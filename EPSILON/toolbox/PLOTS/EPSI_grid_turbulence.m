@@ -40,8 +40,6 @@ chi2=cellfun(@(x) interp1(x.pr,x.chi(:,2),z),MS(~MSempty),'un',0);
 t=cellfun(@(x) interp1(x.pr,x.t,z),MS(~MSempty),'un',0);
 s=cellfun(@(x) interp1(x.pr,x.s,z),MS(~MSempty),'un',0);
 w=cellfun(@(x) interp1(x.pr,x.w,z),MS(~MSempty),'un',0);
-flag1=cellfun(@(x) interp1(x.pr,double(x.flag(:,1)),z),MS(~MSempty),'un',0);
-flag2=cellfun(@(x) interp1(x.pr,double(x.flag(:,2)),z),MS(~MSempty),'un',0);
 dnum=cell2mat(cellfun(@(x) mean(x.time),MS(~MSempty),'un',0));
 
 Z=numel(z);
@@ -56,23 +54,11 @@ epsilon1_fit=cell2mat(epsilon1_fit);
 epsilon2_fit=cell2mat(epsilon2_fit);
 chi1=cell2mat(chi1);
 chi2=cell2mat(chi2);
-flag1=cell2mat(flag1);
-flag2=cell2mat(flag2);
+
 t=cell2mat(t);
 s=cell2mat(s);
 w=cell2mat(w);
 
-flag1(flag1<1)=NaN;
-flag2(flag2<1)=NaN;
-
-if all(isnan(flag1))
-    warning('Flag1 is all nan. Check out the data')
-    flag1(isnan(flag1))=1;
-end
-if all(isnan(flag2))
-    warning('Flag2 is all nan. Check out the data')
-    flag2(isnan(flag2))=1;
-end
 
 sgth=filloutliers(sw_dens(s,t,z).','nearest','movmedian',10).';
 
@@ -136,7 +122,7 @@ epsi_chi2(epsi_chi2<0)=nan;
 N2=interp1(zaxis12,N2,z);
 N2(N2<=0)=nan;
 N2=fillmissing(N2,'linear');
-n2=N2.*flag1.*flag2;
+n2=N2;
 
 
 
@@ -147,7 +133,7 @@ save(fullfile(Meta_Data.L1path,'Turbulence_grid.mat'), ...
     'epsilon1_fit','epsilon2_fit', ...
     'chi1','chi2', ...
     'dnum','z', ...
-    'sgth','t','s','w','eta2m','flag1','flag2','Meta_Data','lat','lon','H','epsi_chi1','epsi_chi2','n2')
+    'sgth','t','s','w','eta2m','Meta_Data','lat','lon','H','epsi_chi1','epsi_chi2','n2')
 
 close all
 
@@ -327,7 +313,6 @@ print(fullfile(Meta_Data.L1path,'EpsiMap2_fit.png'),'-dpng2')
 % chi 1 
 figure;
 colormap('parula')
-%pcolor(dnum,z,log10(real(chi1.*flag1)));shading flat;axis ij
 pcolor(dnum,z,log10(real(chi1)));shading flat;axis ij
 hold on
 plot(dnum,eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
@@ -349,7 +334,7 @@ print(fullfile(Meta_Data.L1path,'Chi1_map.png'),'-dpng2')
 %chi2 
 figure;
 colormap('parula')
-pcolor(dnum,z,log10(real(chi2.*flag2)));shading flat;axis ij
+pcolor(dnum,z,log10(real(chi2)));shading flat;axis ij
 hold on
 plot(dnum,eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
 colorbar
@@ -370,7 +355,7 @@ print(fullfile(Meta_Data.L1path,'Chi2_map.png'),'-dpng2')
 %epsilon from chi1 
 figure;
 colormap('parula')
-pcolor(dnum,z,log10(real(epsi_chi1.*flag1)));shading flat;axis ij
+pcolor(dnum,z,log10(real(epsi_chi1)));shading flat;axis ij
 %pcolor(dnum,z,log10(real(epsi_chi1)));shading flat;axis ij
 hold on
 plot(dnum,eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
@@ -392,7 +377,7 @@ print(fullfile(Meta_Data.L1path,'Epsichi1_map.png'),'-dpng2')
 %epsilon from chi2 
 figure;
 colormap('parula')
-pcolor(dnum,z,log10(real(epsi_chi2.*flag2)));shading flat;axis ij
+pcolor(dnum,z,log10(real(epsi_chi2)));shading flat;axis ij
 hold on
 plot(dnum,eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
 colorbar
@@ -419,7 +404,7 @@ pcolor(dnum,z,t);shading flat;axis ij
 hold on
 plot(dnum,eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
 colorbar
-caxis([0,10])
+caxis([15,32])
 set(gca,'XTickLabelRotation',25)
 datetick
 cax=colorbar;
@@ -457,7 +442,7 @@ pcolor(dnum,z,w);shading flat;axis ij
 hold on
 plot(dnum,eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
 colorbar
-caxis([0.4,.7])
+caxis([0.4,.9])
 set(gca,'XTickLabelRotation',25)
 datetick
 cax=colorbar;

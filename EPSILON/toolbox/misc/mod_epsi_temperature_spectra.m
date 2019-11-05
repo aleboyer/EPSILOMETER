@@ -1,4 +1,4 @@
-function Meta_Data=mod_epsi_temperature_spectra(Meta_Data,EPSI_Profile,CTD_Profile,title1,np,dsp,tscan,ctd_df)
+function Meta_Data=mod_epsi_temperature_spectra(Meta_Data,EPSI_Profile,CTD_Profile,title1,np,dsp,tscan)
 %function Meta_Data=mod_epsi_temperature_spectra(Meta_Data,EPSI_Profile,CTD_Profile,title1,np,dsp,tscan,ctd_df)
 
 % ALB Feb 2019.
@@ -44,7 +44,9 @@ CTD_Profile.w = smoothdata([diff(CTD_Profile.P(:))./diff(CTD_Profile.ctdtime(:)*
                            'movmean',10);
 
 % we compute spectra on scan with 50% overlap.
-nbscan=2*nbscan-1;
+% nbscan=2*nbscan-1;
+% change for PISTON PC3 d1 
+nbscan=2*nbscan-2;
 epsi_indscan = arrayfun(@(x) (1+floor(epsi_Lscan/2)*(x-1):1+floor(epsi_Lscan/2)*(x-1)+epsi_Lscan-1),1:nbscan,'un',0);
 ctd_indscan = arrayfun(@(x) (1+floor(ctd_Lscan/2)*(x-1):1+floor(ctd_Lscan/2)*(x-1)+ctd_Lscan-1),1:nbscan,'un',0);
 clear data_CTD

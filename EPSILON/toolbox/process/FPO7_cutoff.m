@@ -1,4 +1,4 @@
-function fc_index=FPO7_cutoff(f,spec,FPO7noise)
+function fc_index=FPO7_cutoff(f,spec,FPO7noise,autocorrect)
 % thcut1_t1_1_mmp
 %   Usage: fc_index=thcut1_t1_1_mmp(f,spec)
 %      f is a vector of frequencies
@@ -16,6 +16,9 @@ function fc_index=FPO7_cutoff(f,spec,FPO7noise)
 %      the median filter.
 %% Added september 14 2017 in epsilometer processing by A. LeBoyer
 %  from original MMP processing 
+if nargin<4
+    autocorrect=1;
+end
 
 f=f(:); spec=spec(:);
 %ALB add f>0 because sometinme the frequency array have a 0; 
@@ -42,8 +45,11 @@ noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
 medspec=smoothdata(spec,'movmean',15);
 indsup110=find(f>110);
 % adjusting the electrical noise to the data. 
+if autocorrect>1
 adjust_spec=nanmean(medspec(indsup110)./10.^(noise(indsup110)));
-% adjust_spec=1;
+else
+ adjust_spec=autocorrect;
+end
 if adjust_spec>10
     warning('temp noise way higher than bench')
 end

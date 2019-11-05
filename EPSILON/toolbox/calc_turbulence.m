@@ -82,7 +82,7 @@ total_indscan = arrayfun(@(x) (1+floor(Lscan/2)*(x-1):1+floor(Lscan/2)*(x-1)+Lsc
 total_w       = cellfun(@(x) nanmean(Profile.w(x)),total_indscan); 
 
 % make sure that we are using fast enough scans
-ind_downcast = find((total_w)>.20);
+ind_downcast = find((total_w)>.16);
 nbscan=length(ind_downcast);
 
 % start creating the MS structure
@@ -106,10 +106,13 @@ for c=1:length(All_channels)
     wh_channels=All_channels{c};
     ind=find(cellfun(@(x) strcmp(x,wh_channels),channels));
     switch wh_channels
-        case {'t1','t2','s1','s2'}
-            data(ind,:,:) = cell2mat(cellfun(@(x) filloutliers(Profile.(wh_channels)(x),'center','movmedian',f(end)),MS.indscan,'un',0)).';
+        case {'t1','t2'}
+            data(ind,:,:) = cell2mat(cellfun(@(x) Profile.(wh_channels)(x),MS.indscan,'un',0)).';
+        case {'s1','s2'}
+%             data(ind,:,:) = cell2mat(cellfun(@(x) filloutliers(Profile.(wh_channels)(x),'linear','movmedian',2*320),MS.indscan,'un',0)).';
+            data(ind,:,:) = cell2mat(cellfun(@(x) Profile.(wh_channels)(x),MS.indscan,'un',0)).';
         case {'a1','a2','a3'}
-            data(ind,:,:) = cell2mat(cellfun(@(x) filloutliers(Profile.(wh_channels)(x),'center','movmedian',f(end)),MS.indscan,'un',0)).';
+            data(ind,:,:) = cell2mat(cellfun(@(x) Profile.(wh_channels)(x),MS.indscan,'un',0)).';
     end
 end
 
@@ -301,31 +304,6 @@ end
 MS.PphiT_k=zeros(nbscan,Lk_all,2).*nan;
 MS.Pshear_k=zeros(nbscan,Lk_all,2).*nan;
 
-% % movie stuff
-if dsp==1
-    % % movie stuff
-    v = VideoWriter(sprintf('%s_rawcast%i%s',Meta_Data.deployment,i,'.avi'));
-    v.FrameRate=5;
-    open(v)
-    
-    n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
-    logf=log10(f1);
-    noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
-    shearnoise=load(fullfile(Meta_Data.CALIpath,'shear_noise.mat'),'n0s','n1s','n2s','n3s');
-    n0s=shearnoise.n0s; n1s=shearnoise.n1s; n2s=shearnoise.n2s; n3s=shearnoise.n3s;
-    snoise=n0s+n1s.*logf+n2s.*logf.^2+n3s.*logf.^3;
-    close all
-    figure(10)
-    set(gcf,'Position',[100 100 1000 1000])
-    ax(1)=axes('Position',[.1 .52 .8 .27]);
-    ax(3)=axes('Position',[.1 .83 .8 .08]);
-    ax(2)=axes('Position',[.1 .06 .8 .27]);
-    ax(4)=axes('Position',[.1 .36 .8 .08]);
-    
-    smin=-.03;smax=.03;
-    tmin=-3e-4;tmax=3e-4;
-end
-
 % compute shear and temperature gradient. Get chi and epsilon values
 % TODO: we do not need kall. 
 
@@ -351,6 +329,7 @@ for j=1:nbscan
         if all(isnan(squeeze(P11k(inds1,j,:))))
             MS.Ppan(j,:,1)=nan.*k_all;
             MS.epsilon(j,1)=nan;
+            MS.epsilon_co(j,1)=nan;
             MS.kc(j,1)=nan;
         else
             [MS.epsilon(j,1),MS.kc(j,1)]=eps1_mmp(k_all,MS.Pshear_k(j,:,1),MS.kvis(j),dk_all,MS.kmax(j)); 
@@ -364,6 +343,7 @@ for j=1:nbscan
         if all(isnan(squeeze(P11k(inds2,j,:))))
             MS.Ppan(j,:,1)=nan.*k_all;
             MS.epsilon(j,2)=nan;
+            MS.epsilon_co(j,2)=nan;
             MS.kc(j,2)=nan;
         else
             [MS.epsilon(j,2),MS.kc(j,2)]=eps1_mmp(k_all,MS.Pshear_k(j,:,2),MS.kvis(j),dk_all,MS.kmax(j));
@@ -399,90 +379,6 @@ for j=1:nbscan
             MS.flag(j,2)=MS.fc_index(j,2)<round(Lf1*.95);
         end
     end
-
-    
-    % movie stuff
-    if (dsp==1 && all(~isnan([MS.chi(j,1) MS.chi(j,2) MS.epsilon(j,1) MS.epsilon(j,2)])) )
-        
-        
-        loglog(ax(1),f1,squeeze(P11_temp(1,j,:)),'r')
-        hold(ax(1),'on')
-        loglog(ax(1),f1,squeeze(P11_temp(2,j,:)),'b')
-        if ~isempty(indt1)
-            loglog(ax(1),f1(1:MS.fc_index(j,1)),squeeze(P11_temp(1,j,1:MS.fc_index(j,1))),'c')
-        else
-            loglog(ax(1),f1(1:MS.fc_index(j,2)),squeeze(P11_temp(2,j,1:MS.fc_index(j,2))),'c')
-        end
-        loglog(ax(1),f1,10.^noise,'k')
-        ylim(ax(1),[1e-15 1e-5])
-        xlim(ax(1),f1([1 end]))
-        hold(ax(1),'off')
-        ylabel(ax(1),'t_{1,2} (V^2/Hz)','fontsize',20)
-        set(ax(1),'fontsize',15)
-        legend(ax(1),'t1 raw','t2','t1 signal','MADRE noise','location','southwest')
-        set(ax(1),'Xscale','log','Yscale','log')
-        grid(ax(1),'on')       
-        lab={};
-        if ~isempty(indt1)
-            plot(ax(3),(MS.indscan{j}-MS.indscan{j}(1))/320,detrend(squeeze(data(indt1,j,:))),'r');
-            lab{1}='t1';
-        end
-        hold(ax(3),'on')
-        if ~isempty(indt2)
-            plot(ax(3),(MS.indscan{j}-MS.indscan{j}(1))/320,detrend(squeeze(data(indt2,j,:))),'b');
-            lab{2}='t2';
-        end
-        hold(ax(3),'off')
-        legend(ax(3),lab(cellfun(@(x) ~isempty(x),lab)))
-        xlabel(ax(3),'s' ,'fontsize',20)
-        ylabel(ax(3),'V' ,'fontsize',20)
-        ylim(ax(3),[tmin tmax])
-        title(ax(3),{'raw Temperature', ...
-            sprintf(' %s %s Cast %i ',Meta_Data.mission,Meta_Data.deployment,i)}, ...
-                   'fontsize',20)
-        
-  
-               
-        loglog(ax(2),f1,squeeze(P11_shear(1,j,:)),'r')
-        hold(ax(2),'on')
-        loglog(ax(2),f1,squeeze(P11_shear(2,j,:)),'b')
-        ind_s1=find(k(j,:)<MS.kc(j,1));
-        loglog(ax(2),f1(ind_s1),squeeze(P11_shear(1,j,ind_s1)),'c')
-%         ind_s2=find(k(j,:)<MS.kc(j,1));
-%         loglog(ax(2),f1(ind_s2),squeeze(P11_shear(2,j,ind_s2)),'b')
-        loglog(ax(2),f1,10.^snoise,'k')
-        ylim(ax(2),[1e-15 1e-1])
-        xlim(ax(2),f1([1 end]))
-        hold(ax(2),'off')
-        set(ax(2),'Xscale','log','Yscale','log')
-        ylabel(ax(2),'s_{1,2} (V^2/Hz)','fontsize',20)
-        xlabel(ax(2),'Hz' ,'fontsize',20)
-        set(ax(2),'fontsize',15)
-        legend(ax(2),'s1 raw','s2','s1 signal','MADRE noise','location','southwest')
-        grid(ax(2),'on')       
-
-        plot(ax(4),(MS.indscan{j}-MS.indscan{j}(1))/320,detrend(squeeze(data(inds1,j,:))),'r')
-        hold(ax(4),'on')
-        plot(ax(4),(MS.indscan{j}-MS.indscan{j}(1))/320,detrend(squeeze(data(inds2,j,:))),'b')
-        hold(ax(4),'off')
-        legend(ax(4),{'s1','s2'})
-        title(ax(4),'raw Shear','fontsize',20)
-        xlabel(ax(4),'s' ,'fontsize',20)
-        ylim(ax(4),[smin smax])
-        ylabel(ax(4),'V' ,'fontsize',20)
-
-        
-        pause(.1)
-        frame=getframe(gcf);
-        writeVideo(v,frame)
-        cla(ax(3))
-        cla(ax(4))
-    end
-    % movie stuff
 end
-if dsp==1
-    close(v)
-end
-
 
 
