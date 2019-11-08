@@ -76,7 +76,8 @@ MS = struct([]);
 % the addition of the pressure sensor on Epsi
 count=0;
 rem_nan=@(x) (fillmissing(x,'linear'));
-for i=1:length(EPSI_Profiles)
+% for i=1:length(EPSI_Profiles)
+for i=1:9
     L=tscan*320;
     if numel(EPSI_Profiles{i}.epsitime)>10*L
     fprintf('Profile %i over %i\n',i,length(EPSI_Profiles));
