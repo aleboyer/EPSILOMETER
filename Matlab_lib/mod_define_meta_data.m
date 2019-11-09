@@ -18,17 +18,17 @@ CTDpath  = fullfile(mission_folder_L2,'ctd');
 RAWpath  = fullfile(mission_folder_L2,'raw');
 SDRAWpath  = fullfile(mission_folder_L2,'sd_raw');
 
-                                            
-if ~exist(mission_folder_L0,'dir')
-    %% create paths
-    eval([ '!mkdir ' mission_folder_L0]);
-    eval([ '!mkdir ' mission_folder_L1]);
-    eval([ '!mkdir ' mission_folder_L2]);
-    eval([ '!mkdir ' L1path]);
-    eval([ '!mkdir ' Epsipath]);
-    eval([ '!mkdir ' CTDpath]);
-    eval([ '!mkdir ' RAWpath]);
-end
+%MHA 11/7/2019 temporary comment out making new directories.                                            
+% if ~exist(mission_folder_L0,'dir')
+%     %% create paths
+%     eval([ '!mkdir ' mission_folder_L0]);
+%     eval([ '!mkdir ' mission_folder_L1]);
+%     eval([ '!mkdir ' mission_folder_L2]);
+%     eval([ '!mkdir ' L1path]);
+%     eval([ '!mkdir ' Epsipath]);
+%     eval([ '!mkdir ' CTDpath]);
+%     eval([ '!mkdir ' RAWpath]);
+% end
 
 %% add path fields
 Meta_Data.root     = mission_folder_L2;
@@ -96,6 +96,7 @@ Meta_Data=get_filters_name_MADRE(Meta_Data);
 
 Meta_Data.CALIpath=fullfile(Meta_Data.process,'CALIBRATION','ELECTRONICS');
 
-save(fullfile(Meta_Data.RAWpath, ...
-    ['Meta_' Meta_Data.mission '_' Meta_Data.deployment '.mat']),'Meta_Data')
+%MHA 11/7/2019: comment this out too.
+%save(fullfile(Meta_Data.RAWpath, ...
+%    ['Meta_' Meta_Data.mission '_' Meta_Data.deployment '.mat']),'Meta_Data')
 end

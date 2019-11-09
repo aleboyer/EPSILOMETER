@@ -1,5 +1,5 @@
 % plot time series and fft (Pf_0) from PISTON 2019
-process_dir='~/ARNAUD/SCRIPPS/EPSILOMETER/';
+%process_dir='~/ARNAUD/SCRIPPS/EPSILOMETER/';
 addpath(process_dir)
 EPSI_matlab_path(process_dir); % EPSI_matlab_path is under ~/ARNAUD/SCRIPPS/EPSILOMETER/
 rem_nan=@(x) (fillmissing(x,'linear'));
