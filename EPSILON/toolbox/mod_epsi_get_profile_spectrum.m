@@ -26,6 +26,8 @@ function [k,P1,P11,Co12]=mod_epsi_get_profile_spectrum(data,k)
     datap=window.* detrend(data.').';
     P1  = fft(datap,[],2);
     P11 = conj(P1).*P1./Lscan^2/dk*wc2;
+    P11 = smoothdata(P11,2,'gaussian',10); % smooth to match psd
+    
     
     if size_data==3
         P1=reshape(P1,[nb_sensor,nb_scan,Lscan]);
@@ -36,8 +38,6 @@ function [k,P1,P11,Co12]=mod_epsi_get_profile_spectrum(data,k)
         for j=1:nb_sensor
             tempo=shiftdim(repmat(squeeze(P1(j,:,:)),[1,1,nb_sensor-1]),2);
             P12(j,:,:,:)=conj(tempo).*P1(ind_nbsensor~=j,:,:)./Lscan^2/dk*wc2;
-            tempo=shiftdim(repmat(squeeze(P11(j,:,:)),[1,1,nb_sensor-1]),2);
-%             Co12(j,:,:,:)=(squeeze(P12(j,:,:,:))).^2./(tempo.*P11(ind_nbsensor~=j,:,:));
             Co12(j,:,:,:)=(squeeze(P12(j,:,:,:)));
         end
     end

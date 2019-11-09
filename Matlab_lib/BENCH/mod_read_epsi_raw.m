@@ -87,11 +87,11 @@ if ~isempty(EPSI)
     else
         EPSI.header.system_time = EPSI.header.system_time/86400/100+EPSI.header.offset_time;
     end
-    if isfield(Meta_Data,'SBEcal')
-        EPSI.header.SBEcal=Meta_Data.SBEcal;
-    end
-
+else
+%  isfield(Meta_Data,'SBEcal')
+    EPSI.header=Meta_Data.SBEcal;
 end
+
 %TODO get rid of ths offset  
 switch Meta_Data.PROCESS.recording_mod
     case 'STREAMING'
@@ -212,9 +212,9 @@ end
 
 % ALB: comment San's version
 % if isnan(aux1.offset)
-%     epsi.offset = madre.offset+madre.name_length+madre.epsi_stamp_length+1+madre.epsi_time_length+1+madre.alt_time_length*2+1+madre.aux_chksum_length+1+madre.fsync_err_length+1+madre.map_chksum_length+2-1;
+%     epsi.offset(end) = madre.offset+madre.name_length+madre.epsi_stamp_length+1+madre.epsi_time_length+1+madre.alt_time_length*2+1+madre.aux_chksum_length+1+madre.fsync_err_length+1+madre.map_chksum_length+2-1;
 % else
-%     epsi.offset = aux1.offset+aux1.name_length+(aux1.stamp_length+1+aux1.sbe_length+2)*9;
+%     epsi.offset(end) = aux1.offset+aux1.name_length+(aux1.stamp_length+1+aux1.sbe_length+2)*9;
 % end
 if is_aux1
     epsi.offset = aux1.stamp_offset+aux1_sample_length;
@@ -234,7 +234,7 @@ epsi.total_length = epsi.nbsamples*epsi.nchannels*epsi.bytes_per_channel; % leng
 % find the non corrupted (right length)
 %!!!!!!!! VERY IMPORTANT to remember !!!!! 
 %indblock=ind_madre(diff(ind_madre)==median(diff(ind_madre))); %TO DO figure that exact math for the block length
-indblock=ind_madre(diff(ind_madre)==epsi.offset+epsi.name_length+epsi.total_length+offset1+1);
+indblock=ind_madre(diff(ind_madre)==epsi.offset(end)+epsi.name_length+epsi.total_length+offset1+1);
 NBblock=numel(indblock);
 
 % initialize arrays and structures.
@@ -270,12 +270,6 @@ switch firmware_version
             'Checksum_map',NaN(NBblock,1));
 end
 
-if is_aux1
-    aux1.stamp = char(zeros(NBblock*aux1.nbsample,aux1.stamp_length));
-    aux1.sbe = char(zeros(NBblock*aux1.nbsample,aux1.sbe_length));
-end
-
-
 if(isfield(EPSI,'header'))
     EPSI.madre.time = NaN(NBblock,1);
 end
@@ -296,7 +290,7 @@ end
 EPSI.epsi.EPSInbsample=NaN(NBblock,epsi.nbsamples);
 
 % we are checking if the very last block is good too.
-check_endstr=mod(ind_madre(end)+epsi.offset+epsi.name_length+epsi.total_length ...
+check_endstr=mod(ind_madre(end)+epsi.offset(end)+epsi.name_length+epsi.total_length ...
                                 - numel(str),epsi.total_length);
 if check_endstr==0
     nb_block=NBblock;
@@ -315,7 +309,9 @@ epsi.raw = int32(zeros(nb_block,epsi.total_length));
 for i=1:numel(indblock)
     % grab local time if STREAMING SITUATION;
     if(isfield(EPSI,'header'))
-        system.time(i,1:10) = str(ind_madre(i)-(10:-1:1));
+        if (isfield(EPSI.header,'offset_time'))
+            system.time(i,1:10) = str(ind_madre(i)-(10:-1:1));
+        end
     end
     % read items in the EPSI block Header
     madre.epsi_stamp(i,:) = str(indblock(i)+(1:madre.epsi_stamp_length)+madre.epsi_stamp_offset);
@@ -338,7 +334,7 @@ for i=1:numel(indblock)
         end
     end
     % get the EPSI block
-    epsi.raw(i,:) = int32(str(indblock(i)+epsi.offset+epsi.name_length+(1:epsi.total_length)));
+    epsi.raw(i,:) = int32(str(indblock(i)+epsi.offset(end)+epsi.name_length+(1:epsi.total_length)));
 end
 % done with split file
 toc
@@ -361,14 +357,29 @@ if(isfield(EPSI,'header'))
 end
 
 % converting Hex into decimal. Starts with the header.
-EPSI.madre.EpsiStamp = hex2dec(madre.epsi_stamp);
-EPSI.madre.TimeStamp = hex2dec(madre.epsi_time);
-EPSI.madre.muTimeStamp = hex2dec(madre.epsi_mutime);
-EPSI.madre.altimeter = reshape(hex2dec(madre.altimeter),2,[])';
-EPSI.madre.fsync_err = hex2dec(madre.fsync_err);
-EPSI.madre.Checksum_aux1 = hex2dec(madre.aux1_chksum);
-EPSI.madre.Checksum_map = hex2dec(madre.epsi_chksum);
-
+try
+    EPSI.madre.EpsiStamp = hex2dec(madre.epsi_stamp);
+    EPSI.madre.TimeStamp = hex2dec(madre.epsi_time);
+    EPSI.madre.altimeter = reshape(hex2dec(madre.altimeter),2,[])';
+    EPSI.madre.fsync_err = hex2dec(madre.fsync_err);
+    EPSI.madre.Checksum_aux1 = hex2dec(madre.aux1_chksum);
+    EPSI.madre.Checksum_map = hex2dec(madre.epsi_chksum);
+    switch firmware_version
+        case 'microsecond' % ALB: I added the musecond timestamp in third position. So the header is longer
+            EPSI.madre.muTimeStamp = hex2dec(madre.epsi_mutime);
+    end
+catch
+%     EPSI.madre.EpsiStamp = hex2dec(madre.epsi_stamp);
+%     EPSI.madre.TimeStamp = hex2dec(madre.epsi_time);
+%     EPSI.madre.altimeter = reshape(hex2dec(madre.altimeter),2,[])';
+%     EPSI.madre.fsync_err = hex2dec(madre.fsync_err);
+%     EPSI.madre.Checksum_aux1 = hex2dec(madre.aux1_chksum);
+%     EPSI.madre.Checksum_map = hex2dec(madre.epsi_chksum);
+%     switch firmware_version
+%         case 'microsecond' % ALB: I added the musecond timestamp in third position. So the header is longer
+%             EPSI.madre.muTimeStamp = hex2dec(madre.epsi_mutime);
+%     end
+end
 % issues with the SD write and some bytes are not hex. if issues we scan
 % the whole sbe time series to find the bad bytes and then use the average 
 % increment from with the previous samples;
@@ -379,30 +390,67 @@ if is_aux1
         EPSI.aux1.C_raw = hex2dec(aux1.sbe(:,(1:6)+6));
         EPSI.aux1.P_raw = hex2dec(aux1.sbe(:,(1:6)+12));
         EPSI.aux1.PT_raw = hex2dec(aux1.sbe(:,(1:4)+18));
+        EPSI.aux1.Aux1Stamp =hex2dec(aux1.stamp);
     catch 
         disp('bug in SBE hex bytes')
-        for kk=1:size(aux1.stamp,1)
-            if mod(kk,5000)==0
-                fprintf('%u over %u \n',kk,size(aux1.stamp,1));
-            end
-            try
-                EPSI.aux1.T_raw(kk) = hex2dec(aux1.sbe(kk,1:6));
-                EPSI.aux1.C_raw(kk) = hex2dec(aux1.sbe(kk,(1:6)+6));
-                EPSI.aux1.P_raw(kk) = hex2dec(aux1.sbe(kk,(1:6)+12));
-                EPSI.aux1.PT_raw(kk) = hex2dec(aux1.sbe(kk,(1:4)+18));
-            catch
-                EPSI.aux1.T_raw(kk) = EPSI.aux1.T_raw(kk-1)+ ...
-                                nanmean(diff(EPSI.aux1.T_raw(kk-10:kk-1)));
-                EPSI.aux1.C_raw(kk) = EPSI.aux1.C_raw(kk-1)+ ...
-                                nanmean(diff(EPSI.aux1.C_raw(kk-10:kk-1)));
-                EPSI.aux1.P_raw(kk) = EPSI.aux1.P_raw(kk-1)+ ...
-                                nanmean(diff(EPSI.aux1.C_raw(kk-10:kk-1)));
-                EPSI.aux1.PT_raw(kk) =EPSI.aux1.PT_raw(kk-1)+ ...
-                                nanmean(diff(EPSI.aux1.PT_raw(kk-10:kk-1)));
-            end
-        end
+        % ALB:San's trick to get the errors and replace the bad char by '0'
+        ind_sbe = ( aux1.sbe >='0' & ...
+                aux1.sbe <='9')| ...
+              ( aux1.sbe >='a' & ...
+                aux1.sbe <='f')| ...
+              ( aux1.sbe >='A' & ...
+                aux1.sbe <='F');
+            
+        ind_stamp = ( aux1.stamp >='0' & ...
+                aux1.stamp <='9')| ...
+              ( aux1.stamp >='a' & ...
+                aux1.stamp <='f')| ...
+              ( aux1.stamp >='A' & ...
+                aux1.stamp <='F');
+            % replace bad char with '0'
+            aux1.stamp(~ind_stamp)='0';
+            aux1.sbe(~ind_sbe)='0';
+            EPSI.aux1.T_raw = hex2dec(aux1.sbe(:,1:6));
+            EPSI.aux1.C_raw = hex2dec(aux1.sbe(:,(1:6)+6));
+            EPSI.aux1.P_raw = hex2dec(aux1.sbe(:,(1:6)+12));
+            EPSI.aux1.PT_raw = hex2dec(aux1.sbe(:,(1:4)+18));
+            EPSI.aux1.Aux1Stamp =hex2dec(aux1.stamp);
+            
+%         for kk=1:size(aux1.stamp,1)
+%             if mod(kk,5000)==0
+%                 fprintf('%u over %u \n',kk,size(aux1.stamp,1));
+%             end
+%             try
+%                 EPSI.aux1.T_raw(kk) = hex2dec(aux1.sbe(kk,1:6));
+%                 EPSI.aux1.C_raw(kk) = hex2dec(aux1.sbe(kk,(1:6)+6));
+%                 EPSI.aux1.P_raw(kk) = hex2dec(aux1.sbe(kk,(1:6)+12));
+%                 EPSI.aux1.PT_raw(kk) = hex2dec(aux1.sbe(kk,(1:4)+18));
+%                 EPSI.aux1.Aux1Stamp =hex2dec(aux1.stamp);
+%             catch
+% %                 try
+% %                     EPSI.aux1.T_raw(kk) = EPSI.aux1.T_raw(kk-1)+ ...
+% %                         nanmean(diff(EPSI.aux1.T_raw(kk-10:kk-1)));
+% %                     EPSI.aux1.C_raw(kk) = EPSI.aux1.C_raw(kk-1)+ ...
+% %                         nanmean(diff(EPSI.aux1.C_raw(kk-10:kk-1)));
+% %                     EPSI.aux1.P_raw(kk) = EPSI.aux1.P_raw(kk-1)+ ...
+% %                         nanmean(diff(EPSI.aux1.C_raw(kk-10:kk-1)));
+% %                     EPSI.aux1.PT_raw(kk) =EPSI.aux1.PT_raw(kk-1)+ ...
+% %                         nanmean(diff(EPSI.aux1.PT_raw(kk-10:kk-1)));
+% %                     EPSI.aux1.Aux1Stamp(kk)=aux1.stamp(kk-1)+...
+% %                         nanmean(diff(aux1.stamp(kk-10:kk-1)));
+% %                 catch
+% %                     EPSI.aux1.T_raw(kk) = 0;
+% %                     EPSI.aux1.C_raw(kk) = 0;
+% %                     EPSI.aux1.P_raw(kk) = 0;
+% %                     EPSI.aux1.PT_raw(kk) =0;
+% %                     EPSI.aux1.Aux1Stamp(kk)=0;
+% %                 end
+%                 
+%             end
+%         end
     end
-    [EPSI.aux1.Aux1Stamp,ia0,~] =unique(hex2dec(aux1.stamp),'stable');
+    [EPSI.aux1.Aux1Stamp,ia0,~] =unique(EPSI.aux1.Aux1Stamp,'stable');
+    
     %ALB reorder the stamps and samples because until now we kept the zeros
     % in the aux block
     [EPSI.aux1.Aux1Stamp,ia1]=sort(EPSI.aux1.Aux1Stamp);
@@ -411,16 +459,9 @@ if is_aux1
     EPSI.aux1.P_raw  = EPSI.aux1.P_raw(ia0(ia1));
     EPSI.aux1.PT_raw = EPSI.aux1.PT_raw(ia0(ia1));
     
-end
-
-% ALB: TODO remove check on isfield
-if(isfield(Meta_Data,'SBEcal'))
     EPSI = epsi_ascii_get_temperature(EPSI);
     EPSI = epsi_ascii_get_pressure(EPSI);
     EPSI = epsi_ascii_get_conductivity(EPSI);
-end
-
-if is_aux1
     % remove bad records for aux1
     ind = EPSI.aux1.Aux1Stamp == 0 & EPSI.aux1.T_raw == 0 & EPSI.aux1.C_raw == 0 & EPSI.aux1.P_raw == 0;
     aux1_fields = fieldnames(EPSI.aux1);
@@ -428,6 +469,7 @@ if is_aux1
         EPSI.aux1.(aux1_fields{i})(ind) = NaN;
     end
 end
+
 
 % parsing the EPSI block data
 for cha=1:Meta_Data.PROCESS.nb_channels
@@ -460,10 +502,10 @@ for cha=1:Meta_Data.PROCESS.nb_channels
     wh_channel=Meta_Data.PROCESS.channels{cha};
     if ~strcmp(wh_channel,'c')
         switch Meta_Data.epsi.(wh_channel).ADCconf
-            case 'Bipolar'
+            case {'Bipolar','bipolar'}
                 EPSI.epsi.(wh_channel)=full_range/gain* ...
                     (double(EPSI.epsi.([wh_channel '_count']))/2.^(bit_counts-1)-1);
-            case 'Unipolar'
+            case {'Unipolar','unipolar'}
                 EPSI.epsi.(wh_channel)=full_range/gain* ...
                     double(EPSI.epsi.([wh_channel '_count']))/2.^(bit_counts);
                 
@@ -695,13 +737,21 @@ end
 
 %  reads and apply calibration to the conductivity data
 function EPSI = epsi_ascii_get_conductivity(EPSI)
-
-g = EPSI.header.SBEcal.g;
-h = EPSI.header.SBEcal.h;
-i = EPSI.header.SBEcal.i;
-j = EPSI.header.SBEcal.j;
-tcor = EPSI.header.SBEcal.tcor;
-pcor = EPSI.header.SBEcal.pcor;
+try 
+g = EPSI.header.g;
+h = EPSI.header.h;
+i = EPSI.header.i;
+j = EPSI.header.j;
+tcor = EPSI.header.tcor;
+pcor = EPSI.header.pcor;
+catch
+g = EPSI.header.cg;
+h = EPSI.header.ch;
+i = EPSI.header.ci;
+j = EPSI.header.cj;
+tcor = EPSI.header.ctcor;
+pcor = EPSI.header.cpcor;
+end
 
 f = EPSI.aux1.C_raw/256/1000;
 
@@ -712,19 +762,19 @@ end
 
 %  reads and apply calibration to the pressure data
 function EPSI = epsi_ascii_get_pressure(EPSI)
-
-pa0 = EPSI.header.SBEcal.pa0;
-pa1 = EPSI.header.SBEcal.pa1;
-pa2 = EPSI.header.SBEcal.pa2;
-ptempa0 = EPSI.header.SBEcal.ptempa0;
-ptempa1 = EPSI.header.SBEcal.ptempa1;
+% ALB 04112019 Changed EPSI.header.SBEcal. to EPSI.header.
+pa0 = EPSI.header.pa0;
+pa1 = EPSI.header.pa1;
+pa2 = EPSI.header.pa2;
+ptempa0 = EPSI.header.ptempa0;
+ptempa1 = EPSI.header.ptempa1;
 ptempa2 = EPSI.header.ptempa2;
-ptca0 = EPSI.header.SBEcal.ptca0;
-ptca1 = EPSI.header.SBEcal.ptca1;
-ptca2 = EPSI.header.SBEcal.ptca2;
-ptcb0 = EPSI.header.SBEcal.ptcb0;
-ptcb1 = EPSI.header.SBEcal.ptcb1;
-ptcb2 = EPSI.header.SBEcal.ptcb2;
+ptca0 = EPSI.header.ptca0;
+ptca1 = EPSI.header.ptca1;
+ptca2 = EPSI.header.ptca2;
+ptcb0 = EPSI.header.ptcb0;
+ptcb1 = EPSI.header.ptcb1;
+ptcb2 = EPSI.header.ptcb2;
 
 
 y = EPSI.aux1.PT_raw/13107;
