@@ -4,6 +4,11 @@ function ax=MHA_diagnostic1fcn(MS,EpsiProfiles,Meta_Data,wh,z,N,nfft,nfftc)
 % The last three are computed for profile wh with +/-N points centered around the
 % specified bin (at depth z), with windows of length nfft for spectra and
 % nfftc for coherence.
+%
+%A basic plot of fall rate, epsilon, T and S is also included.
+%
+%MHA Nov 2019
+
 if nargin < 8
     nfftc=1024;
 end
