@@ -80,14 +80,15 @@ v2=detrend(EpsiProfiles.(whfield){wh}.s2(iv));
 a1=detrend(EpsiProfiles.(whfield){wh}.a1(iv));
 if isfield(EpsiProfiles.(whfield){wh},'a2')
     a2=detrend(EpsiProfiles.(whfield){wh}.a2(iv)); %The other acceleration channel
-else
-    a2=nan*a1;
 end    
 a3=detrend(EpsiProfiles.(whfield){wh}.a3(iv)); %The other acceleration channel
 
 %nfft=512;
-[Pa1,fe] = pwelch(a1,nfft,[],nfft,samplefreq,'psd');
+[Pa1,fe] = pwelch(a1,nfft,[],nfft,samplefreq,'psd'); 
+if exist('a2')
 [Pa2,fe] = pwelch(a2,nfft,[],nfft,samplefreq,'psd');
+e
+end
 [Pa3,fe] = pwelch(a3,nfft,[],nfft,samplefreq,'psd');
 [Pv1,fe] = pwelch(v1,nfft,[],nfft,samplefreq,'psd'); 
 [Pv2,fe] = pwelch(v2,nfft,[],nfft,samplefreq,'psd');
@@ -121,11 +122,11 @@ accel_chindex2=5; %6/7/8 but for NISKINE we were only transmitting 5 channels.
 %clf
 %loglog(fe,Pe);shg
 axes(ax(3))
-loglog(fe,Pa1,'r-',fe,Pa2,'g-',fe,Pa3,'b-',MS{wh}.f,Accelnoise,'k--');shg;grid
+loglog(fe,Pa1,fe,Pa3,MS{wh}.f,Accelnoise,'k--');shg;grid
 xlim(xl)
 title('Acceleration frequency spectrum')
 ylabel('g^2/Hz')
-legend('a1','a2','a3','noise spec','location','southwest')
+legend('a1','a3','noise spec','location','southwest')
 xlabel('Hz')
 SubplotLetter(['Acceleration spectra, N=' num2str(N) ', nfft=' num2str(nfft)],.01,.9)
 
@@ -135,15 +136,15 @@ SubplotLetter(['Acceleration spectra, N=' num2str(N) ', nfft=' num2str(nfft)],.0
 %data2e=detrend(a1e);
 [Cv1a1,fCe] = mscohere(v1,a1,nfftc,[],nfftc,samplefreq);
 [Cv2a1,fCe] = mscohere(v2,a1,nfftc,[],nfftc,samplefreq);
-[Cv1a2,fCe] = mscohere(v1,a2,nfftc,[],nfftc,samplefreq);
-[Cv2a2,fCe] = mscohere(v2,a2,nfftc,[],nfftc,samplefreq);
+%[Cv1a2,fCe] = mscohere(v1,a2,nfftc,[],nfftc,samplefreq);
+%[Cv2a2,fCe] = mscohere(v2,a2,nfftc,[],nfftc,samplefreq);
 [Cv1a3,fCe] = mscohere(v1,a3,nfftc,[],nfftc,samplefreq);
 [Cv2a3,fCe] = mscohere(v2,a3,nfftc,[],nfftc,samplefreq);
 %samplefreq=400;
 %figure(5);clf;
 axes(ax(4))
-h=semilogx(fCe,Cv1a1,'b-',fCe,Cv2a1,'r-',fCe,Cv1a2,'b--',fCe,Cv2a2,'r--',fCe,Cv1a3,'b-',fCe,Cv2a3,'r')
-lw(h(5:6),2)
+h=semilogx(fCe,Cv1a1,'b-',fCe,Cv2a1,'r-',fCe,Cv1a3,'b-',fCe,Cv2a3,'r')
+lw(h(3:4),2)
 xlim(xl)
 grid
 title('Coherence')
@@ -187,7 +188,3 @@ ytloff
 xlabel('S/ psu')
 grid
 linkaxes(ax,'y')
-
-%Get back to the spectra plot
-figure(1)
-
