@@ -76,7 +76,8 @@ switch Meta_Data.vehicle
         Profile.w=-Profile.w/1e7;
 end
 All_channels=fields(Profile);
-
+%%
+Profile=structfun(@(x) x(:),Profile,'un',0);
 %% define the index in the profile for each scan
 total_indscan = arrayfun(@(x) (1+floor(Lscan/2)*(x-1):1+floor(Lscan/2)*(x-1)+Lscan-1),1:nbscan,'un',0);
 total_w       = cellfun(@(x) nanmean(Profile.w(x)),total_indscan); 
@@ -107,9 +108,9 @@ for c=1:length(All_channels)
     ind=find(cellfun(@(x) strcmp(x,wh_channels),channels));
     switch wh_channels
         case {'t1','t2','s1','s2'}
-            data(ind,:,:) = cell2mat(cellfun(@(x) filloutliers(Profile.(wh_channels)(x),'center','movmedian',f(end)),MS.indscan,'un',0)).';
+            data(ind,:,:) = cell2mat(cellfun(@(x) Profile.(wh_channels)(x),MS.indscan,'un',0)).';
         case {'a1','a2','a3'}
-            data(ind,:,:) = cell2mat(cellfun(@(x) filloutliers(Profile.(wh_channels)(x),'center','movmedian',f(end)),MS.indscan,'un',0)).';
+            data(ind,:,:) = cell2mat(cellfun(@(x) Profile.(wh_channels)(x),MS.indscan,'un',0)).';
     end
 end
 
@@ -211,7 +212,7 @@ dTdV(2)=Meta_Data.epsi.t2.dTdV; % define in mod_epsi_temperature_spectra
 
 %% compute fpo7 filters (they are speed dependent)
 Emp_Corr_fac=1;
-TFtemp=cell2mat(cellfun(@(x) h_freq.FPO7(x),num2cell(MS.w),'un',0).');
+TFtemp=cell2mat(cellfun(@(x) h_freq.FPO7(x),num2cell(MS.w(:)),'un',0).').';
 
 % apply transfer function and calibraiton coeficient to convert Volt^2 into
 % physical spectra
@@ -222,15 +223,15 @@ for c=1:length(All_channels)
         case{'a1','a2','a3'}
             % correct transfert functions for accel spectra
             P11(ind,:,:)=squeeze(P11(ind,:,:))./...
-                (ones(nbscan,1)*h_freq.electAccel);
+                (ones(nbscan,1)*h_freq.electAccel(:).');
         case{'s1'}
             TF1 =@(x) (Sv(1).*x/(2*G)).^2 .* h_freq.shear .* haf_oakey(f1,x);     
-            TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w),'un',0).');
+            TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w(:)),'un',0).').';
             P11_shear(1,:,:) = squeeze(P11(ind,:,:)); % keep Volt spectrum for noise check
-            P11(ind,:,:) = squeeze(P11(ind,:,:)) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
+                P11(ind,:,:) = squeeze(P11(ind,:,:)) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
       case{'s2'}
             TF1 =@(x) (Sv(2).*x/(2*G)).^2 .* h_freq.shear .* haf_oakey(f1,x);     
-            TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w),'un',0).');
+            TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w(:)),'un',0).').';
             P11_shear(2,:,:) = squeeze(P11(ind,:,:)); % keep Volt spectrum for noise check
             P11(ind,:,:) = squeeze(P11(ind,:,:)) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
         case{'t1','t2'}
@@ -255,8 +256,8 @@ Ps2k=s2;
 
 %%
 % convert frequency to wavenumber
-k=cell2mat(cellfun(@(x) f1/x, num2cell(MS.w),'un',0).');
-dk=cell2mat(cellfun(@(x) df/x, num2cell(MS.w),'un',0));
+k=cell2mat(cellfun(@(x) f1/x, num2cell(MS.w(:)),'un',0).').';
+dk=cell2mat(cellfun(@(x) df/x, num2cell(MS.w(:)),'un',0));
 
 % create a common vertical wavenumber axis. 
 dk_all=nanmin(nanmean(diff(k,1,2),2));
@@ -264,7 +265,7 @@ k_all=nanmin(k(:)):dk_all:nanmax(k(:));
 Lk_all=length(k_all);
 
 % temperature, vel and accell spec as function of k
-P11k  = P11.* shiftdim(repmat(ones(nb_channels,1)*MS.w,[1,1,Lf1]),3);   
+P11k  = P11.* shiftdim(repmat(ones(nb_channels,1)*MS.w(:).',[1,1,Lf1]),3);   
 
 % Very usefull to debug but some fileds are not necessary.
 % TODO: see how to reduce the number of field on the MS structure probably
@@ -276,7 +277,7 @@ MS.Co12 = Co12;
 
 % Set kmax for integration to highest bin below pump spike,
 % which is between 49 and 52 Hz in a 1024-pt spectrum
-MS.kmax=MS.fmax./MS.w; % Lowest estimate below pump spike in 1024-pt record
+MS.kmax=MS.fmax./MS.w(:); % Lowest estimate below pump spike in 1024-pt record
 
 
 
