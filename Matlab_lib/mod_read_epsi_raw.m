@@ -152,15 +152,7 @@ switch firmware_version
         madre.map_chksum_offset  = madre.alt_time_offset(end)+madre.alt_time_length+1;
     otherwise
         % hard coded value to define MADRE block Header
-        
-        % ALB commented San's version
-%         madre.epsi_stamp_offset = -1+madre.name_length;
-%         madre.epsi_time_offset  = 8+madre.name_length;
-%         madre.alt_time_offset   = [17,21]+madre.name_length;
-%         madre.fsync_err_offset  = 35+madre.name_length;
-%         madre.aux_chksum_offset = 26+madre.name_length;
-%         madre.map_chksum_offset = 44+madre.name_length;
-        
+       
         madre.epsi_stamp_offset  = -1+madre.name_length;
         madre.epsi_time_offset   = madre.epsi_stamp_offset+madre.epsi_stamp_length+1;
         madre.fsync_err_offset    = madre.epsi_time_offset+madre.epsi_time_length+1;
@@ -171,31 +163,6 @@ switch firmware_version
 end
 
 madre.header_offset  = madre.map_chksum_offset+madre.map_chksum_length+2;
-
-% % define offset if aux1 is present
-% if isempty(ind_aux1)
-%     aux1.offset = nan();
-% else
-%     aux1.offset = madre.offset+ ...
-%                   madre.name_length+ ...
-%                   madre.epsi_stamp_length+1+ ...
-%                   madre.epsi_time_length+1+ ...
-%                   madre.alt_time_length*2+1+ ...
-%                   madre.aux_chksum_length+1+ ...
-%                   madre.fsync_err_length+1+ ...
-%                   madre.map_chksum_length+2-1;
-%               
-%      aux1.offset  = madre.map_chksum_offset+madre.map_chksum_length+2;
-% 
-%               
-% end%60; %madre.offset+madre.name_length+madre.epsi_stamp_length+1+madre.epsi_time_length+1+madre.alt_time_length*4+2+madre.aux_chksum_length+1+madre.map_chksum_length+2-1;
-% aux1.name_length = 5;
-% aux1.stamp_offset = (0:8)*33+aux1.name_length+aux1.offset;
-% aux1.sbe_offset = (0:8)*33+9+aux1.name_length+aux1.offset;
-% 
-% % e.g 00000F2E,052C2409E6F3080D7A4DAF
-% aux1.stamp_length = 8; % length of epsi sample number linked to SBE sample.
-% aux1.sbe_length = 22;  % length of SBE sample.
 
 % define offset if aux1 is present
 if is_aux1
@@ -209,13 +176,6 @@ if is_aux1
     aux1.sbe_offset    = madre.header_offset + (0:aux1.nbsample-1)*aux1_sample_length+(aux1.stamp_length + 1)+aux1.name_length;
 end
 
-
-% ALB: comment San's version
-% if isnan(aux1.offset)
-%     epsi.offset(end) = madre.offset+madre.name_length+madre.epsi_stamp_length+1+madre.epsi_time_length+1+madre.alt_time_length*2+1+madre.aux_chksum_length+1+madre.fsync_err_length+1+madre.map_chksum_length+2-1;
-% else
-%     epsi.offset(end) = aux1.offset+aux1.name_length+(aux1.stamp_length+1+aux1.sbe_length+2)*9;
-% end
 if is_aux1
     epsi.offset = aux1.stamp_offset+aux1_sample_length;
 else
@@ -416,38 +376,6 @@ if is_aux1
             EPSI.aux1.PT_raw = hex2dec(aux1.sbe(:,(1:4)+18));
             EPSI.aux1.Aux1Stamp =hex2dec(aux1.stamp);
             
-%         for kk=1:size(aux1.stamp,1)
-%             if mod(kk,5000)==0
-%                 fprintf('%u over %u \n',kk,size(aux1.stamp,1));
-%             end
-%             try
-%                 EPSI.aux1.T_raw(kk) = hex2dec(aux1.sbe(kk,1:6));
-%                 EPSI.aux1.C_raw(kk) = hex2dec(aux1.sbe(kk,(1:6)+6));
-%                 EPSI.aux1.P_raw(kk) = hex2dec(aux1.sbe(kk,(1:6)+12));
-%                 EPSI.aux1.PT_raw(kk) = hex2dec(aux1.sbe(kk,(1:4)+18));
-%                 EPSI.aux1.Aux1Stamp =hex2dec(aux1.stamp);
-%             catch
-% %                 try
-% %                     EPSI.aux1.T_raw(kk) = EPSI.aux1.T_raw(kk-1)+ ...
-% %                         nanmean(diff(EPSI.aux1.T_raw(kk-10:kk-1)));
-% %                     EPSI.aux1.C_raw(kk) = EPSI.aux1.C_raw(kk-1)+ ...
-% %                         nanmean(diff(EPSI.aux1.C_raw(kk-10:kk-1)));
-% %                     EPSI.aux1.P_raw(kk) = EPSI.aux1.P_raw(kk-1)+ ...
-% %                         nanmean(diff(EPSI.aux1.C_raw(kk-10:kk-1)));
-% %                     EPSI.aux1.PT_raw(kk) =EPSI.aux1.PT_raw(kk-1)+ ...
-% %                         nanmean(diff(EPSI.aux1.PT_raw(kk-10:kk-1)));
-% %                     EPSI.aux1.Aux1Stamp(kk)=aux1.stamp(kk-1)+...
-% %                         nanmean(diff(aux1.stamp(kk-10:kk-1)));
-% %                 catch
-% %                     EPSI.aux1.T_raw(kk) = 0;
-% %                     EPSI.aux1.C_raw(kk) = 0;
-% %                     EPSI.aux1.P_raw(kk) = 0;
-% %                     EPSI.aux1.PT_raw(kk) =0;
-% %                     EPSI.aux1.Aux1Stamp(kk)=0;
-% %                 end
-%                 
-%             end
-%         end
     end
     [EPSI.aux1.Aux1Stamp,ia0,~] =unique(EPSI.aux1.Aux1Stamp,'stable');
     
@@ -550,23 +478,24 @@ function epsi = mod_combine_epsi(varargin)
 %
 % Written 2018/10/15 - San Nguyen stn 004@ucsd.edu
 
-if nargin < 1 
+
+if nargin < 1
     epsi = [];
     return;
 end
 
 if nargin == 1
-   epsi = varargin{1};
-   if length(epsi) == 1
-       return;
-   end
-   evalstr = 'epsi = mod_combine_epsi(';
-   for i=1:(length(epsi)-1)
-       evalstr = strcat(evalstr, 'epsi(', num2str(i), '),');
-   end
-   evalstr = strcat(evalstr, 'epsi(', num2str(length(epsi)), '));');
-   eval(evalstr);
-   return
+    epsi = varargin{1};
+    if length(epsi) == 1
+        return;
+    end
+    evalstr = 'epsi = mod_combine_epsi(';
+    for i=1:(length(epsi)-1)
+        evalstr = strcat(evalstr, 'epsi(', num2str(i), '),');
+    end
+    evalstr = strcat(evalstr, 'epsi(', num2str(length(epsi)), '));');
+    eval(evalstr);
+    return
 end
 
 epsi_fields = fieldnames(varargin{1});
@@ -633,27 +562,6 @@ for i=1:(length(epsi_fields))
         eval(evalstr);
     end
 end
-
-% % sort out time
-% [~, I] = sort(epsi.Time);
-% 
-% for i=1:(length(epsi_sub_fields))
-%     if strcmpi(epsi_sub_fields{i},'README')
-%         continue;
-%     end
-%     epsi.(epsi_sub_fields{i}) = epsi.(epsi_sub_fields{i})(I);
-% end
-% 
-% %find unique time
-% [~, I, ~] = unique(epsi.Time);
-% 
-% for i=1:(length(epsi_sub_fields))
-%     if strcmpi(epsi_sub_fields{i},'README')
-%         continue;
-%     end
-%     epsi.(epsi_sub_fields{i}) = epsi.(epsi_sub_fields{i})(I);
-% end
-
 end
 
 %  parse all the lines in the header of the file

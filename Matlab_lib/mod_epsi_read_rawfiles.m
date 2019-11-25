@@ -79,13 +79,8 @@ if isfield(a,'aux1')
     for f=1:length(F)
         wh_F=F{f}; 
          eval(sprintf('%s.%s=a.aux1.%s;',['ctd_' Meta_Data.deployment ],wh_F,wh_F))
-%         eval(sprintf('%s=a.aux1.%s;',wh_F,wh_F))
-%         command=[command ',' sprintf('''%s''',F{f})];
     end
     filepath=fullfile(Meta_Data.CTDpath,['ctd_' Meta_Data.deployment '.mat']);
-%      command=sprintf('save(''%s''%s)',filepath,command);
-%      disp(command)
-%      eval(command);
      save(filepath,['ctd_' Meta_Data.deployment]);
 end
 

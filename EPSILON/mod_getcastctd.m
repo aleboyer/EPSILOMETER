@@ -4,11 +4,11 @@ function [up,down,dataup,datadown] = mod_getcastctd(Meta_Data,min_depth,crit_dep
 %  we filt the pressure with low pass at 1min. then look for the period
 %  where pressure is higher ther min_depth (user defined).The downcast is
 %  the part before the maximun pressure whithin this period the upscast is
-%  the remaining. This is done iteratively until the end of the time serie. 
+%  the remaining. This is done iteratively until the end of the time serie.
 %  At the end, we only keep the profile where
 %  max_depth-min_depth>=crit_depth. By default crit_depth is 10 m
 
-% output: 
+% output:
 %   up:       upcasts indexes from the ctd
 %   down:     downcasts indexes from the ctd
 %   dataup:   data (P,S,T,C,sig,ctdtime) for the upcasts
@@ -51,17 +51,16 @@ end
 disp('smooth the pressure to define up and down cast')
 Nb  = 3; % filter order
 fnb = 1/(2*dt); % Nyquist frequency
-fc  = 1/60/dt; % 50 dt (give "large scale patern") 
+fc  = 1/60/dt; % 50 dt (give "large scale patern")
 [b,a]= butter(Nb,fc/fnb,'low');
 % filt fall rate
 pdata=filtfilt(b,a,pdata);
 
 T=size(pdata);
 disp('check if time series is shorter than 3 hours')
-if T<3/24  
+if T<3/24
     warning('time serie is less than 3 hours, very short for data processing, watch out the results')
 end
-
 
 % we start at the top when the fallrate is higher than the criterium
 % and look for the next time the speed is lower than that criteria to end
@@ -89,12 +88,9 @@ while (do_it==0)
     end
 end
 
-
-
 %once we have the index defining the casts we split the data
 dataup=cellfun(@(x) structfun(@(y) y(x),data,'un',0),up,'un',0);
 datadown=cellfun(@(x) structfun(@(y) y(x),data,'un',0),down,'un',0);
-
 
 % select only cast with more than 10 points. 10 points is arbitrary
 indPup=find(cellfun(@(x) x.P(1)-x.P(end),dataup)>crit_depth);
@@ -104,58 +100,4 @@ datadown=datadown(indPdown);
 dataup=dataup(indPup);
 down=down(indPdown);
 up=up(indPup);
-
-% % plot pressure and highlight up /down casts in red/green
-% close all
-% plot(tdata,pdata)
-% hold on
-% for i=1:length(up)
-%     if isfield(data,'ctdtime')
-%         plot(dataup{i}.ctdtime,dataup{i}.P,'r')
-%     else
-%         plot(dataup{i}.time,dataup{i}.P,'r')
-%     end
-% end
-% for i=1:length(down)
-%     if isfield(data,'ctdtime')
-%        plot(datadown{i}.ctdtime,datadown{i}.P,'g')
-%     else
-%        plot(datadown{i}.time,datadown{i}.P,'g')
-%     end
-% end
-% 
-% %MHA: plot ocean style
-% axis ij
-% 
-% print('-dpng2',[Meta_Data.CTDpath 'Profiles_Pr.png'])
-
-
-% % do we wnat to save or change the speed and filter criteria
-% answer1=input('save? (yes,no)','s');
-% 
-% %save
-% switch answer1
-%     case 'yes'
-%         
-%         CTDProfiles.up=up;
-%         CTDProfiles.down=down;
-%         CTDProfiles.dataup=dataup;
-%         CTDProfiles.datadown=datadown;
-%         if isfield(data,'info')
-%             CTDProfiles.info=info;
-%         end
-%         filepath=fullfile(Meta_Data.L1path,['Profiles_' Meta_Data.deployment '.mat']);
-%         fprintf('Saving data in %s \n',filepath)
-%         save(filepath,'CTDProfiles','-v7.3');
-%         
-%         Meta_Data.nbprofileup=numel(CTDProfiles.up);
-%         Meta_Data.nbprofiledown=numel(CTDProfiles.down);
-%         Meta_Data.maxdepth=max(cellfun(@(x) max(x.P),CTDProfiles.dataup));
-%         save(fullfile(Meta_Data.L1path,'Meta_Data.mat'),'Meta_Data')
-% end
-
-
-
- 
-
 end
