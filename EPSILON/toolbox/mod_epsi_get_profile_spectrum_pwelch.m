@@ -1,4 +1,4 @@
-function [k,P1,P11,Co12,P11w,kw]=mod_epsi_get_profile_spectrum(data,k)
+function [k,P1,P11,Co12]=mod_epsi_get_profile_spectrum(data,k)
 %
 %  input: data
 % . data : epsi data
@@ -24,23 +24,23 @@ function [k,P1,P11,Co12,P11w,kw]=mod_epsi_get_profile_spectrum(data,k)
     wc2=1/mean(window(1,:).^2);            % window correction factor
 %    datap  = window.*(data- mean(data,2)* ones(1,Lscan));
     datap=window.* detrend(data.').';
-    dataw=detrend(data.');
+%     dataw=detrend(data.');
     P1  = fft(datap,[],2);
     P11 = conj(P1).*P1./Lscan^2/dk*wc2;
     P11 = smoothdata(P11,2,'gaussian',10);
-    [P11w,kw]= pwelch(dataw,[],[],Lscan,320);
+%     [P11w,kw]= pwelch(dataw,[],[],Lscan,320);
     
     if size_data==3
         P1=reshape(P1,[nb_sensor,nb_scan,Lscan]);
         P11=reshape(P11,[nb_sensor,nb_scan,Lscan]);
-        P11w=reshape(P11w.',[nb_sensor,nb_scan,length(kw)]);
+%         P11w=reshape(P11w.',[nb_sensor,nb_scan,length(kw)]);
         P12=zeros(nb_sensor,nb_sensor-1,nb_scan,Lscan);
         Co12=zeros(nb_sensor,nb_sensor-1,nb_scan,Lscan);
         ind_nbsensor=1:nb_sensor;
         for j=1:nb_sensor
             tempo=shiftdim(repmat(squeeze(P1(j,:,:)),[1,1,nb_sensor-1]),2);
             P12(j,:,:,:)=conj(tempo).*P1(ind_nbsensor~=j,:,:)./Lscan^2/dk*wc2;
-            Co12(j,:,:,:)=(squeeze(P12(j,:,:,:)));
+            Co12(j,:,:,:)=squeeze(P12(j,:,:,:));
         end
     end
     

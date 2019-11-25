@@ -44,7 +44,7 @@ switch Meta_Data.MAP.temperature
     case 'Tdiff'
         Tdiff_filter = load('FILTER/Tdiff_filt.mat');
         Tdiff_H = interp1(Tdiff_filter.freq,Tdiff_filter.coef_filt ,f);
-        H.Tdiff=Tdiff_H;
+        H.Tdiff=2*Tdiff_H;
         H.FPO7=@(speed)(H.electFPO7.^2 .* H.magsq(speed) .* H.Tdiff.^2);
     otherwise
         H.FPO7=@(speed)(H.electFPO7.^2 .* H.magsq(speed));
