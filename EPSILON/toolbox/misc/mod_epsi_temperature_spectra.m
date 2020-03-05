@@ -1,4 +1,4 @@
-function Meta_Data=mod_epsi_temperature_spectra(Meta_Data,EPSI_Profile,CTD_Profile,title1,np,dsp,tscan,ctd_df)
+function Meta_Data=mod_epsi_temperature_spectra(Meta_Data,EPSI_Profile,CTD_Profile,title1,np,dsp,tscan)
 %function Meta_Data=mod_epsi_temperature_spectra(Meta_Data,EPSI_Profile,CTD_Profile,title1,np,dsp,tscan,ctd_df)
 
 % ALB Feb 2019.
@@ -105,7 +105,7 @@ P11_Tctd = nanmean(P11_ctd);
 P11_epsi = 2*squeeze(P11_epsi(:,:,epsi_indk));
 
 % get transfer EPSI FPO7 transfert functions 
-h_freq=get_filters_MADRE(Meta_Data,epsi_k);
+h_freq=get_filters_MADRE(Meta_Data,epsi_k(:));
 % compute fpo7 filters (they are speed dependent)
 TFtemp=cell2mat(cellfun(@(x) h_freq.FPO7(x),num2cell(w),'un',0)).';
 

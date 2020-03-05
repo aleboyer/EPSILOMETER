@@ -157,7 +157,7 @@ grid
 title('Coherence')
 SubplotLetter(['Coherence, N=' num2str(N) ', nfft=' num2str(nfftc)],.01,.9)
 
-legend('v1a1','v2a1','v1a3','v2a3')
+legend('v1a1','v2a1','v1a2','v2a2','v1a3','v2a3')
 set(gca,'yaxislocation','right')
 ylabel('Coherence')
 xlabel('Hz')

@@ -65,9 +65,7 @@ end
 
 %MHA: plot ocean style
 axis ij
-
 print('-dpng2',[Meta_Data.CTDpath 'Profiles_Pr.png'])
-
 
 % do we wnat to save or change the speed and filter criteria
 answer1=input('save profiles? (yes,no)','s');
@@ -76,7 +74,7 @@ answer1=input('save profiles? (yes,no)','s');
 switch answer1
     case 'yes'
         [EpsiProfiles.up,EpsiProfiles.down,EpsiProfiles.dataup,EpsiProfiles.datadown] =...
-            EPSI_getcastepsi(EPSI,CTD.ctdtime,CTDProfiles.up,CTDProfiles.down);
+            mod_getcastepsi(EPSI,CTD.ctdtime,CTDProfiles.up,CTDProfiles.down);
         
         filepath=fullfile(Meta_Data.L1path,['Profiles_' Meta_Data.deployment '.mat']);
         fprintf('Saving data in %s \n',filepath)
