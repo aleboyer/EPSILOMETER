@@ -28,37 +28,26 @@ epsilon2=cellfun(@(x) interp1(x.pr,x.epsilon(:,2),z),MS(~MSempty),'un',0);
 epsilon1=cellfun(@(x) interp1(x.pr,x.epsilon(:,1),z),MS(~MSempty),'un',0);
 epsilon2_co=cellfun(@(x) interp1(x.pr,x.epsilon_co(:,2),z),MS(~MSempty),'un',0);
 epsilon1_co=cellfun(@(x) interp1(x.pr,x.epsilon_co(:,1),z),MS(~MSempty),'un',0);
-% epsilon2_eof=cellfun(@(x) interp1(x.pr,x.epsilon_eof(:,2),z),MS(~MSempty),'un',0);
-% epsilon1_eof=cellfun(@(x) interp1(x.pr,x.epsilon_eof(:,1),z),MS(~MSempty),'un',0);
-
-% epsilon2_fit=cellfun(@(x) interp1(x.pr,x.epsilon_fit(:,2),z),MS(~MSempty),'un',0);
-% epsilon1_fit=cellfun(@(x) interp1(x.pr,x.epsilon_fit(:,1),z),MS(~MSempty),'un',0);
-epsilon2_fit=cellfun(@(x) interp1(x.pr,x.epsilon_co(:,2),z),MS(~MSempty),'un',0);
-epsilon1_fit=cellfun(@(x) interp1(x.pr,x.epsilon_co(:,1),z),MS(~MSempty),'un',0);
 chi1=cellfun(@(x) interp1(x.pr,x.chi(:,1),z),MS(~MSempty),'un',0);
 chi2=cellfun(@(x) interp1(x.pr,x.chi(:,2),z),MS(~MSempty),'un',0);
 t=cellfun(@(x) interp1(x.pr,x.t,z),MS(~MSempty),'un',0);
 s=cellfun(@(x) interp1(x.pr,x.s,z),MS(~MSempty),'un',0);
+w=cellfun(@(x) interp1(x.pr,x.w,z),MS(~MSempty),'un',0);
 flag1=cellfun(@(x) interp1(x.pr,double(x.flag(:,1)),z),MS(~MSempty),'un',0);
 flag2=cellfun(@(x) interp1(x.pr,double(x.flag(:,2)),z),MS(~MSempty),'un',0);
 dnum=cell2mat(cellfun(@(x) mean(x.time),MS(~MSempty),'un',0));
-
-Z=numel(z);
 
 epsilon1=cell2mat(epsilon1);
 epsilon2=cell2mat(epsilon2);
 epsilon1_co=cell2mat(epsilon1_co);
 epsilon2_co=cell2mat(epsilon2_co);
-% epsilon1_eof=cell2mat(epsilon1_eof);
-% epsilon2_eof=cell2mat(epsilon2_eof);
-epsilon1_fit=cell2mat(epsilon1_fit);
-epsilon2_fit=cell2mat(epsilon2_fit);
 chi1=cell2mat(chi1);
 chi2=cell2mat(chi2);
 flag1=cell2mat(flag1);
 flag2=cell2mat(flag2);
 t=cell2mat(t);
 s=cell2mat(s);
+w=cell2mat(w);
 
 flag1(flag1<1)=NaN;
 flag2(flag2<1)=NaN;
@@ -142,270 +131,7 @@ n2=N2.*flag1.*flag2;
 save(fullfile(Meta_Data.L1path,'Turbulence_grid.mat'), ...
     'epsilon1','epsilon2', ...
     'epsilon1_co','epsilon2_co', ...
-    'epsilon1_fit','epsilon2_fit', ...
     'chi1','chi2', ...
     'dnum','z', ...
-    'sgth','t','s','eta2m','flag1','flag2','Meta_Data','lat','lon','H','epsi_chi1','epsi_chi2','n2')
-
-close all
-
-% epsilon 1 
-fontsize=25;
-figure;
-colormap('parula')
-pcolor(dnum,z,log10(real(epsilon1)));shading flat;axis ij
-hold on
-plot(dnum,eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
-colorbar
-caxis([-11,-5])
-set(gca,'XTickLabelRotation',25)
-datetick
-cax=colorbar;
-xlabel(['Start date :' datestr(dnum(1),'mm-dd-yyyy')],'fontsize',fontsize)
-set(gca,'fontsize',fontsize)
-ylabel(cax,'log_{10}(\epsilon)','fontsize',fontsize)
-ylabel('Depth (m)','fontsize',fontsize)
-
-fig=gcf;
-fig.PaperPosition = [0 0 12 8];
-fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'Epsi1_map.png'),'-dpng2')
-
-% epsilon 2
-figure;
-colormap('parula')
-pcolor(dnum,z,log10(real(epsilon2)));shading flat;axis ij
-hold on
-plot(dnum,eta2m,'k')
-colorbar
-caxis([-11,-5])
-set(gca,'XTickLabelRotation',45)
-datetick
-cax=colorbar;
-xlabel(['Start date :' datestr(dnum(1),'mm-dd-yyyy')],'fontsize',15)
-set(gca,'fontsize',15)
-ylabel(cax,'log_{10}(\epsilon)','fontsize',20)
-ylabel('Depth (m)','fontsize',20)
-
-fig=gcf;
-fig.PaperPosition = [0 0 15 10];
-fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'Epsi2_Map.png'),'-dpng2')
-
-% epsilon coherence 1 
-figure;
-colormap('parula')
-pcolor(dnum,z,log10(real(epsilon1_co)));shading flat;axis ij
-hold on
-plot(dnum,eta2m,'k')
-colorbar
-caxis([-11,-5])
-set(gca,'XTickLabelRotation',45)
-datetick
-cax=colorbar;
-xlabel(['Start date :' datestr(dnum(1),'mm-dd-yyyy')],'fontsize',15)
-set(gca,'fontsize',15)
-ylabel(cax,'log_{10}(\epsilon_{co})','fontsize',20)
-ylabel('Depth (m)','fontsize',20)
-
-fig=gcf;
-fig.PaperPosition = [0 0 15 10];
-fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'EpsiMap1_co.png'),'-dpng2')
-
-% epsilon co 2
-figure;
-colormap('parula')
-pcolor(dnum,z,log10(real(epsilon2_co)));shading flat;axis ij
-hold on
-plot(dnum,eta2m,'k')
-colorbar
-caxis([-11,-5])
-set(gca,'XTickLabelRotation',45)
-datetick
-cax=colorbar;
-xlabel(['Start date :' datestr(dnum(1),'mm-dd-yyyy')],'fontsize',15)
-set(gca,'fontsize',15)
-ylabel(cax,'log_{10}(\epsilon_{co})','fontsize',20)
-ylabel('Depth (m)','fontsize',20)
-
-fig=gcf;
-fig.PaperPosition = [0 0 15 10];
-fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'EpsiMap2_co.png'),'-dpng2')
-
-% % epsilon eof 1 
-% figure;
-% colormap('parula')
-% pcolor(dnum,z,log10(real(epsilon1_eof)));shading flat;axis ij
-% hold on
-% plot(dnum,eta2m,'k')
-% colorbar
-% caxis([-11,-5])
-% set(gca,'XTickLabelRotation',45)
-% datetick
-% cax=colorbar;
-% xlabel(['Start date :' datestr(dnum(1),'mm-dd-yyyy')],'fontsize',15)
-% set(gca,'fontsize',15)
-% ylabel(cax,'log_{10}(\epsilon_{eof})','fontsize',20)
-% ylabel('Depth (m)','fontsize',20)
-% 
-% fig=gcf;
-% fig.PaperPosition = [0 0 15 10];
-% fig.PaperOrientation='Portrait';
-% print(fullfile(Meta_Data.L1path,'EpsiMap1_eof.png'),'-dpng2')
-% 
-% % epsilon eof 2
-% figure;
-% colormap('parula')
-% pcolor(dnum,z,log10(real(epsilon2_eof)));shading flat;axis ij
-% hold on
-% plot(dnum,eta2m,'k')
-% colorbar
-% caxis([-11,-5])
-% set(gca,'XTickLabelRotation',45)
-% datetick
-% cax=colorbar;
-% xlabel(['Start date :' datestr(dnum(1),'mm-dd-yyyy')],'fontsize',15)
-% set(gca,'fontsize',15)
-% ylabel(cax,'log_{10}(\epsilon_{eof})','fontsize',20)
-% ylabel('Depth (m)','fontsize',20)
-% 
-% fig=gcf;
-% fig.PaperPosition = [0 0 15 10];
-% fig.PaperOrientation='Portrait';
-% print(fullfile(Meta_Data.L1path,'EpsiMap2_eof.png'),'-dpng2')
-
-
-
-% epsilon fit 1 
-figure;
-colormap('parula')
-pcolor(dnum,z,log10(real(epsilon1_fit)));shading flat;axis ij
-hold on
-plot(dnum,eta2m,'k')
-colorbar
-caxis([-11,-5])
-set(gca,'XTickLabelRotation',45)
-datetick
-cax=colorbar;
-xlabel(['Start date :' datestr(dnum(1),'mm-dd-yyyy')],'fontsize',15)
-set(gca,'fontsize',15)
-ylabel(cax,'log_{10}(\epsilon_{fit})','fontsize',20)
-ylabel('Depth (m)','fontsize',20)
-
-fig=gcf;
-fig.PaperPosition = [0 0 15 10];
-fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'EpsiMap1_fit.png'),'-dpng2')
-
-% epsilon 2
-figure;
-colormap('parula')
-pcolor(dnum,z,log10(real(epsilon2_fit)));shading flat;axis ij
-hold on
-plot(dnum,eta2m,'k')
-colorbar
-caxis([-11,-5])
-set(gca,'XTickLabelRotation',45)
-datetick
-cax=colorbar;
-xlabel(['Start date :' datestr(dnum(1),'mm-dd-yyyy')],'fontsize',15)
-set(gca,'fontsize',15)
-ylabel(cax,'log_{10}(\epsilon_{fit})','fontsize',20)
-ylabel('Depth (m)','fontsize',20)
-
-fig=gcf;
-fig.PaperPosition = [0 0 15 10];
-fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'EpsiMap2_fit.png'),'-dpng2')
-
-
-
-% chi 1 
-figure;
-colormap('parula')
-%pcolor(dnum,z,log10(real(chi1.*flag1)));shading flat;axis ij
-pcolor(dnum,z,log10(real(chi1)));shading flat;axis ij
-hold on
-plot(dnum,eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
-colorbar
-caxis([-11,-5])
-set(gca,'XTickLabelRotation',25)
-datetick
-cax=colorbar;
-xlabel(['Start date :' datestr(dnum(1),'mm-dd-yyyy')],'fontsize',15)
-set(gca,'fontsize',fontsize)
-ylabel(cax,'log_{10}(\chi)','fontsize',fontsize)
-ylabel('Depth (m)','fontsize',fontsize)
-
-fig=gcf;
-fig.PaperPosition = [0 0 12 8];
-fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'Chi1_map1.png'),'-dpng2')
-
-%chi2 
-figure;
-colormap('parula')
-pcolor(dnum,z,log10(real(chi2.*flag2)));shading flat;axis ij
-hold on
-plot(dnum,eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
-colorbar
-caxis([-11,-5])
-set(gca,'XTickLabelRotation',45)
-datetick
-cax=colorbar;
-xlabel(['Start date :' datestr(dnum(1),'mm-dd-yyyy')],'fontsize',15)
-set(gca,'fontsize',15)
-ylabel(cax,'log_{10}(\chi)','fontsize',20)
-ylabel('Depth (m)','fontsize',20)
-
-fig=gcf;
-fig.PaperPosition = [0 0 15 10];
-fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'Chi2_map.png'),'-dpng2')
-
-%epsilon from chi1 
-figure;
-colormap('parula')
-pcolor(dnum,z,log10(real(epsi_chi1.*flag1)));shading flat;axis ij
-%pcolor(dnum,z,log10(real(epsi_chi1)));shading flat;axis ij
-hold on
-plot(dnum,eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
-colorbar
-caxis([-11,-5])
-set(gca,'XTickLabelRotation',25)
-datetick
-cax=colorbar;
-xlabel(['Start date :' datestr(dnum(1),'mm-dd-yyyy')],'fontsize',fontsize)
-set(gca,'fontsize',fontsize)
-ylabel(cax,'log_{10}(\epsilon_{\chi_1})','fontsize',fontsize)
-ylabel('Depth (m)','fontsize',fontsize)
-
-fig=gcf;
-fig.PaperPosition = [0 0 14 9];
-fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'Epsichi1_map.png'),'-dpng2')
-
-%epsilon from chi2 
-figure;
-colormap('parula')
-pcolor(dnum,z,log10(real(epsi_chi2.*flag2)));shading flat;axis ij
-hold on
-plot(dnum,eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
-colorbar
-caxis([-11,-5])
-set(gca,'XTickLabelRotation',45)
-datetick
-cax=colorbar;
-xlabel(['Start date :' datestr(dnum(1),'mm-dd-yyyy')],'fontsize',15)
-set(gca,'fontsize',15)
-ylabel(cax,'log_{10}(\epsilon_{\chi_2})','fontsize',20)
-ylabel('Depth (m)','fontsize',20)
-
-fig=gcf;
-fig.PaperPosition = [0 0 15 10];
-fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'Epsichi2_map.png'),'-dpng2')
-
+    'sgth','t','s','w','eta2m','flag1','flag2','Meta_Data','lat','lon','H','epsi_chi1','epsi_chi2','n2')
 

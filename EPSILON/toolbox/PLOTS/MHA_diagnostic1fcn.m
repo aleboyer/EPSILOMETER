@@ -48,7 +48,11 @@ whz=find(abs(MS{wh}.pr - z) ==min(abs(MS{wh}.pr -z)));
 whsh=1:2;
 h=loglog(MS{wh}.k.*MS{wh}.w(whz),squeeze(MS{wh}.Pshear_k(whz,:,whsh)),'r-',...
     MS{wh}.k.*MS{wh}.w(whz),squeeze(MS{wh}.Ppan(whz,:,whsh)),'r--');shg
-lc(h([1 3]),'b')
+% ALB lc might line color?
+% lc(h([1 3]),'b')
+h(1).Color='b';
+h(3).Color='b';
+
 xlim(xl)
 legend(h,'v1','v2','location','southwest')
 ylabel('\Phi_{shear}(\omega) / s^{-1}/cpm')
@@ -143,7 +147,11 @@ SubplotLetter(['Acceleration spectra, N=' num2str(N) ', nfft=' num2str(nfft)],.0
 %figure(5);clf;
 axes(ax(4))
 h=semilogx(fCe,Cv1a1,'b-',fCe,Cv2a1,'r-',fCe,Cv1a2,'b--',fCe,Cv2a2,'r--',fCe,Cv1a3,'b-',fCe,Cv2a3,'r')
-lw(h(5:6),2)
+% 
+% lw(h(5:6),2)
+h(5).LineWidth=2;
+h(6).LineWidth=2;
+
 xlim(xl)
 grid
 title('Coherence')
@@ -165,7 +173,8 @@ grid
 axes(ax(2))
 %semilogx(MS{wh}.epsilon(:,whsh),MS{wh}.pr,MS{wh}.epsilon_co(:,whsh),MS{wh}.pr);axis ij; shg
 semilogx(MS{wh}.epsilon(:,whsh),MS{wh}.pr);axis ij; shg
-ytloff
+% ALB what is ytloff
+% ytloff
 xlim([1e-11 1e-6])
 grid
 hold on
@@ -178,12 +187,14 @@ hold off
 xlabel('\epsilon / W~kg^{-1}')
 axes(ax(3))
 plot(MS{wh}.t,MS{wh}.pr);axis ij; shg
-ytloff
+% % ALB what is ytloff
+% ytloff
 xlabel('T / ^oC')
 grid
 axes(ax(4))
 plot(MS{wh}.s,MS{wh}.pr);axis ij; shg
-ytloff
+% % ALB what is ytloff
+% ytloff
 xlabel('S/ psu')
 grid
 linkaxes(ax,'y')
