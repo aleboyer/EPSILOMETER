@@ -142,7 +142,7 @@ inds1=find(cellfun(@(x) strcmp(x,'s1'),channels));
 inds2=find(cellfun(@(x) strcmp(x,'s2'),channels));
 inda1=find(cellfun(@(x) strcmp(x,'a1'),channels));
 inda2=find(cellfun(@(x) strcmp(x,'a2'),channels));
-inda3=find(cellfun(@(x) strcmp(x,'a3'),Meta_Data.PROCESS.channels));
+inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
 
 nsmooth=15; %how many points to smooth over for  covariance
 
@@ -212,11 +212,7 @@ dTdV(2)=Meta_Data.epsi.t2.dTdV; % define in mod_epsi_temperature_spectra
 
 %% compute fpo7 filters (they are speed dependent)
 Emp_Corr_fac=1;
-<<<<<<< HEAD
-TFtemp=cell2mat(cellfun(@(x) h_freq.FPO7(x),num2cell(MS.w(:)),'un',0).').';
-=======
 TFtemp=cell2mat(cellfun(@(x) h_freq.FPO7(x),num2cell(MS.w(:)),'un',0));
->>>>>>> defb18a8ffdd79c760ab8900535250aed870cb1c
 
 % apply transfer function and calibraiton coeficient to convert Volt^2 into
 % physical spectra
@@ -230,21 +226,12 @@ for c=1:length(All_channels)
                 (ones(nbscan,1)*h_freq.electAccel(:).');
         case{'s1'}
             TF1 =@(x) (Sv(1).*x/(2*G)).^2 .* h_freq.shear .* haf_oakey(f1,x);     
-<<<<<<< HEAD
-            TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w(:)),'un',0).').';
-            P11_shear(1,:,:) = squeeze(P11(ind,:,:)); % keep Volt spectrum for noise check
-                P11(ind,:,:) = squeeze(P11(ind,:,:)) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
-      case{'s2'}
-            TF1 =@(x) (Sv(2).*x/(2*G)).^2 .* h_freq.shear .* haf_oakey(f1,x);     
-            TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w(:)),'un',0).').';
-=======
             TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w(:)),'un',0));
             P11_shear(1,:,:) = squeeze(P11(ind,:,:)); % keep Volt spectrum for noise check
             P11(ind,:,:)     = squeeze(P11(ind,:,:)) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
       case{'s2'}
             TF1 =@(x) (Sv(2).*x/(2*G)).^2 .* h_freq.shear .* haf_oakey(f1,x);     
             TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w(:)),'un',0));
->>>>>>> defb18a8ffdd79c760ab8900535250aed870cb1c
             P11_shear(2,:,:) = squeeze(P11(ind,:,:)); % keep Volt spectrum for noise check
             P11(ind,:,:) = squeeze(P11(ind,:,:)) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
         case{'t1','t2'}
@@ -269,11 +256,7 @@ Ps2k=s2;
 
 %%
 % convert frequency to wavenumber
-<<<<<<< HEAD
-k=cell2mat(cellfun(@(x) f1/x, num2cell(MS.w(:)),'un',0).').';
-=======
 k=cell2mat(cellfun(@(x) f1/x, num2cell(MS.w(:)),'un',0));
->>>>>>> defb18a8ffdd79c760ab8900535250aed870cb1c
 dk=cell2mat(cellfun(@(x) df/x, num2cell(MS.w(:)),'un',0));
 
 % create a common vertical wavenumber axis. 
