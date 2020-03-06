@@ -215,6 +215,31 @@ print('-dpng2',figname)
 figure(1)
 
 
+%%
+figure(3)
+clf
+ax=MySubplot(.1,.1,0,.1,.1,.01,1,6);
+
+plot(ax(1),CTDProfiles.(whfield){wh}.ctdtime,CTDProfiles.(whfield){wh}.P,'linewidth',3)
+plot(ax(2),CTDProfiles.(whfield){wh}.ctdtime,CTDProfiles.(whfield){wh}.T,'linewidth',3)
+plot(ax(3),EpsiProfiles.(whfield){wh}.epsitime,EpsiProfiles.(whfield){wh}.t1,'linewidth',3)
+plot(ax(4),EpsiProfiles.(whfield){wh}.epsitime,EpsiProfiles.(whfield){wh}.t2,'linewidth',3)
+plot(ax(5),EpsiProfiles.(whfield){wh}.epsitime,EpsiProfiles.(whfield){wh}.s1,'linewidth',3)
+plot(ax(6),EpsiProfiles.(whfield){wh}.epsitime,EpsiProfiles.(whfield){wh}.s2,'linewidth',3)
+
+for i=1:5
+    ax(i).XTickLabel='';
+end
+ax(5).YLim=[1.25-.01 1.25+.01];
+ax(6).YLim=[1.25-.01 1.25+.01];
+
+xlabel(ax(end),'time (seconds)','fontsize',20)
+ylabel(ax(1),'P','fontsize',20)
+ylabel(ax(2),'T','fontsize',20)
+ylabel(ax(3),'t1','fontsize',20)
+ylabel(ax(4),'t2','fontsize',20)
+ylabel(ax(5),'s1','fontsize',20)
+ylabel(ax(6),'s2','fontsize',20)
 
 
 
