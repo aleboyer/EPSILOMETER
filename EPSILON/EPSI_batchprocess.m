@@ -1,4 +1,4 @@
-function MS=EPSI_batchprocess(Meta_Data,dsp)
+function EPSI_batchprocess(Meta_Data)
 % test github
 
 %  input: Meta_Data
@@ -77,30 +77,40 @@ MS = struct([]);
 % the addition of the pressure sensor on Epsi
 count=0;
 rem_nan=@(x) (fillmissing(x,'linear'));
+sav_var_name=[];
 for i=1:length(EPSI_Profiles)
     L=tscan*320;
     if numel(EPSI_Profiles{i}.epsitime)>10*L
     fprintf('Profile %i over %i\n',i,length(EPSI_Profiles));
+    Profile=EPSI_Profiles{i};
 
-    EPSI_Profiles{i}.P=interp1(rem_nan(CTD_Profiles{i}.ctdtime),CTD_Profiles{i}.P,EPSI_Profiles{i}.epsitime);
-    EPSI_Profiles{i}.P=filloutliers(EPSI_Profiles{i}.P,'center','movmedian',1000);
-    EPSI_Profiles{i}.T=interp1(rem_nan(CTD_Profiles{i}.ctdtime),CTD_Profiles{i}.T,EPSI_Profiles{i}.epsitime);
-    EPSI_Profiles{i}.S=interp1(rem_nan(CTD_Profiles{i}.ctdtime),CTD_Profiles{i}.S,EPSI_Profiles{i}.epsitime);
+    Profile.P=rem_nan(interp1(rem_nan(CTD_Profiles{i}.ctdtime),CTD_Profiles{i}.P,EPSI_Profiles{i}.epsitime));
+    Profile.P=filloutliers(Profile.P,'center','movmedian',1000);
+    Profile.T=rem_nan(interp1(rem_nan(CTD_Profiles{i}.ctdtime),CTD_Profiles{i}.T,EPSI_Profiles{i}.epsitime));
+    Profile.S=rem_nan(interp1(rem_nan(CTD_Profiles{i}.ctdtime),CTD_Profiles{i}.S,EPSI_Profiles{i}.epsitime));
+    Profile.time=EPSI_Profiles{i}.epsitime;
 
-    MS{mod(i-1,10)+1}=calc_turbulence(EPSI_Profiles{i},tscan,f,Fcut_epsilon,Meta_Data,dsp,i);
+    Profile=calc_turbulence(Profile,6,3*325,3*325,325,2,48,Meta_Data);
+    eval(sprintf('Profile%03i=Profile;',i))
+    clear Profile;
+    sav_var_name=[sav_var_name sprintf(',''Profile%03i''',i)];
+%     MS{mod(i-1,10)+1}=calc_turbulence(EPSI_Profiles{i},tscan,f,Fcut_epsilon,Meta_Data,dsp,i);
     else
         MS{mod(i-1,10)+1}=[];
     end
     if (mod(i,10)==0)
-        save(fullfile(Meta_Data.L1path,['Turbulence_Profiles' num2str(count) '.mat']),'MS','-v7.3')
+        save_file=fullfile(Meta_Data.L1path,['Turbulence_Profiles' num2str(count) '.mat']);
+        cmd=['save(''' save_file '''' sav_var_name ')'];
+        eval(cmd);
+
         count=count+10;
-        clear MS
+        sav_var_name=[];
     end
     
 end
-if exist('MS','var')
-    save(fullfile(Meta_Data.L1path,['Turbulence_Profiles' num2str(count) '.mat']),'MS','-v7.3')
-end
+% if exist('MS','var')
+%     save(fullfile(Meta_Data.L1path,['Turbulence_Profiles' num2str(count) '.mat']),cmd(2:end),'-v7.3')
+% end
 
 
 

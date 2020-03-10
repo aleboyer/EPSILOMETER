@@ -25,7 +25,7 @@ ctd_T       = length(CTD_Profile.ctdtime);
 % make sure all the fields in the CTD structure are columns.
 CTD_Profile=structfun(@(x) x(:),CTD_Profile,'un',0);
 Length_profile=86400*(EPSI_Profile.epsitime(end)-EPSI_Profile.epsitime(1));
-ctd_df   = .98*floor((ctd_T./Length_profile));
+ctd_df   = floor((ctd_T./Length_profile));
 ctd_Lscan  = tscan*ctd_df;  
 
 

@@ -1,4 +1,4 @@
-function [epsilon,kc]=eps1_mmp(k,Psheark,kvis,dk,kmax)
+function [epsilon,kc]=eps1_mmp(k,Psheark,kvis,kmax)
 % eps1_mmp
 %   Usage: epsilon=eps1_mmp(k,Psheark,kvis,w);
 %      k is a vector array with wavenumber in cpm
@@ -41,6 +41,7 @@ function [epsilon,kc]=eps1_mmp(k,Psheark,kvis,dk,kmax)
 
 KI=(2:0.2:10); % wavenumber array for interpolation
 
+dk=nanmean(diff(k));
 % first estimation of epsilon of the sum of the shear variance is too high
 % and falls into the inertial subrange (no roll off). I think it assumes that
 % the shear variance directly follows a Panchev spectrum and predict

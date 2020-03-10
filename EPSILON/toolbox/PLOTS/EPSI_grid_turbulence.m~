@@ -114,7 +114,7 @@ save(fullfile(Meta_Data.L1path,'Turbulence_grid.mat'), ...
     'epsilon1_co','epsilon2_co', ...
     'chi1','chi2', ...
     'dnum','z', ...
-    'sgth','t','s','w','eta2m','lat','lon','H','epsi_chi1','epsi_chi2','n2')
+    'sgth','t','s','w','eta2m',,'Meta_Data','lat','lon','H','epsi_chi1','epsi_chi2','n2')
 
 
 %%
@@ -289,4 +289,6 @@ fig=gcf;
 fig.PaperPosition = [0 0 15 10];
 fig.PaperOrientation='Portrait';
 print(fullfile(Meta_Data.L1path,'Epsichi2_map.png'),'-dpng2')
+
+>>>>>>> defb18a8ffdd79c760ab8900535250aed870cb1c
 
