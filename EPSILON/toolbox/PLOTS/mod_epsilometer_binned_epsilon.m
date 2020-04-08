@@ -74,6 +74,7 @@ for i=1:length(epsi_bin)
             end
             load(fullfile(listfile(id_file).folder,listfilename{id_file}),sprintf('Profile%03i',id_profile))
             eval(sprintf('Profile=Profile%03i;',id_profile));
+            scan.Cu1a.a3=Profile.Cu1a3;
             for id_scan=index1{id_profile}'
                 Pr=Profile.pr(id_scan);
                 scan.w=Profile.w(id_scan);
@@ -83,11 +84,9 @@ for i=1:length(epsi_bin)
                 ind_Pr_epsi = find(Profile.epsitime<Profile.ctdtime(indP),1,'last');
                 ind_scan = ind_Pr_epsi-N_epsi/2:ind_Pr_epsi+N_epsi/2; % ind_scan is even
                 
-                scan.a3=Profile.a3(ind_scan)*G; % time series in m.s^{-2}
+%                 scan.a3=Profile.a3(ind_scan)*G; % time series in m.s^{-2}
                 scan.s1=Profile.s1(ind_scan).*twoG./(Sv1.*scan.w); % time series in m.s^{-1}
                 scan.s2=Profile.s1(ind_scan).*twoG./(Sv1.*scan.w); % time series in m.s^{-1}
-                [~,scan.Cu1a.(wh_channel),~,...
-                    ~,~,~,~]=mod_efe_scan_acceleration(scan,wh_channel,Meta_Data);
                 [~,~,~,P1,~,~,~,fe]=mod_efe_scan_epsilon(scan,'s1','a3',Meta_Data);
                 
                 Psk1=Psk1+interp1(fe/scan.w,P1,k);
@@ -111,6 +110,7 @@ for i=1:length(epsi_bin)
             end
             load(fullfile(listfile(id_file).folder,listfilename{id_file}),sprintf('Profile%03i',id_profile))
             eval(sprintf('Profile=Profile%03i;',id_profile));
+            scan.Cu2a.a3=Profile.Cu2a3;
             for id_scan=index2{id_profile}'
                 Pr=Profile.pr(id_scan);
                 scan.w=Profile.w(id_scan);
@@ -120,16 +120,15 @@ for i=1:length(epsi_bin)
                 ind_Pr_epsi = find(Profile.epsitime<Profile.ctdtime(indP),1,'last');
                 ind_scan = ind_Pr_epsi-N_epsi/2:ind_Pr_epsi+N_epsi/2; % ind_scan is even
                 
-                scan.a3=Profile.a3(ind_scan)*G; % time series in m.s^{-2}
+%                 scan.a3=Profile.a3(ind_scan)*G; % time series in m.s^{-2}
                 % this is bad but I am too tired to fixed now
                 % I copy s1 and s2 so mod_efe_scan_acceleration can run.
                 % Because I just changed it and I did not think about
                 % binned_epsi.
                 scan.s1=Profile.s2(ind_scan).*twoG./(Sv2.*scan.w); % time series in m.s^{-1}
                 scan.s2=Profile.s2(ind_scan).*twoG./(Sv2.*scan.w); % time series in m.s^{-1}
-                wh_channel='a3';
-                [~,~,scan.Cu2a.(wh_channel),...
-                    ~,~,~,~]=mod_efe_scan_acceleration(scan,wh_channel,Meta_Data);
+%                 wh_channel='a3';
+%                 [~,scan.Cu2a.(wh_channel),~,~,~]=mod_efe_scan_coherence(scan,wh_channel,Meta_Data);
                 
                 [~,~,~,P2,~,~,~,fe]=mod_efe_scan_epsilon(scan,'s2','a3',Meta_Data);
                 

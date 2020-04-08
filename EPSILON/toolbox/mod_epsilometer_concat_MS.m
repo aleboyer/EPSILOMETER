@@ -22,35 +22,20 @@ for f=1:10
                     minepsi2{count}=nanmin(log10(Profile.epsilon(:,2)));
                     maxepsi1{count}=nanmax(log10(Profile.epsilon(:,1)));
                     maxepsi2{count}=nanmax(log10(Profile.epsilon(:,2)));
-                case 'chi'
-                    MS{count}.chi=Profile.chi;
-                case 't'
-                    MS{count}.t=Profile.t;
-                case 's'
-                    MS{count}.s=Profile.s;
-                case 'w'
-                    MS{count}.w=Profile.w;
-                case 'pr'
-                    MS{count}.pr=Profile.pr;
-                case 'dnum'
-                    MS{count}.dnum=Profile.dnum;
-                case 'sh_qcflag'
-                    MS{count}.sh_qcflag=Profile.sh_qcflag;
-                case 'tg_flag'
-                    MS{count}.tg_flag=Profile.tg_flag;
                 case 'Pc1c2'
                     for c=1:length(channels)
                         wh_channel=channels{c};
                         MS{count}.(sprintf('P%s',wh_channel))=Profile.Pc1c2.(wh_channel);
                     end
-                case 'Cu1'
-                    MS{count}.Cu1a1=Profile.Cu1.a1;
-                    MS{count}.Cu1a2=Profile.Cu1.a2;
-                    MS{count}.Cu1a3=Profile.Cu1.a3;
-                case 'Cu2'
-                    MS{count}.Cu2a1=Profile.Cu2.a1;
-                    MS{count}.Cu2a2=Profile.Cu2.a2;
-                    MS{count}.Cu2a3=Profile.Cu2.a3;
+                case 'Cc1c2'
+                    FnamesCc1c2=fieldnames(Profile.Cc1c2);
+                    for c=1:length(FnamesCc1c2)
+                        wh_channel=FnamesCc1c2{c};
+                        MS{count}.(sprintf('C%s',wh_channel))=Profile.Cc1c2.(wh_channel);
+                    end
+                otherwise
+                    MS{count}.(wh_field)=Profile.(wh_field);
+                    
             end
         end
         clear Profile;
