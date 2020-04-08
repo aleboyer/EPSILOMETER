@@ -19,7 +19,7 @@ switch shear_channel
         Cua = scan.Cu2a.(acceleration_channel);
 end
 Pp=P.*(1-Cua);
-filter_TF=(h_freq.shear .* haf_oakey(fe,scan.w))/2^2;
+filter_TF=(h_freq.shear .* haf_oakey(fe,scan.w));
 Pv   = Pp./filter_TF;
 Pvk   = Pv.*scan.w;
 ke=fe/scan.w;

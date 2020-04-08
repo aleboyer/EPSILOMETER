@@ -11,6 +11,7 @@ function Profile=mod_epsilometer_calc_turbulence(CTDProfile,EpsiProfile,dz,Meta_
 channels=Meta_Data.PROCESS.channels;
 
 nfft=Meta_Data.PROCESS.nfft;
+nfftc=Meta_Data.PROCESS.nfftc;
 Fs_epsi=Meta_Data.PROCESS.Fs_epsi;
 Fs_ctd=Meta_Data.PROCESS.Fs_ctd;
 
@@ -28,10 +29,17 @@ limit_speed=.2;
 %  We are using the pressure from other sensors (CTD);
 
 %% TODO check the dimension of the raw time series to remove this line
-Profile=structfun(@(x) x(:),CTDProfile,'un',0);
-for fields=fieldnames(EpsiProfile)'
-    Profile.(fields{1})=EpsiProfile.(fields{1})(:); % not super clear why I need fields{1} and not simply fields
-end
+
+% profile to process
+Prmin=min(CTDProfile.P);
+Prmax=max(CTDProfile.P);
+Profile=mod_epsilometer_merge_profile(CTDProfile,EpsiProfile,Prmin,Prmax);
+
+% cut profile to compute coherence
+Prmin=Meta_Data.PROCESS.Prmin;
+Prmax=Meta_Data.PROCESS.Prmax;
+Profile_coh=mod_epsilometer_merge_profile(CTDProfile,EpsiProfile,Prmin,Prmax);
+
                     
 switch Meta_Data.vehicle
     case 'FISH'
@@ -65,6 +73,7 @@ Sv2=Meta_Data.epsi.s2.Sv;
 dTdV(1)=Meta_Data.epsi.t1.dTdV; % define in mod_epsi_temperature_spectra
 dTdV(2)=Meta_Data.epsi.t2.dTdV; % define in mod_epsi_temperature_spectra 
 
+fe=Meta_Data.PROCESS.fe;
 h_freq=Meta_Data.PROCESS.h_freq;
 FPO7noise=Meta_Data.PROCESS.FPO7noise;
 
@@ -74,8 +83,10 @@ FPO7noise=Meta_Data.PROCESS.FPO7noise;
 Profile.pr        = Pr;
 Profile.nbscan    = nbscan;
 Profile.nfft      = nfft;
+Profile.nfftc     = nfftc;
 Profile.tscan     = tscan;
 Profile.fpump     = fpump; % arbitrary cut off frequency usually extract from coherence spectra shear/accel 
+Profile.fe        = fe;
 
 %initialize process flags
 Profile.process_flag=Pr*0;
@@ -90,8 +101,10 @@ for c=1:length(channels)
     Profile.Pc1c2.(wh_channel)=Pr*0;
     switch wh_channel
         case {'a1','a2','a3'}
-            Profile.Cu1.(wh_channel)=Pr*0;
-            Profile.Cu2.(wh_channel)=Pr*0;
+            fieldstr1=sprintf('Cu1%s',wh_channel);
+            Profile.Cc1c2.(fieldstr1)=Pr*0;
+            fieldstr2=sprintf('Cu2%s',wh_channel);
+            Profile.Cc1c2.(fieldstr2)=Pr*0;
     end
 end
 
@@ -100,6 +113,21 @@ Profile.t=zeros(nbscan,1).*nan;
 Profile.w=zeros(nbscan,1).*nan;
 Profile.s=zeros(nbscan,1).*nan;
 Profile.dnum=zeros(nbscan,1).*nan;
+
+
+% compute Coherence over the whole profile.
+
+for c=[inda1 inda2 inda3]
+    wh_channel=channels{c};
+    [scan.Cu1a.(wh_channel),scan.Cu2a.(wh_channel),...
+     ~,~,~]=mod_efe_scan_coherence(Profile_coh,wh_channel,Meta_Data);
+     
+    fieldstr1=sprintf('Cu1%s',wh_channel);
+    Profile.(fieldstr1)=fe*0;
+    fieldstr2=sprintf('Cu2%s',wh_channel);
+    Profile.(fieldstr2)=fe*0;
+
+end
 
 % loop along the pressure axis.
 average_scan=@(x,y) (nanmean(x(y)));
@@ -142,10 +170,13 @@ for p=1:nbscan % p is the scan index.
         % compute spectra for acceleration channels.
         for c=[inda1 inda2 inda3]
             wh_channel=channels{c};
-            [scan.P.(wh_channel),scan.Cu1a.(wh_channel),scan.Cu2a.(wh_channel),...
-             Profile.Pc1c2.(wh_channel)(p), ...
-             Profile.Cu1.(wh_channel)(p),Profile.Cu2.(wh_channel)(p), ...
-             fe]=mod_efe_scan_acceleration(scan,wh_channel,Meta_Data);
+            fieldstr1=sprintf('Cu1%s',wh_channel);
+            fieldstr2=sprintf('Cu2%s',wh_channel);
+
+            [~,Profile.Pc1c2.(wh_channel)(p),~]= ...
+                mod_efe_scan_acceleration(scan,wh_channel,Meta_Data);
+            [~,~,Profile.Cc1c2.(fieldstr1)(p),Profile.Cc1c2.(fieldstr2)(p),~]= ...
+                mod_efe_scan_coherence(scan,wh_channel,Meta_Data);
         end
         
         % get the filter transfer functions.
@@ -183,5 +214,4 @@ for p=1:nbscan % p is the scan index.
         
     end
 end
-Profile.fe=fe;
 

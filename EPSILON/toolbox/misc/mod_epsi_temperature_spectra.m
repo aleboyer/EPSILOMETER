@@ -15,7 +15,7 @@ function Meta_Data=mod_epsi_temperature_spectra(Meta_Data,EPSI_Profile,CTD_Profi
 % ctd_df=6; % RBR ctd_df=16; % SBE
 
 % default epsi_freq
-epsi_df=320;
+epsi_df=Meta_Data.PROCESS.Fs_epsi;
 
 % define parameters to compute the spectra.
 epsi_Lscan  = tscan*epsi_df;  
