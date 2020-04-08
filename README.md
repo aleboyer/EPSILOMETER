@@ -126,11 +126,17 @@ And sum it between Meta_Data.PROCESS.fc1 and  Meta_Data.PROCESS.fc2
 It gives a scalar informing the user if the shear signal is above (>0) or below (<0) the noise level.
 
 mod_epsilometer_grid_turbulence: create depth-time map from the turbulence profiles. -
+
 mod_epsilometer_grid_plot: plot the maps. (TODO: Currently missing a lot of necessary plots t,s,w, flags, coherence, accel)
+
 mod_epsilometer_binned_epsilon: compute and plot the spectra averaged around discreta values of \epsilon. 
+
 mod_epsilometer_binned_chi: TODO compute and plot the spectra averaged around discreta values of \chi. 
+
 mod_epsilometer_heat_flux: TODO
+
 mod_epsilometer_thorpe scale: TODO
+
 mod_epsilometer_epsi_from_chi: TODO
 
 
