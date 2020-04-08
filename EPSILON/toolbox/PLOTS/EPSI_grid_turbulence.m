@@ -111,11 +111,12 @@ close all
 fontsize=25;
 figure;
 colormap('parula')
-pcolor(dnum,z,log10(real(epsilon1)));shading flat;axis ij
+% pcolor(dnum,z,log10(real(epsilon1)));shading flat;axis ij
+pcolor(dnum,z,sh_qcflag1);shading flat;axis ij
 hold on
 plot(dnum,eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
 colorbar
-caxis([-11,-5])
+% caxis([-10,-5])
 set(gca,'XTickLabelRotation',25)
 datetick
 cax=colorbar;

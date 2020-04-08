@@ -1,4 +1,4 @@
-function Profile=quality_flag(Profile,Meta_Data,H1,H2,fH)
+function Profile=mod_add_sh_quality_flag(Profile,Meta_Data,H1,H2,fH,fc1,fc2)
 
 %  Profile structure for Micro Structure. Inside Profile you ll find
 %  temperature spectra in degC Hz^-1
@@ -14,7 +14,6 @@ nb_channels=length(channels);
 nfft=Meta_Data.PROCESS.nfft;
 df=Meta_Data.df_epsi;
 
-fpump=Meta_Data.fpump;
 tscan=Meta_Data.tscan;
 
 %% Gravity  ... of the situation :)
@@ -32,7 +31,7 @@ N_pr=tscan.*df-mod(tscan*df,2);
 
 %initialize process flags
 Profile.sh_qcflag=zeros(nbscan,2).*nan;
-TFnoise=@(x,y) (interp1(fH,y,x);
+TFnoise=@(x,y) (interp1(fH,y,x));
 
 for p=1:nbscan % p is the scan index.
     [~,indP] = sort(abs(Profile.P-Pr(p)));
@@ -43,8 +42,8 @@ for p=1:nbscan % p is the scan index.
     scan.(wh_channels)=Profile.(wh_channels)(ind_scan)*G; % time series in m.s^{-2}
     [scan.P.(wh_channels),fe] = pwelch(detrend(scan.(wh_channels)),nfft,[],nfft,df_epsi,'psd');
     
-    u1_vibration=TFnoise(scan.P.(wh_channels),H1)
-    u2_vibration=TFnoise(scan.P.(wh_channels),H2)
+    u1_vibration=TFnoise(scan.P.(wh_channels),H1);
+    u2_vibration=TFnoise(scan.P.(wh_channels),H2);
 
     for c=1:nb_channels
         wh_channel=channels{c};
@@ -59,15 +58,12 @@ for p=1:nbscan % p is the scan index.
         end
     end
     
-    TFa3=Hnoise.*squeeze(MS1{prid}.Pf(end,n,:))';
-    A=smoothdata(squeeze(MS1{prid}.Pf(3,n,:)),'movmean',5);
-    B=smoothdata(2*TFa3,'movmean',5);
-    
-    qc_flag=log10(A./B.');
-    qc_flag=nanmean(qc_flag(MS1{prid}.f>2 & MS1{prid}.f<35));
+    % get the ratio of U_obs / U_vibration (from low epsilon region)
+    qc_flag1= log10(P1./ smoothdata(u1_vibration,'movmean',5));
+    qc_flag2= log10(P2./ smoothdata(u2_vibration,'movmean',5));
 
-    
-    Profile.tg_flag(p,2)=scan.tg_flag(2);
-    
+    qc_flag1=nanmean(qc_flag1(fe>fc1 & fe<fc2));
+    qc_flag2=nanmean(qc_flag2(fe>fc1 & fe<fc2));
+
+    Profile.sh_qcflag(p,:)=[qc_flag1 qc_flag2];
 end
-Profile.fe=fe;

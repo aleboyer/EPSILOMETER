@@ -1,14 +1,17 @@
-function scan=mod_som_make_scan_v2(Profile,scan,Meta_Data)
+function scan=mod_epsilometer_make_scan_v2(Profile,scan,Meta_Data)
 
-tscan=Meta_Data.tscan;
-df=Meta_Data.df_epsi;
+tscan=Meta_Data.PROCESS.tscan;
+Fs_epsi=Meta_Data.PROCESS.Fs_epsi;
+Fs_ctd=Meta_Data.PROCESS.Fs_ctd;
 channels=Meta_Data.PROCESS.channels;
 G=9.91;
 twoG=2*G;
 
-L_pr=length(Profile.t1);% length of profile
+% L_epsi=length(Profile.t1);% length of profile
+% L_ctd=length(Profile.T);% length of profile
 % numbuer of samples for a scan. I make sure it is always even
-N_pr=tscan.*df-mod(tscan*df,2);
+N_epsi=tscan.*Fs_epsi-mod(tscan*Fs_epsi,2);
+N_ctd=tscan.*Fs_ctd-mod(tscan*Fs_ctd,2);
 
 % get index of the acceleration channels (usefull when the number of channels is not 8)
 inda1=find(cellfun(@(x) strcmp(x,'a1'),channels));
@@ -27,11 +30,13 @@ dTdV(2)=Meta_Data.epsi.t2.dTdV; % define in mod_epsi_temperature_spectra
 
 [~,indP] = sort(abs(Profile.P-scan.Pr));
 indP=indP(1);
-ind_scan = indP-N_pr/2:indP+N_pr/2; % ind_scan is even
 
+ind_Pr_epsi = find(Profile.epsitime<Profile.ctdtime(indP),1,'last');
+ind_scan = ind_Pr_epsi-N_epsi/2:ind_Pr_epsi+N_epsi/2; % ind_scan is even
 
-ind_scan=ind_scan(ind_scan>0 & ind_scan<L_pr);
-disp(sprintf('L ind scan %i', length(ind_scan)))
+if length(ind_scan)<975
+fprintf('length indscan : %i\n',length(ind_scan))
+end
 
 % compute mean values of w,T,S of each scans
 % scan.w    = average_scan(pr_w,ind_scan);

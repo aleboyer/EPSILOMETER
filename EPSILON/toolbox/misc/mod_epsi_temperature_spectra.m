@@ -116,14 +116,16 @@ indsub1Hz=find(ctd_k<1);
 if ~isempty(indt1)
     P11_TFepsi(indt1,:,:)=squeeze(P11_epsi(indt1,:,:))./TFtemp;
     P11_T(indt1,:) = squeeze(nanmean(P11_TFepsi(indt1,:,:),2)); % Temperature gradient frequency spectra should be ?C^2/s^-2 Hz^-1 ????
-    tempo_P11=interp1(epsi_k,P11_T(indt1,:),ctd_k).';
+%     tempo_P11=interp1(epsi_k,P11_T(indt1,:),ctd_k).';
+     tempo_P11=interp1(epsi_k,P11_T(indt1,:),ctd_k);
     dTdV(1)=sqrt(nanmedian(P11_Tctd(indsub1Hz)./tempo_P11(indsub1Hz)));
     P11_T(indt1,:)= P11_T(indt1,:).*dTdV(1).^2;
 end
 if ~isempty(indt2)
     P11_TFepsi(indt2,:,:)=squeeze(P11_epsi(indt2,:,:))./TFtemp;
     P11_T(indt2,:) = squeeze(nanmean(P11_TFepsi(indt2,:,:),2)); % Temperature gradient frequency spectra should be ?C^2/s^-2 Hz^-1 ????
-    tempo_P11=interp1(epsi_k,P11_T(indt2,:),ctd_k).';
+%     tempo_P11=interp1(epsi_k,P11_T(indt2,:),ctd_k).';
+    tempo_P11=interp1(epsi_k,P11_T(indt2,:),ctd_k);
     dTdV(2)=sqrt(nanmedian(P11_Tctd(indsub1Hz)./tempo_P11(indsub1Hz)));
     P11_T(indt2,:)= P11_T(indt2,:).*dTdV(2).^2;
 end

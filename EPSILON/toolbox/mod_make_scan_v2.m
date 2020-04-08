@@ -1,4 +1,4 @@
-function scan=mod_som_make_scan_v2(Profile,scan,Meta_Data)
+function scan=mod_epsilometer_make_scan_v2(Profile,scan,Meta_Data)
 
 tscan=Meta_Data.tscan;
 df=Meta_Data.df_epsi;
@@ -31,7 +31,7 @@ ind_scan = indP-N_pr/2:indP+N_pr/2; % ind_scan is even
 
 
 ind_scan=ind_scan(ind_scan>0 & ind_scan<L_pr);
-disp(sprintf('L ind scan %i', length(ind_scan)))
+
 
 % compute mean values of w,T,S of each scans
 % scan.w    = average_scan(pr_w,ind_scan);

@@ -8,7 +8,7 @@ function thermal_diffusivity=kt(s,t,p)
 s_avg=mean(s);
 if s_avg > 1
   s=s/1000;
-  disp('nu: input s vector > 1, divided by 1000 to compute kt')
+%   disp('nu: input s vector > 1, divided by 1000 to compute kt')
 end
 
 thermal_diffusivity = thermometric_cond(s,t,p)./( density(s,t,p) .* cp(s,t) );

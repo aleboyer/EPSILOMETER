@@ -11,6 +11,8 @@ function Profile=mod_som_add_sh_quality_flag(Profile,Meta_Data,H1,H2,fH,fc1,fc2)
 channels=Meta_Data.PROCESS.channels;
 nb_channels=length(channels);
 
+inda3=find(cellfun(@(x) strcmp(x,'a3'),channels));
+
 nfft=Meta_Data.PROCESS.nfft;
 df=Meta_Data.df_epsi;
 
@@ -28,6 +30,7 @@ nbscan=length(Pr);
 
 % number of samples for a scan. I make sure it is always even
 N_pr=tscan.*df-mod(tscan*df,2);
+
 
 %initialize process flags
 Profile.sh_qcflag=zeros(nbscan,2).*nan;

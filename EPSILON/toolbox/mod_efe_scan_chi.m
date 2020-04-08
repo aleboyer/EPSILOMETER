@@ -10,13 +10,13 @@ switch fpo7_channel
 end
 
 nfft=Meta_Data.PROCESS.nfft;
-df=Meta_Data.df_epsi;
+Fs=Meta_Data.PROCESS.Fs_epsi;
 
 
 % first get the spectrum in Volt so we can estimate the noise level and get
 % a cut-off freqeuncy
-[P0,~] = pwelch(detrend(scan.(fpo7_channel))./dTdV,nfft,[],nfft,df,'psd');
-[P,fe] = pwelch(detrend(scan.(fpo7_channel)),nfft,[],nfft,df,'psd');
+[P0,~] = pwelch(detrend(scan.(fpo7_channel))./dTdV,nfft,[],nfft,Fs,'psd');
+[P,fe] = pwelch(detrend(scan.(fpo7_channel)),nfft,[],nfft,Fs,'psd');
 
 if nargin<5
     h_freq=get_filters_MADRE(Meta_Data,fe);

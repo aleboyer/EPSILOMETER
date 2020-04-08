@@ -2,7 +2,17 @@
 %  The schematic of this structure can be found on confluence
 function Meta_Data=mod_define_meta_data(Meta_Data)
 
-%% Define main names 
+% Get default values of the Meta_Data strucutre. It requires at least a
+% Meta_Data.path_mission
+% Meta_Data.mission
+% Meta_Data.vehicle_name
+% Meta_Data.deployment
+% Meta_Data.vehicle
+% Meta_Data.process_dir
+
+% written by ALB 
+% update 04/01/2020
+
 
 %% create mission folders
 mission_folder_L0=fullfile(Meta_Data.path_mission,...
@@ -18,17 +28,6 @@ CTDpath  = fullfile(mission_folder_L2,'ctd');
 RAWpath  = fullfile(mission_folder_L2,'raw');
 SDRAWpath  = fullfile(mission_folder_L2,'sd_raw');
 
-%MHA 11/7/2019 temporary comment out making new directories.                                            
-% if ~exist(mission_folder_L0,'dir')
-%     %% create paths
-%     eval([ '!mkdir ' mission_folder_L0]);
-%     eval([ '!mkdir ' mission_folder_L1]);
-%     eval([ '!mkdir ' mission_folder_L2]);
-%     eval([ '!mkdir ' L1path]);
-%     eval([ '!mkdir ' Epsipath]);
-%     eval([ '!mkdir ' CTDpath]);
-%     eval([ '!mkdir ' RAWpath]);
-% end
 
 %% add path fields
 Meta_Data.root     = mission_folder_L2;
@@ -42,21 +41,26 @@ Meta_Data.SDRAWpath  = SDRAWpath;
 if ~isfield(Meta_Data,'PROCESS')
     Meta_Data.PROCESS.nb_channels=8;
     Meta_Data.PROCESS.channels={'t1','t2','s1','s2','c','a1','a2','a3'};
-    Meta_Data.PROCESS.recording_mod='SD';
+    Meta_Data.PROCESS.recording_mode='SD';
+    Meta_Data.PROCESS.tscan=6;
+    Meta_Data.PROCESS.Fs_epsi=325;
+    Meta_Data.PROCESS.Fs_ctd=8;
+    Meta_Data.PROCESS.nfft=Meta_Data.PROCESS.tscan*Meta_Data.PROCESS.Fs_epsi;
+    Meta_Data.PROCESS.nfftc=floor(Meta_Data.PROCESS.nfft/3);
+    Meta_Data.PROCESS.ctd_fc=45;  %45 Hz
+    Meta_Data.PROCESS.dz=.25;  %45 Hz
+    Meta_Data.PROCESS.fc1=5;
+    Meta_Data.PROCESS.fc2=35;
 end
 
 % add MADRE fields
-if ~isfield(Meta_Data,'MADRE')
-    Meta_Data.MADRE.rev='MADREB.0';
-    Meta_Data.MADRE.SN='0002';
-end
-% add MAP fields
-if ~isfield(Meta_Data,'MAP')
-    Meta_Data.MAP.rev='MAP.0';
-    Meta_Data.MAP.SN='0001';
-    Meta_Data.MAP.temperature='';
-    Meta_Data.MAP.shear='CAmp1.0';
-end
+if ~isfield(Meta_Data,'Hardware')
+    Meta_Data.Hardware.SOM.rev='MADREB.0';
+    Meta_Data.Hardware.SOM.SN='0002';
+    Meta_Data.Hardware.EFE.rev='MADREB.0';
+    Meta_Data.Hardware.EFE.SN='0002';
+    Meta_Data.Hardware.EFE.temperature='Tdiff';
+    Meta_Data.Hardware.EFE.shear='CAmp1.0';
 
 %% add Firmware fields
 if ~isfield(Meta_Data,'Firmware')
@@ -89,12 +93,12 @@ Meta_Data.epsi.a2.ADCfilter=Meta_Data.Firmware.ADCfilter; % serial number;
 Meta_Data.epsi.a3.ADCfilter=Meta_Data.Firmware.ADCfilter; % serial number;
 
 
-Meta_Data.epsi.shearcal_path=fullfile(Meta_Data.process,'CALIBRATION','SHEAR_PROBES');
+Meta_Data.epsi.shearcal_path=fullfile(Meta_Data.process_dir,'CALIBRATION','SHEAR_PROBES');
 Meta_Data.epsi=get_shear_calibration(Meta_Data.epsi);    % Calibration number
 
 Meta_Data=get_filters_name_MADRE(Meta_Data);
 
-Meta_Data.CALIpath=fullfile(Meta_Data.process,'CALIBRATION','ELECTRONICS');
+Meta_Data.CALIpath=fullfile(Meta_Data.process_dir,'CALIBRATION','ELECTRONICS');
 
 %MHA 11/7/2019: comment this out too.
 %save(fullfile(Meta_Data.RAWpath, ...

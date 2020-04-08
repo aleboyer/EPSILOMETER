@@ -22,7 +22,7 @@ ig=find(~isnan(s));
 s_avg=mean(s);
 if s_avg > 1
   s=s/1000;
-  disp('nu: input s vector > 1, divided by 1000 to compute nu')
+%   disp('nu: input s vector > 1, divided by 1000 to compute nu')
 end
  
 mu = (1.779e-3 - t.*(5.9319e-5 - t.*(1.2917e-6 - t * 1.3402e-8))) ...
