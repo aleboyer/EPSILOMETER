@@ -36,6 +36,11 @@ Prmax=max(CTDProfile.P);
 Profile=mod_epsilometer_merge_profile(CTDProfile,EpsiProfile,Prmin,Prmax);
 
 % cut profile to compute coherence
+% this  depth range to compute the coherence. 
+% this WILL choke when depth is varying. 
+% TODO change the coherence estimation to use a range in percentage of the
+% profile 
+
 Prmin=Meta_Data.PROCESS.Prmin;
 Prmax=Meta_Data.PROCESS.Prmax;
 Profile_coh=mod_epsilometer_merge_profile(CTDProfile,EpsiProfile,Prmin,Prmax);
