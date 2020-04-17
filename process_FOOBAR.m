@@ -21,6 +21,8 @@ Meta_Data.PROCESS.ctd_fc=45;  %45 Hz
 Meta_Data.PROCESS.dz=.25;  %45 Hz
 Meta_Data.PROCESS.fc1=5;
 Meta_Data.PROCESS.fc2=35;
+Meta_Data.PROCESS.Prmin=20; % 20 m for a 100m profile
+Meta_Data.PROCESS.Prmax=80; % 80 m for a 100 profile
 
 [~,fe] = pwelch(0*(1:Meta_Data.PROCESS.nfft),...
                 Meta_Data.PROCESS.nfft,[], ...
