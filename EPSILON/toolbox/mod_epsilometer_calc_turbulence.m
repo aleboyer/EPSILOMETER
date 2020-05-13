@@ -41,8 +41,9 @@ Profile=mod_epsilometer_merge_profile(CTDProfile,EpsiProfile,Prmin,Prmax);
 % TODO change the coherence estimation to use a range in percentage of the
 % profile 
 
-Prmin=Meta_Data.PROCESS.Prmin;
-Prmax=Meta_Data.PROCESS.Prmax;
+dP=max(CTDProfile.P)-min(CTDProfile.P);
+Prmin=min(CTDProfile.P)+.2*dP;
+Prmax=max(CTDProfile.P)-.2*dP;
 Profile_coh=mod_epsilometer_merge_profile(CTDProfile,EpsiProfile,Prmin,Prmax);
 
                     
@@ -143,8 +144,8 @@ for p=1:nbscan % p is the scan index.
     scan.w   = average_scan(Profile.dPdt,ind_ctdscan(ind_ctdscan>0 & ind_ctdscan<LCTD));
     % check if the scan is not too shallow or too close to the end of the
     % profile. Also check if the speed if >20 cm s^{-1}
-    if (ind_ctdscan(1)>0 && ind_ctdscan(end)<LCTD && scan.w>limit_speed) 
-        ind_Pr_epsi = find(EpsiProfile.epsitime<CTDProfile.ctdtime(indP),1,'last');
+    if (ind_ctdscan(1)>N_ctd/2 && ind_ctdscan(end)<LCTD-N_ctd/2 && scan.w>limit_speed) 
+        ind_Pr_epsi = find(EpsiProfile.epsitime>CTDProfile.ctdtime(indP),1,'first');
         ind_epsiscan = ind_Pr_epsi-N_epsi/2:ind_Pr_epsi+N_epsi/2; % ind_scan is even
         % compute mean values of w,T,S of each scans
         scan.w    = average_scan(Profile.dPdt,ind_ctdscan);
@@ -177,7 +178,7 @@ for p=1:nbscan % p is the scan index.
             wh_channel=channels{c};
             fieldstr1=sprintf('Cu1%s',wh_channel);
             fieldstr2=sprintf('Cu2%s',wh_channel);
-
+            
             [~,Profile.Pc1c2.(wh_channel)(p),~]= ...
                 mod_efe_scan_acceleration(scan,wh_channel,Meta_Data);
             [~,~,Profile.Cc1c2.(fieldstr1)(p),Profile.Cc1c2.(fieldstr2)(p),~]= ...

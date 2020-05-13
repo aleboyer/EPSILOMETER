@@ -1,4 +1,4 @@
-function [H1,H2,fH]=create_velocity_tranfer_function(MS,min_epsi,Meta_Data)
+function [H1,H2]=create_velocity_tranfer_function(MS,min_epsi,Meta_Data)
 % Create a transfer function using the Cross spectrum of u (from shear probes)
 % and a3 or a1 ( it depends which axes influence most the shear probes).
 % Turbulence_scans are raw spectra and time series from a single deployment
@@ -32,7 +32,6 @@ for f=1:length(id_min_scan1)
         load(fullfile(listfile(id_file).folder,listfilename{id_file}),sprintf('Profile%03i',f))
         eval(sprintf('Profile=Profile%03i;',f));
         for i=1:length(id_min_scan1{f})
-            Profile.a3=Profile.a1; % EPSI WW had the probes oriented differently shear are more sensitvie to a1.
             scans1{count1}.Pr=Profile.pr(id_min_scan1{f}(i));
             scans1{count1}.w=Profile.w(id_min_scan1{f}(i));
             scans1{count1} =mod_epsilometer_make_scan_v2(Profile,scans1{count1},Meta_Data);
@@ -43,10 +42,9 @@ for f=1:length(id_min_scan1)
         id_file=floor((f-1)./10)+1;
         load(fullfile(listfile(id_file).folder,listfilename{id_file}),sprintf('Profile%03i',f))
         eval(sprintf('Profile=Profile%03i;',f));
-        for i=1:length(id_min_scan1{f})
-            Profile.a3=Profile.a1; % EPSI WW had the probes oriented differently shear are more sensitvie to a1.
+        for i=1:length(id_min_scan2{f})
             scans2{count2}.Pr=Profile.pr(id_min_scan2{f}(i));
-            scans2{count2}.w=Profile.w(id_min_scan1{f}(i));
+            scans2{count2}.w=Profile.w(id_min_scan2{f}(i));
             scans2{count2} =mod_epsilometer_make_scan_v2(Profile,scans2{count2},Meta_Data);
             count2=count2+1;
         end
@@ -73,15 +71,15 @@ for n=1:Nscans1
     TF1(n,:)=abs(PCu1a3)./Pa3;
 end
 for n=1:Nscans2
-    nfft=ceil(length(scans1{n}.s2)/3); %window length
+    nfft=ceil(length(scans2{n}.s2)/3); %window length
     if mod(nfft,2)==0
         TF=zeros(Nscans2,ceil(nfft/2)+1);
     else
         TF=zeros(Nscans2,ceil(nfft/2));
     end
     
-    u2 = scans1{n}.s2; %attention s2 is actually in m/s. Change was done in mod_som_make_scan_v2
-    a3 = scans1{n}.a3;%attention a3 is actually in m/s^2. Change was done in mod_som_make_scan_v2
+    u2 = scans2{n}.s2; %attention s2 is actually in m/s. Change was done in mod_som_make_scan_v2
+    a3 = scans2{n}.a3;%attention a3 is actually in m/s^2. Change was done in mod_som_make_scan_v2
     [Pa3,fH] = pwelch(detrend(a3),nfft,[],nfft,Fs,'psd');
     [PCu2a3,~]=cpsd(detrend(u2),detrend(a3),nfft,[],nfft,Fs);
     TF2(n,:)=abs(PCu2a3)./Pa3;
@@ -90,11 +88,13 @@ end
 
 if ~isempty(TF1)
     H1=smoothdata(nanmean(TF1,1),'movmean',3);
+    H1=interp1(fH,H1,Meta_Data.PROCESS.fe);
 else
     H1=fH*0;
 end
 if ~isempty(TF2)
     H2=smoothdata(nanmean(TF2,1),'movmean',3);
+    H2=interp1(fH,H2,Meta_Data.PROCESS.fe);
 else
     H2=fH*0;
 end

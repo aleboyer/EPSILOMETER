@@ -29,6 +29,11 @@ for f=1:length(Fnames)
             Map.chi2=cellfun(@(x) interp1(x.pr,x.chi(:,2),Map.z),MS(~MSempty),'un',0);
             Map.chi1=cell2mat(Map.chi1);
             Map.chi2=cell2mat(Map.chi2);
+        case 'chi2'
+            Map.chi21=cellfun(@(x) interp1(x.pr,x.chi2(:,1),Map.z),MS(~MSempty),'un',0);
+            Map.chi22=cellfun(@(x) interp1(x.pr,x.chi2(:,2),Map.z),MS(~MSempty),'un',0);
+            Map.chi21=cell2mat(Map.chi21);
+            Map.chi22=cell2mat(Map.chi22);
         case 'dnum'
             Map.dnum=cell2mat(cellfun(@(x) nanmean(x.dnum),MS(~MSempty),'un',0));
         case 'w'
@@ -50,8 +55,8 @@ for f=1:length(Fnames)
             Map.sh_qcflag2=cellfun(@(x) interp1(x.pr,x.sh_qcflag(:,2),Map.z),MS(~MSempty),'un',0);
             Map.sh_qcflag1=cell2mat(Map.sh_qcflag1);
             Map.sh_qcflag2=cell2mat(Map.sh_qcflag2);
-        case {'Pt1','Pt2','Ps1','Ps2','Pa1','Pa2','Pa3','Cu1a1','Cu1a2',...
-              'Cu1a3','Cu2a1','Cu2a2','Cu2a3'}  
+        case {'Pt1','Pt2','Ps1','Ps2','Pa1','Pa2','Pa3','CCu1a1','CCu1a2',...
+              'CCu1a3','CCu2a1','CCu2a2','CCu2a3'}  
             Map.(wh_field)=cellfun(@(x) interp1(x.pr,x.(wh_field),Map.z),MS(~MSempty),'un',0);
             Map.(wh_field)=cell2mat(Map.(wh_field));
     end

@@ -62,14 +62,20 @@ switch Meta_Data.MAP.temperature
         Meta_Data.PROCESS.FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
 end
 
-
 for i=1:length(EPSI_Profiles)
-    if numel(EPSI_Profiles{i}.epsitime)>10*L
         fprintf('Profile %i over %i\n',i,length(EPSI_Profiles));
         
         % some cleaning on the Pressure channel
         % w=dPdt needs to be smooth.
         CTD_Profiles{i}.P=filloutliers(CTD_Profiles{i}.P,'center','movmedian',1000);
+
+        CTD_Profiles{i}=structfun(@(x) fillmissing(x,'linear'),CTD_Profiles{i},'Un',0);
+        EPSI_Profiles{i}=structfun(@(x) fillmissing(double(x),'linear'),EPSI_Profiles{i},'Un',0);
+        
+        %in case there is a mismatch between ctd and epsi time which still
+        %happens as of April 17th 2020.
+        EPSI_Profiles{i}.epsitime=EPSI_Profiles{i}.epsitime+ ...
+                 (CTD_Profiles{i}.ctdtime(1)-EPSI_Profiles{i}.epsitime(1));
         
         Profile=mod_epsilometer_calc_turbulence(CTD_Profiles{i}, ...
                                                 EPSI_Profiles{i}, ...
@@ -78,7 +84,6 @@ for i=1:length(EPSI_Profiles)
         clear Profile;
         sav_var_name=[sav_var_name sprintf(',''Profile%03i''',i)];
         nb_profile_perfile=nb_profile_perfile+1;% so I know how many profiles per file.
-    end
     if (mod(i,10)==0)
         save_file=fullfile(Meta_Data.L1path, ...
             ['Turbulence_Profiles' num2str(count) '.mat']);

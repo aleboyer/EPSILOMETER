@@ -101,6 +101,51 @@ fig.PaperPosition = [0 0 15 10];
 fig.PaperOrientation='Portrait';
 print(fullfile(Meta_Data.L1path,'Chi2_map.png'),'-dpng2')
 
+
+% chi 1 
+figure;
+colormap('parula')
+pcolor(Map.dnum,Map.z,log10(Map.chi21));shading flat;axis ij
+hold on
+plot(Map.dnum,Map.eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
+colorbar
+caxis([-11,-5])
+set(gca,'XTickLabelRotation',25)
+datetick
+cax=colorbar;
+xlabel(['Start date :' datestr(Map.dnum(1),'mm-dd-yyyy')],'fontsize',15)
+set(gca,'fontsize',fontsize)
+ylabel(cax,'log_{10}(\chi)','fontsize',fontsize)
+ylabel('Depth (m)','fontsize',fontsize)
+
+fig=gcf;
+fig.PaperPosition = [0 0 12 8];
+fig.PaperOrientation='Portrait';
+print(fullfile(Meta_Data.L1path,'Chi21_map1.png'),'-dpng2')
+
+%chi2 
+figure;
+colormap('parula')
+pcolor(Map.dnum,Map.z,log10(Map.chi22));shading flat;axis ij
+hold on
+plot(Map.dnum,Map.eta2m,'Color',[.1,.1,.1,.6],'linewidth',1)
+colorbar
+caxis([-11,-5])
+set(gca,'XTickLabelRotation',45)
+datetick
+cax=colorbar;
+xlabel(['Start date :' datestr(Map.dnum(1),'mm-dd-yyyy')],'fontsize',15)
+set(gca,'fontsize',15)
+ylabel(cax,'log_{10}(\chi)','fontsize',20)
+ylabel('Depth (m)','fontsize',20)
+
+fig=gcf;
+fig.PaperPosition = [0 0 15 10];
+fig.PaperOrientation='Portrait';
+print(fullfile(Meta_Data.L1path,'Chi22_map.png'),'-dpng2')
+
+
+
 %epsilon from chi1 
 figure;
 colormap('parula')

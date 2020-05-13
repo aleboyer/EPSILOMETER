@@ -5,8 +5,7 @@ listfile=dir(fullfile(Meta_Data.L1path,'Turbulence_Profiles*.mat'));
 listfilename=natsort({listfile.name});
 count=1;
 channels=Meta_Data.PROCESS.channels;
-% for f=1:length(listfilename)
-for f=1:10
+for f=1:length(listfilename)
     load(fullfile(listfile(f).folder,listfilename{f}),'nb_profile_perfile')
     for p=1:nb_profile_perfile
         load(fullfile(listfile(f).folder,listfilename{f}),sprintf('Profile%03i',count))
@@ -22,6 +21,12 @@ for f=1:10
                     minepsi2{count}=nanmin(log10(Profile.epsilon(:,2)));
                     maxepsi1{count}=nanmax(log10(Profile.epsilon(:,1)));
                     maxepsi2{count}=nanmax(log10(Profile.epsilon(:,2)));
+                case 'epsilonTF'
+                    MS{count}.epsilonTF=Profile.epsilonTF;
+                    minepsi1TF{count}=nanmin(log10(Profile.epsilonTF(:,1)));
+                    minepsi2TF{count}=nanmin(log10(Profile.epsilonTF(:,2)));
+                    maxepsi1TF{count}=nanmax(log10(Profile.epsilonTF(:,1)));
+                    maxepsi2TF{count}=nanmax(log10(Profile.epsilonTF(:,2)));
                 case 'Pc1c2'
                     for c=1:length(channels)
                         wh_channel=channels{c};
@@ -43,6 +48,11 @@ for f=1:10
         count=count+1;
     end
 end
-min_epsi=[nanmean([minepsi1{:}]) nanmean([minepsi2{:}])];
-max_epsi=[nanmean([maxepsi1{:}]) nanmean([maxepsi2{:}])];
+if exist('minepsi1TF','var')
+    min_epsi=[nanmean([minepsi1TF{:}]) nanmean([minepsi2TF{:}])];
+    max_epsi=[nanmean([maxepsi1TF{:}]) nanmean([maxepsi2TF{:}])];
+else
+    min_epsi=[nanmean([minepsi1{:}]) nanmean([minepsi2{:}])];
+    max_epsi=[nanmean([maxepsi1{:}]) nanmean([maxepsi2{:}])];
+end
 

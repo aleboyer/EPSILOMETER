@@ -279,7 +279,7 @@ grid(ax1,'on')
 xlabel(ax1,'k [cpm]')
 ylabel(ax1,'[s^{-2} / cpm]')
 set(ax1,'fontsize',20)
-title(ax1,sprintf('%s - %s - shear1',Meta_Data.mission,Meta_Data.deployment))
+title(ax1,sprintf('%s - %s - shear2',Meta_Data.mission,Meta_Data.deployment))
 
 nanind=find(nansum(mPsk1,2)>0);
 legend_string=arrayfun(@(x) sprintf('log_{10}(\\epsilon)~%2.1f',x),log10(epsi_bin),'un',0);
