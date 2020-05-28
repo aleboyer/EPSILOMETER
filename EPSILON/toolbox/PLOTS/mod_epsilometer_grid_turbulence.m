@@ -69,7 +69,9 @@ Map.eta=zeros(100,numel(Map.dnum));
 
 for dt=1:numel(Map.dnum)
     indnan=~isnan(Map.sgth(:,dt));
+    if sum(indnan)>1
     Map.eta(:,dt)=interp1(Map.sgth(indnan,dt),Map.z(indnan),Map.level_sig);
+    end
 end
 dvals2=floor(nanmean(Map.eta,2)./2);
 dmeta2=diff(dvals2);

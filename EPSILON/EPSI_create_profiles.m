@@ -34,6 +34,10 @@ if exist(fullfile(Meta_Data.CTDpath,['ctd_' Meta_Data.deployment '.mat']),'file'
 if ~strcmp(Meta_Data.vehicle,'WW')
     CTD.ctdtime=CTD.aux1time;
 end
+%NC added the following because SODA WW d3 CTD structure had aux1time but no ctdtime
+if any(strcmp(fields(CTD),'aux1time')) && ~any(strcmp(fields(CTD),'ctdtime'))
+    CTD.ctdtime=CTD.aux1time;
+end
     
     % define casts using CTD data
     [CTDProfiles.up,CTDProfiles.down,CTDProfiles.dataup,CTDProfiles.datadown] = ...

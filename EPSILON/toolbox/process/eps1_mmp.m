@@ -39,7 +39,8 @@ function [epsilon,kc]=eps1_mmp(k,Psheark,kvis,kmax)
 %
 %    (3) repeat of (2) with wavenumber determined from eps2    
 
-KI=(2:0.2:10); % wavenumber array for interpolation
+dKI=0.2;
+KI=(2:dKI:10); % wavenumber array for interpolation
 
 dk=nanmean(diff(k));
 % first estimation of epsilon of the sum of the shear variance is too high
@@ -63,15 +64,15 @@ krange=find(k>=2 & k<10);
 P_interpolated=interp1(k(krange),Psheark(krange),KI);
 % ALB change to nansum since coherence correction can introduces nansclear 
 % shear10=nansum(P_interpolated)*0.2;
-shear10=nansum(P_interpolated)*0.2;
+shear10=nansum(P_interpolated)*dKI;
 %
 % estimate epsilon using poly fits to log10(shear10)
-x=log10(shear10);
-if x>-3 % 2-10 cpm lies entirely in inertial subrange
-	log10eps=polyval(eps_fit_shear10,x);
+logshear10=log10(shear10);
+if logshear10>-3 % 2-10 cpm lies entirely in inertial subrange
+	log10eps=polyval(eps_fit_shear10,logshear10);
 	eps1=10^log10eps;
 else
-	log10_sheartotal=polyval(shtotal_fit_shear10,x);
+	log10_sheartotal=polyval(shtotal_fit_shear10,logshear10);
 	eps1=7.5*kvis*10^log10_sheartotal;
 end
 
@@ -82,7 +83,7 @@ if kc2>kmax
 	kc2=kmax; % limit set by noise spectrum
 end
 krange=find(k>=2 & k<=kc2);
-eps2=7.5*kvis*nansum(Psheark(krange))*dk/.9; % no clue what the .9 is for.
+eps2=7.5*kvis*nansum(Psheark(krange))*dk/.9; % .9 we want to get 90% of the shear variance
 
 % third estimate: same as before.
 kc=0.0816*( eps2 / kvis^3 )^(1/4);

@@ -75,6 +75,8 @@ TODO: describe the mission/vehicle/deployment organization
 - Meta_Data.SOM.SN= system on module (SOM) serial number.
 - Meta_Data.SOM.Firmware= version of the firmware on the SOM.
 
+**mod_define_meta_data.m:** Defines paths to raw and to-be-processed data. If 'PROCESS', 'Hardware', and 'Firmware' structures within Meta_Data have not be defined yet, they are defined with defaults here. 
+
 **EPSI_matlab_path.m:** Add the paths defined in process_FOOBAR.m
 
 **Mod_epsi_temperature_spectra:**
@@ -141,3 +143,7 @@ It gives a scalar informing the user if the shear signal is above (>0) or below 
 **mod_epsilometer_thorpe scale:** TODO
 
 **mod_epsilometer_epsi_from_chi:** TODO
+
+##3. Data organization
+
+**Meta_Data.CTDpath** points to the directory where CTD data are stored. They should be in a Matlab variable called ctd_d[deployment #].mat which contains a structure called ctd_d[deployment #]. The structure fields are [nx1] arrays.

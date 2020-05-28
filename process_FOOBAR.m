@@ -1,10 +1,15 @@
 % process FOOBAR mission
 %
-% Make a copy of this file for each deployment you want to process and rename it accordingly (e.g process_[mission]_[vehicle_name]_[deployment].m)
+% Make a copy of this file for each deployment you want to process and
+% rename it accordingly (e.g
+% process_[mission]_[vehicle_name]_[deployment].m)
 %
-% I want to stress the importance of creating this Meta_Data structure BEFORE deployment. It will help the user to remember details if engineering notes are not sufficient. I am talking from experience here.
+% I want to stress the importance of creating this Meta_Data structure
+% BEFORE deployment. It will help the user to remember details if
+% engineering notes are not sufficient. I am talking from experience here.
+% -------------------------------------------------------------------------
 
-% point t o EPSI libraries
+% point to EPSI libraries
 process_dir='/Volumes/GoogleDrive/My Drive/WORK/EPSILOMETER/';
 Meta_Data.path_mission='/Volumes/GoogleDrive/My Drive/DATA/';
 Meta_Data.mission='FOOBAR';
@@ -71,10 +76,17 @@ id_profile=10;
 
 % Tscan 50 scan
 display=0;tscan=50;
+titleStr = strrep([Meta_Data.mission ' ' Meta_Data.vehicle_name ' ' Meta_Data.deployment],'_','\_');
+switch Meta_Data.vehicle
+    case 'FISH'
+        datachoice = 'datadown';
+    case 'WW'
+        datachoice = 'dataup';
+end
 Meta_Data=mod_epsi_temperature_spectra(Meta_Data, ...
-                                       EpsiProfiles.datadown{1}, ...
-                                       CTDProfiles.datadown{1},...
-                                       'FOOBAR',i,display,tscan);
+                                       EpsiProfiles.(datachoice){id_profile}, ...
+                                       CTDProfiles.(datachoice){id_profile},...
+                                       titleStr,id_profile,display,tscan);
 
 mod_epsilometer_batch_process(Meta_Data);
 

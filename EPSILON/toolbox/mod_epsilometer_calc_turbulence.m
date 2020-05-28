@@ -63,7 +63,7 @@ Pr=ceil(min(Profile.P)):dz:floor(max(Profile.P));
 nbscan=length(Pr);
 
 LCTD=length(Profile.P);% length of profile
-% numbuer of samples for a scan. I make sure it is always even
+% number of samples for a scan. I make sure it is always even
 N_epsi=tscan.*Fs_epsi-mod(tscan*Fs_epsi,2);
 N_ctd=tscan.*Fs_ctd-mod(tscan*Fs_ctd,2);
 
