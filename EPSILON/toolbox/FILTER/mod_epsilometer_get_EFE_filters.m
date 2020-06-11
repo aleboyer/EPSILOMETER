@@ -28,7 +28,10 @@ end
 % calibrator gain 2.5 dB ~ Vout/Vin=1.33 for a shear probe of 750pF
 
 %ca_filter = load('FILTER/charge_coeffilt_09312019.mat'); %from network analysis
-ca_filter = load('FILTER/charge_coeffilt.mat'); %from network analysis
+% ca_filter = load('FILTER/charge_coeffilt.mat'); %from network analysis
+
+% ALB until now I never used the AA TF. May 30 th 2020
+ca_filter = load('FILTER/shr_chramp_waa.mat'); %from spice WITH AA filter. 
 epsi_ca   = interp1(ca_filter.freq,ca_filter.coef_filt ,f);
 gain_ca   = 1; %try with a 0 dB gain.
 H.electshear= epsi_ca*gain_ca;% 

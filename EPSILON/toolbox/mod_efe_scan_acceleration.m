@@ -1,6 +1,11 @@
 function [Pa,sumP,fe]=mod_efe_scan_acceleration(scan,acceleration_channel,Meta_Data)
 % get epsilon and the cutting frequency 
-
+% 
+% OUTPUTS
+%   Pa      = accleration frequency power spectrum
+%   sumP    = integrated acceleratation frequency power spectrum between
+%             Meta_Data.PROCESS.fc1 and Meta_Data.PROCESS.fc2
+%   fe      = frequency array
 
 nfft=Meta_Data.PROCESS.nfft;
 Fs=Meta_Data.PROCESS.Fs_epsi;

@@ -1,4 +1,5 @@
 fid=fopen('shearprobeAMP_v6.txt');
+fid=fopen('shearprobeAMP_v6.txt');
 C=textscan(fid,'%s %s','Headerlines',1);
 cfreq=char(C{1});
 for i=1:length(cfreq)

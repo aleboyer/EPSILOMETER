@@ -122,7 +122,6 @@ Profile.dnum=zeros(nbscan,1).*nan;
 
 
 % compute Coherence over the whole profile.
-
 for c=[inda1 inda2 inda3]
     wh_channel=channels{c};
     [scan.Cu1a.(wh_channel),scan.Cu2a.(wh_channel),...
