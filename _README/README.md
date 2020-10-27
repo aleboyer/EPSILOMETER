@@ -29,7 +29,9 @@ TODO: describe the mission/vehicle/deployment organization
 
 ##2. Matlab library
 
-**process_FOOBAR.m:** Define Meta_Data. This structure contains the exhaustive list of parameters necessary to process epsilon and chi for the epsilometer front end (EFE) data.
+**process_FOOBAR.m:** Define Meta_Data and run data processing steps.
+
+The Meta_Data structure contains the exhaustive list of parameters necessary to process epsilon and chi for the epsilometer front end (EFE) data.
 
 *I want to stress the importance of creating this Meta_Data structure before deployment. It will help the user to remember details if engineering notes are not sufficient. I am talking from experience here. Make a copy of this file for each deployment you want to process and name it accordingly (e.g. process_soda_wirewalker_epsi_d3.m)*
 
@@ -75,7 +77,7 @@ TODO: describe the mission/vehicle/deployment organization
 - Meta_Data.SOM.SN= system on module (SOM) serial number.
 - Meta_Data.SOM.Firmware= version of the firmware on the SOM.
 
-**mod_define_meta_data.m:** Defines paths to raw and to-be-processed data. If 'PROCESS', 'Hardware', and 'Firmware' structures within Meta_Data have not be defined yet, they are defined with defaults here. 
+**mod_define_meta_data.m:** Defines paths to raw and to-be-processed data. If 'PROCESS', 'Hardware', and 'Firmware' structures within Meta_Data have not be defined yet, they are defined with defaults here.
 
 **EPSI_matlab_path.m:** Add the paths defined in process_FOOBAR.m
 

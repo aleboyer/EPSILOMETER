@@ -1,7 +1,9 @@
-%% Create folder and meta data structure of an Epsilometer mission
-%  The schematic of this structure can be found on confluence
 function Meta_Data=mod_define_meta_data(Meta_Data)
-
+% Meta_Data = mod_define_meta_data(Meta_Data)
+%
+% Create folder and meta data structure of an Epsilometer mission
+%  The schematic of this structure can be found on confluence
+%
 % Get default values of the Meta_Data strucutre. It requires at least a
 % Meta_Data.path_mission
 % Meta_Data.mission
@@ -9,7 +11,7 @@ function Meta_Data=mod_define_meta_data(Meta_Data)
 % Meta_Data.deployment
 % Meta_Data.vehicle
 % Meta_Data.process_dir
-
+%
 % written by ALB 
 % update 04/01/2020
 
@@ -92,7 +94,6 @@ Meta_Data.epsi.a1.ADCfilter=Meta_Data.Firmware.ADCfilter; % serial number;
 Meta_Data.epsi.a2.ADCfilter=Meta_Data.Firmware.ADCfilter; % serial number;
 Meta_Data.epsi.a3.ADCfilter=Meta_Data.Firmware.ADCfilter; % serial number;
 
-
 Meta_Data.epsi.shearcal_path=fullfile(Meta_Data.process_dir,'CALIBRATION','SHEAR_PROBES');
 Meta_Data.epsi=get_shear_calibration(Meta_Data.epsi);    % Calibration number
 
@@ -100,7 +101,6 @@ Meta_Data=get_filters_name_MADRE(Meta_Data);
 
 Meta_Data.CALIpath=fullfile(Meta_Data.process_dir,'CALIBRATION','ELECTRONICS');
 
-%MHA 11/7/2019: comment this out too.
-%save(fullfile(Meta_Data.RAWpath, ...
-%    ['Meta_' Meta_Data.mission '_' Meta_Data.deployment '.mat']),'Meta_Data')
+Meta_Data.PROCESS.h_freq=mod_epsilometer_get_EFE_filters(Meta_Data,Meta_Data.PROCESS.fe);
+
 end

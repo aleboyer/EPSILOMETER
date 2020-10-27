@@ -19,8 +19,9 @@ function SD=mod_epsi_sd_buildtime(Meta_Data,a)
 SD.madre=a.madre;
 % epsi time
 
-%get name channel
-name_channels=Meta_Data.PROCESS.channels;
+% get name channels. 
+name_channels=Meta_Data.PROCESS.timeseries;
+
 %get number of channel
 nbchannels=Meta_Data.PROCESS.nb_channels;
 % get start date
@@ -87,6 +88,7 @@ else
     
     
 end
+SD.epsi.epsitime = SD.epsi.epsitime(:);
 
 for n=1:nbchannels
     eval(sprintf('SD.epsi.%s=a.epsi.%s;',name_channels{n},name_channels{n}));

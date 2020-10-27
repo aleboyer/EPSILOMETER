@@ -1,4 +1,4 @@
-function mod_epsilometer_adjusted_chi(Meta_Data,Tnoise)
+ function mod_epsilometer_adjusted_chi(Meta_Data,Tnoise)
 
 %  Profile structure for Micro Structure. Inside Profile you ll find
 %  temperature spectra in degC Hz^-1

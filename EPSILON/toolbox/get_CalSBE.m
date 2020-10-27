@@ -4,7 +4,7 @@ function SBEcal=get_CalSBE(filename)
     fid=fopen(filename);
     line=fgetl(fid);
     SBEcal.SN=line(end-4:end);
-    % Temperature Cal 
+    % Temperature Cal
     line=fgetl(fid);
     SBEcal.TempCal_date=line(end-10:end);
     line=fgetl(fid);
@@ -17,7 +17,7 @@ function SBEcal=get_CalSBE(filename)
     SBEcal.ta3=str2double(line(end-12:end));
     line=fgetl(fid);
     SBEcal.toffset=str2double(line(end-12:end));
-    % Conductivity Cal 
+    % Conductivity Cal
     line=fgetl(fid);
     SBEcal.CondCal_date=line(end-10:end);
     line=fgetl(fid);
@@ -29,9 +29,9 @@ function SBEcal=get_CalSBE(filename)
     line=fgetl(fid);
     SBEcal.j=str2double(line(end-12:end));
     line=fgetl(fid);
-    SBEcal.tcor=str2double(line(end-12:end));
-    line=fgetl(fid);
     SBEcal.pcor=str2double(line(end-12:end));
+    line=fgetl(fid);
+    SBEcal.tcor=str2double(line(end-12:end));
     line=fgetl(fid);
     SBEcal.cslope=str2double(line(end-12:end));
     % Pressure Cal
@@ -63,6 +63,5 @@ function SBEcal=get_CalSBE(filename)
     SBEcal.ptempa2=str2double(line(end-12:end));
     line=fgetl(fid);
     SBEcal.poffset=str2double(line(end-12:end));
+    fclose(fid);
 end
-    
-

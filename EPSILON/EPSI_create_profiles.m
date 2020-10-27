@@ -50,8 +50,7 @@ end
 EPSI=load(fullfile(Meta_Data.Epsipath,['epsi_' Meta_Data.deployment '.mat']));
 
 
-
-% plot pressure and highlight up /down casts in red/green
+%% plot pressure and highlight up /down casts in red/green
 if min(CTD.P)>8
     warning('there is an offset on the RBR pressure. We substract 8 m to get the profile.');
     CTD.P=CTD.P-min(CTD.P);
@@ -69,17 +68,28 @@ end
 
 %MHA: plot ocean style
 axis ij
+figureStamp(mfilename('fullpath'))
 print('-dpng2',[Meta_Data.CTDpath 'Profiles_Pr.png'])
 
-% do we wnat to save or change the speed and filter criteria
-answer1=input('save profiles? (yes,no)','s');
+
+%% do we want to save or change the speed and filter criteria
+str1 = strvcat(sprintf('--- User-defined minimum profile depth is %2.1f m and minimum profile length is %3.1f',min_depth,crit_depth));
+str2 = strvcat('--- User did not define minimum profile depth or minimum profile length.',...
+    sprintf('Default values were used: minimum profile depth is %2.1f m and minimum profile length is %3.1f',min_depth,crit_depth));
+
+if nargin==1
+    disp(str2)
+elseif nargin>1
+    disp(str1)
+end
+answer1  = input('??? Do you want to keep these parameters and save these profiles? (yes/no)','s');
 
 %save
 switch answer1
-    case 'yes'
+    case {'yes','y'}
         [EpsiProfiles.up,EpsiProfiles.down,EpsiProfiles.dataup,EpsiProfiles.datadown] =...
             mod_getcastepsi(EPSI,CTD.ctdtime,CTDProfiles.up,CTDProfiles.down);
-        
+                
         filepath=fullfile(Meta_Data.L1path,['Profiles_' Meta_Data.deployment '.mat']);
         fprintf('Saving data in %s \n',filepath)
         save(filepath,'CTDProfiles','EpsiProfiles','-v7.3');
@@ -88,6 +98,11 @@ switch answer1
         Meta_Data.nbprofiledown=numel(CTDProfiles.down);
         Meta_Data.maxdepth=max(cellfun(@(x) max(x.P),CTDProfiles.dataup));
         save(fullfile(Meta_Data.L1path,'Meta_Data.mat'),'Meta_Data')
+    case {'no','n'}
+        disp(' ')
+        disp('*********************')
+        disp('User should adjust values for Meta_Data.PROCESS.Prmin_prof and Meta_Data.PROCESS.Prcrit_prof');
+        disp(' ')
 end
 
 

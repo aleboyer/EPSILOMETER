@@ -2,7 +2,7 @@ function [Pa,sumP,fe]=mod_efe_scan_acceleration(scan,acceleration_channel,Meta_D
 % get epsilon and the cutting frequency 
 % 
 % OUTPUTS
-%   Pa      = accleration frequency power spectrum
+%   Pa      = acceleration frequency power spectrum
 %   sumP    = integrated acceleratation frequency power spectrum between
 %             Meta_Data.PROCESS.fc1 and Meta_Data.PROCESS.fc2
 %   fe      = frequency array
@@ -12,7 +12,6 @@ Fs=Meta_Data.PROCESS.Fs_epsi;
 fc1=Meta_Data.PROCESS.fc1;
 fc2=Meta_Data.PROCESS.fc2;
 h_freq=Meta_Data.PROCESS.h_freq;
-
 
 [P,fe] = pwelch(detrend(scan.(acceleration_channel)),nfft,[],nfft,Fs,'psd');
 

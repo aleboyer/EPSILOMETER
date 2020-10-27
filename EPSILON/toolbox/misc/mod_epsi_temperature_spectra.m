@@ -15,7 +15,7 @@ function Meta_Data=mod_epsi_temperature_spectra(Meta_Data,EPSI_Profile,CTD_Profi
 % ctd_df=6; % RBR ctd_df=16; % SBE
 
 % default epsi_freq
-epsi_df=Meta_Data.PROCESS.Fs_epsi;
+epsi_df=320;
 
 % define parameters to compute the spectra.
 epsi_Lscan  = tscan*epsi_df;  
@@ -25,7 +25,7 @@ ctd_T       = length(CTD_Profile.ctdtime);
 % make sure all the fields in the CTD structure are columns.
 CTD_Profile=structfun(@(x) x(:),CTD_Profile,'un',0);
 Length_profile=86400*(EPSI_Profile.epsitime(end)-EPSI_Profile.epsitime(1));
-ctd_df   = floor((ctd_T./Length_profile));
+ctd_df   = .98*floor((ctd_T./Length_profile));
 ctd_Lscan  = tscan*ctd_df;  
 
 
@@ -62,20 +62,20 @@ indt2=find(cellfun(@(x) strcmp(x,'t2'),Meta_Data.PROCESS.channels));
 % define epsi data matrice after filling nans and removing outliers.
 % compute the EPSI spectra
 if ~isempty(indt1)
-    EPSI_Profile.t1=fillmissing(EPSI_Profile.t1,'linear');
-    EPSI_Profile.t1=filloutliers(EPSI_Profile.t1,'center','movmedian',1000);
+    EPSI_Profile.t1_volt=fillmissing(EPSI_Profile.t1_volt,'linear');
+    EPSI_Profile.t1_volt=filloutliers(EPSI_Profile.t1_volt,'center','movmedian',1000);
     
     data_EPSI(indt1,:,:) = cell2mat(cellfun(@(x) filloutliers( ...
-                EPSI_Profile.t1(x),'center','movmedian',5), ...
+                EPSI_Profile.t1_volt(x),'center','movmedian',5), ...
                  epsi_indscan,'un',0)).';
     P11_epsi(indt1,:,:)=alb_power_spectrum(squeeze(data_EPSI(indt1,:,:)),1./tscan);
 end
 if ~isempty(indt2)
-    EPSI_Profile.t2=fillmissing(EPSI_Profile.t2,'linear');
-    EPSI_Profile.t2=filloutliers(EPSI_Profile.t2,'center','movmedian',1000);
+    EPSI_Profile.t2_volt=fillmissing(EPSI_Profile.t2_volt,'linear');
+    EPSI_Profile.t2_volt=filloutliers(EPSI_Profile.t2_volt,'center','movmedian',1000);
 
     data_EPSI(indt2,:,:) = cell2mat(cellfun(@(x) filloutliers( ...
-        EPSI_Profile.t2(x),'center','movmedian',5),...
+        EPSI_Profile.t2_volt(x),'center','movmedian',5),...
               epsi_indscan,'un',0)).';
     P11_epsi(indt2,:,:)=alb_power_spectrum(squeeze(data_EPSI(indt2,:,:)),1./tscan);
 end
@@ -98,7 +98,7 @@ epsi_k=epsi_k(epsi_indk);
 % becasue we pick only 1 side I multiply by 2 
 P11_ctd  = 2*squeeze(P11_ctd(:,ctd_indk));
 % final ctd spectrum
-P11_Tctd = nanmean(P11_ctd);
+P11_Tctd = nanmean(P11_ctd,1);
 
 
 % becasue we pick only 1 side I multiply by 2 
@@ -116,15 +116,13 @@ indsub1Hz=find(ctd_k<1);
 if ~isempty(indt1)
     P11_TFepsi(indt1,:,:)=squeeze(P11_epsi(indt1,:,:))./TFtemp;
     P11_T(indt1,:) = squeeze(nanmean(P11_TFepsi(indt1,:,:),2)); % Temperature gradient frequency spectra should be ?C^2/s^-2 Hz^-1 ????
-%     tempo_P11=interp1(epsi_k,P11_T(indt1,:),ctd_k).';
-     tempo_P11=interp1(epsi_k,P11_T(indt1,:),ctd_k);
+    tempo_P11=interp1(epsi_k,P11_T(indt1,:),ctd_k);
     dTdV(1)=sqrt(nanmedian(P11_Tctd(indsub1Hz)./tempo_P11(indsub1Hz)));
     P11_T(indt1,:)= P11_T(indt1,:).*dTdV(1).^2;
 end
 if ~isempty(indt2)
     P11_TFepsi(indt2,:,:)=squeeze(P11_epsi(indt2,:,:))./TFtemp;
     P11_T(indt2,:) = squeeze(nanmean(P11_TFepsi(indt2,:,:),2)); % Temperature gradient frequency spectra should be ?C^2/s^-2 Hz^-1 ????
-%     tempo_P11=interp1(epsi_k,P11_T(indt2,:),ctd_k).';
     tempo_P11=interp1(epsi_k,P11_T(indt2,:),ctd_k);
     dTdV(2)=sqrt(nanmedian(P11_Tctd(indsub1Hz)./tempo_P11(indsub1Hz)));
     P11_T(indt2,:)= P11_T(indt2,:).*dTdV(2).^2;
@@ -189,6 +187,7 @@ xlim([1/15 170])
 set(gca,'fontsize',20)
 fig=gcf;fig.PaperPosition=[0 0 8 6];
 filename=sprintf('%sTctd_Tepsi_comp_cast%i_t%i.png',Meta_Data.L1path,np,1);
+figureStamp(mfilename('fullpath'))
 print('-dpng2',filename)
 if dsp==1
     ind_t=1;

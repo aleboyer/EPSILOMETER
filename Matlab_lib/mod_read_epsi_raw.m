@@ -16,8 +16,13 @@ function epsi = mod_read_epsi_raw(filename,Meta_Data)
 % number channels
 % modified 2018/12/20 Arnaud Le Boyer 
 %
+% 10/15/20 modifications by Nicole Couto:
+%   - rename t1, s1, a1, etc to t1_volts, s1_volts, a1_g
 
-% check if it is a single file or a directory and a set of files
+% Check if it is a single file or a directory and a set of files. If it's
+% one file, open it. If it's several, combine them into one file. Send
+% whatever you have back through this same function until you have an open
+% file that will be read by the subfunction mod_read_epsi_raw_file
 if ischar(filename) % dir or file
     switch exist(filename,'file')
         case 2 % if it is a file
@@ -109,7 +114,7 @@ str = fread(fid,'*char')';
 
 
 
-%%
+%
 %clc;
 % tic
 % get MADRE position beginning of datablock
@@ -123,7 +128,7 @@ toc
 header_length=strfind(str(ind_madre(1):ind_madre(1)+72),'$');
 header_length=header_length(2);
 switch header_length
-    case 71 % ALB: I added the musecond timestamp in third position. So the header is longer
+    case 71 % ALB: I added the microsecond timestamp in third position. So the header is longer
         firmware_version='microsecond';
     otherwise
         firmware_version='SODA';
@@ -141,7 +146,7 @@ madre.offset = 0;
 madre.name_length = 6;
 
 switch firmware_version
-    case 'microsecond' % ALB: I added the musecond timestamp in third position. So the header is longer
+    case 'microsecond' % ALB: I added the microsecond timestamp in third position. So the header is longer
         madre.epsi_mutime_length = 8;
         madre.epsi_stamp_offset  = -1+madre.name_length;
         madre.epsi_time_offset   = madre.epsi_stamp_offset+madre.epsi_stamp_length+1;
@@ -243,10 +248,10 @@ if is_aux1
         'PT_raw',NaN(NBblock*aux1.nbsample,1));
 end
 
-for cha=1:Meta_Data.PROCESS.nb_channels
-    wh_channel=Meta_Data.PROCESS.channels{cha};
-    EPSI.epsi.(wh_channel) = NaN(NBblock,epsi.nbsamples);
-end
+% for cha=1:Meta_Data.PROCESS.nb_channels
+%     wh_channel=Meta_Data.PROCESS.channels{cha};
+%     EPSI.epsi.(wh_channel) = NaN(NBblock,epsi.nbsamples);
+% end
 EPSI.epsi.EPSInbsample=NaN(NBblock,epsi.nbsamples);
 
 % we are checking if the very last block is good too.
@@ -418,7 +423,7 @@ if(isfield(EPSI,'header'))
     end
 end
 
-% coeficient for Unipolar or bipolar ADC configuration and alos to convert
+% coefficient for Unipolar or bipolar ADC configuration and also to convert
 % accelerometer Voltage into Accelereation units (in g).
 full_range = 2.5;
 bit_counts = 24;
@@ -431,25 +436,28 @@ for cha=1:Meta_Data.PROCESS.nb_channels
     if ~strcmp(wh_channel,'c')
         switch Meta_Data.epsi.(wh_channel).ADCconf
             case {'Bipolar','bipolar'}
-                EPSI.epsi.(wh_channel)=full_range/gain* ...
+                EPSI.epsi.([wh_channel '_volt'])=full_range/gain* ...
                     (double(EPSI.epsi.([wh_channel '_count']))/2.^(bit_counts-1)-1);
             case {'Unipolar','unipolar'}
-                EPSI.epsi.(wh_channel)=full_range/gain* ...
+                EPSI.epsi.([wh_channel '_volt'])=full_range/gain* ...
                     double(EPSI.epsi.([wh_channel '_count']))/2.^(bit_counts);
                 
         end
         
         switch wh_channel
             case 'a1'
-                EPSI.epsi.a1 = (EPSI.epsi.a1-acc_offset)/acc_factor;
+                EPSI.epsi.a1_g = (EPSI.epsi.a1_volt-acc_offset)/acc_factor;
             case 'a2'
-                EPSI.epsi.a2 = (EPSI.epsi.a2-acc_offset)/acc_factor;
+                EPSI.epsi.a2_g = (EPSI.epsi.a2_volt-acc_offset)/acc_factor;
             case 'a3'
-                EPSI.epsi.a3 = (EPSI.epsi.a3-acc_offset)/acc_factor;
+                EPSI.epsi.a3_g = (EPSI.epsi.a3_volt-acc_offset)/acc_factor;
         end
     end
 end
-
+% Remove the acceleration volts fields
+EPSI.epsi = rmfield(EPSI.epsi,'a1_volt');
+EPSI.epsi = rmfield(EPSI.epsi,'a2_volt');
+EPSI.epsi = rmfield(EPSI.epsi,'a3_volt');
 
 % grab all the epsi field names.
 epsi_fields = fieldnames(EPSI.epsi);
@@ -469,6 +477,8 @@ end
 toc
 end
 
+
+%%
 function epsi = mod_combine_epsi(varargin)
 % mod_combine_epsi - combines epsi data files in MATLAB format that was
 % converted using mod_read_epsi_raw

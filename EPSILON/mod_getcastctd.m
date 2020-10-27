@@ -2,7 +2,7 @@ function [up,down,dataup,datadown] = mod_getcastctd(Meta_Data,min_depth,crit_dep
 
 % extract upcast downcast.
 %  we filt the pressure with low pass at 1min. then look for the period
-%  where pressure is higher ther min_depth (user defined).The downcast is
+%  where pressure is higher than min_depth (user defined).The downcast is
 %  the part before the maximun pressure whithin this period the upscast is
 %  the remaining. This is done iteratively until the end of the time serie.
 %  At the end, we only keep the profile where

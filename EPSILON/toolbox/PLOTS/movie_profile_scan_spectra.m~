@@ -1,0 +1,38 @@
+function [] = movie_profile_scan_spectra(Meta_Data,Profile_or_profNum)
+%function mod_epsi_chi_epsi_checkprofile(MS,Meta_Data,l)
+% Feb 2019 ALB. Pass in structure MS and Meta_Data.  This will generate a
+% standard movie for cast profNum.
+
+%% Initialize movie
+% ----------------------------------------------------------
+
+% v = VideoWriter(sprintf('%s_cast%i%s',Meta_Data.deployment,profNum,'.avi'));
+% v.FrameRate=5;
+% open(v)
+
+scanList = 1:
+plot_profile_scan_spectra(Meta_Data,Profile_or_profNum,scanList)
+
+    
+    %% Grab frame for movie
+    % ----------------------------------------------------------
+    pause(.001)
+    % movie stuff
+    frame=getframe(gcf);
+    writeVideo(v,frame)
+    if k<length(Profile.kvis)
+        delete(p5(:));
+        delete(p6(:));
+        delete(p7(:));
+        delete(p8(:));
+        delete(p9(:));
+        delete(p10(:));
+        delete(f(:));
+    end
+    
+end %end loop through scans
+
+%% Close movie
+% ----------------------------------------------------------
+
+close(v)

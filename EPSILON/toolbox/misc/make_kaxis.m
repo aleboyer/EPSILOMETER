@@ -1,6 +1,6 @@
 function kaxis=make_kaxis(tscan,df)
 
-% create the frenquency axis for fft
+% create the frequency axis for fft
 % tscan is the length in time units of the segment for the fft
 % df is the sampling frequency in time units^{-1}
 Lscan  = floor(tscan*df);
